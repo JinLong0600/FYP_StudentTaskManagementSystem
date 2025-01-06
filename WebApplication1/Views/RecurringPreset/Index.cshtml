@@ -1,0 +1,1714 @@
+﻿@model StudentTaskManagement.ViewModels.L1RecurringPresetViewModel;
+@using  static StudentTaskManagement.Utilities.GeneralEnum;
+
+@{
+    ViewData["Title"] = "Recurring Pattern";
+}
+@{
+    string TruncateDescription(string description, int wordCount = 20)
+    {
+        if (string.IsNullOrEmpty(description)) return description;
+
+        var words = description.Split(' ');
+        if (words.Length <= wordCount) return description;
+
+        return string.Join(" ", words.Take(wordCount)) + "...";
+    }
+}
+
+<!-- Page Title Section with Add Button -->
+<div class="main-content child-content p-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-2">📬 My Recurring Pattern</h2>
+            <p class="text-muted">Create and manage your recurring pattern to cultivate a new habiat</p>
+        </div>
+        <button class="btn btn-create" id="createPresetBtn">
+            <i class="fas fa-plus me-2"></i>Create New Pattern
+        </button>
+    </div>
+
+    <hr />
+
+    <!-- Simplified Search and Filter -->
+    <div class="filter-section mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Search</label>
+                <div class="search-box">
+                    <input type="text" id="customSearch" class="form-control" placeholder="Search your presets...">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <label for="Type" class="form-label fw-semibold">Type</label>
+                <div class="custom-dropdown">
+                    <select class="form-select" id="Type" name="Type">
+                        <option value="">All Types</option>
+                        <option value="@((int)RecurringType.Day)">Recurring Pattern by Day(s)</option>
+                        <option value="@((int)RecurringType.Week)">Recurring Pattern by Week(s)</option>
+                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by BI-Week</option>
+                        <option value="@((int)RecurringType.Month)">Recurring Pattern by Month(s)</option>
+                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by BiMonth</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preset Cards Grid -->
+    <div class="preset-grid" id="presetGrid">
+
+    </div>
+
+    <!-- Add this after the preset-grid div -->
+    <div class="pagination-container mt-4">
+        <nav aria-label="Notification preset pages">
+            <ul class="pagination justify-content-center">
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Add this modal markup at the bottom of your main content div -->
+    <div class="modal fade" id="presetModal" tabindex="-1" aria-labelledby="presetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content notification-modal-content">
+                <div class="modal-header notification-modal-header">
+                    <h5 class="modal-title title-white" id="presetModalLabel">
+                        <i class="fas fa-bell me-2"></i>
+                        <span class="modal-title-text"></span>
+                    </h5>
+                </div>
+                <form asp-action="AjaxCreate" asp-controller="RecurringPreset" method="post">
+                    <div class="modal-body notification-modal-body p-4">
+                            <input type="hidden" id="patternId" name="id" value="" />
+                            <div class="row g-4">
+                                <!-- Basic Information -->
+                                <div class="col-12">
+                                    <div class="section-title mb-3">Basic Information</div>
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                        <label for="patternName" class="form-label">Pattern Name</label>
+                                        <input type="text" class="form-control" id="patternName" name="Name" placeholder="Enter pattern name" value="">
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="patternDescription" class="form-label">Description</label>
+                                            <textarea class="form-control" id="patternDescription" name="Description"
+                                                  rows="3" placeholder="Enter a brief description" value=""></textarea>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label">Recurring Type</label>
+                                            <div class="notification-type-container">
+                                            <input type="radio" id="type1" name="Type" value="@((int)RecurringType.Day)">
+                                                <label for="type1">Day</label>
+                                            <input type="radio" id="type2" name="Type" value="@((int)RecurringType.Week)">
+                                                <label for="type2">Week</label>
+                                            <input type="radio" id="type3" name="Type" value="@((int)RecurringType.BiWeek)">
+                                                <label for="type3">BiWeek</label>
+                                            <input type="radio" id="type4" name="Type" value="@((int)RecurringType.Month)">
+                                                <label for="type4">Month</label>
+                                            <input type="radio" id="type5" name="Type" value="@((int)RecurringType.BiMonth)">
+                                                <label for="type5">BiMonth</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Reminder Settings -->
+                                <div class="col-12">
+                                    <div class="section-title mb-3">Recurring Settings</div>
+                                    <div class="row g-4">
+                                        <!-- Day Selection -->
+                                        <div class="col-md-12 day-selection-section" style="display: none;">
+                                            <div class="mb-4">
+                                                <label class="form-label">Quick Selection</label>
+                                                <div class="notification-type-container">
+                                                    <input type="checkbox" id="allDays" name="DaytoGenerate" value="0">
+                                                    <label for="allDays">
+                                                        <i class="fas fa-calendar-alt me-2"></i>All Days
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="form-label">Or Select Specific Days</label>
+                                                <div class="notification-type-container">
+                                                        <input type="checkbox" id="day_monday" name="DaytoGenerate" value="1" class="day-checkbox">
+                                                        <label for="day_monday">Monday</label>
+
+                                                        <input type="checkbox" id="day_tuesday" name="DaytoGenerate" value="2" class="day-checkbox">
+                                                        <label for="day_tuesday">Tuesday</label>
+
+                                                        <input type="checkbox" id="day_wednesday" name="DaytoGenerate" value="3" class="day-checkbox">
+                                                        <label for="day_wednesday">Wednesday</label>
+
+                                                        <input type="checkbox" id="day_thursday" name="DaytoGenerate" value="4" class="day-checkbox">
+                                                        <label for="day_thursday">Thursday</label>
+
+                                                        <input type="checkbox" id="day_friday" name="DaytoGenerate" value="5" class="day-checkbox">
+                                                        <label for="day_friday">Friday</label>
+
+                                                        <input type="checkbox" id="day_saturday" name="DaytoGenerate" value="6" class="day-checkbox">
+                                                        <label for="day_saturday">Saturday</label>
+
+                                                        <input type="checkbox" id="day_sunday" name="DaytoGenerate" value="7" class="day-checkbox">
+                                                        <label for="day_sunday">Sunday</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Week Selection -->
+                                        <div class="col-md-12 week-selection-section" style="display: none;">
+                                            <div class="mb-4">
+                                                <label class="form-label">Current Day Pattern</label>
+                                                <div class="notification-type-container">
+                                                    <input type="radio" id="sameAsCreated" name="DaytoGenerateRadio" value="0">
+                                                    <label for="sameAsCreated">
+                                                        <i class="fas fa-calendar-check me-2"></i>Same as Created Day
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="form-label">Or Select Specific Day</label>
+                                                <div class="notification-type-container">
+                                                        <input type="radio" id="week_monday" name="DaytoGenerateRadio" value="1">
+                                                        <label for="week_Monday">Monday</label>
+                                                        <input type="radio" id="week_tuesday" name="DaytoGenerateRadio" value="2">
+                                                        <label for="week_tuesday">Tuesday</label>
+                                                        <input type="radio" id="week_wednesday" name="DaytoGenerateRadio" value="3">
+                                                        <label for="week_wednesday">Wednesday</label>
+                                                        <input type="radio" id="week_thursday" name="DaytoGenerateRadio" value="4">
+                                                        <label for="week_thursday">Thursday</label>
+                                                        <input type="radio" id="week_friday" name="DaytoGenerateRadio" value="5">
+                                                        <label for="week_friday">Friday</label>
+                                                        <input type="radio" id="week_saturday" name="DaytoGenerateRadio" value="6">
+                                                        <label for="week_saturday">Saturday</label>
+                                                        <input type="radio" id="week_sunday" name="DaytoGenerateRadio" value="7">
+                                                        <label for="week_sunday">Sunday</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Month Selection -->
+                                        <div class="col-md-12 month-selection-section" style="display: none;">
+                                            <div class="mb-4">
+                                                <label class="form-label">Quick Selection</label>
+                                                <div class="notification-type-container">
+                                                    <input type="checkbox" id="allMonths" name="DaytoGenerate" value="0">
+                                                    <label for="allMonths">
+                                                        <i class="fas fa-calendar me-2"></i>All Months
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="form-label">Or Select Specific Month</label>
+                                                <div class="notification-type-container">
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_january" name="DaytoGenerate" value="1">
+                                                          <label class="form-check-label" for="month_january">January</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_february" name="DaytoGenerate" value="2">
+                                                          <label class="form-check-label" for="month_february">February</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_march" name="DaytoGenerate" value="3">
+                                                          <label class="form-check-label" for="month_march">March</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_april" name="DaytoGenerate" value="4">
+                                                          <label class="form-check-label" for="month_april">April</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_may" name="DaytoGenerate" value="5">
+                                                          <label class="form-check-label" for="month_may">May</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_june" name="DaytoGenerate" value="6">
+                                                          <label class="form-check-label" for="month_june">June</label>
+                                                        </div>
+                                                </div>
+                                                <div class="notification-type-container">
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_july" name="DaytoGenerate" value="7">
+                                                          <label class="form-check-label" for="month_july">July</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_august" name="DaytoGenerate" value="8">
+                                                          <label class="form-check-label" for="month_august">August</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_september" name="DaytoGenerate" value="9">
+                                                          <label class="form-check-label" for="month_september">September</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_october" name="DaytoGenerate" value="10">
+                                                          <label class="form-check-label" for="month_october">October</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_november" name="DaytoGenerate" value="11">
+                                                          <label class="form-check-label" for="month_november">November</label>
+                                                        </div>
+
+                                                        <div class="form-check form-check-inline">
+                                                          <input class="form-check-input month-checkbox" type="checkbox" id="month_december" name="DaytoGenerate" value="12">
+                                                          <label class="form-check-label" for="month_december">December</label>
+                                                        </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Existing time inputs -->
+                                        <div class="col-md-6 reminder-time-section">
+                                            <label for="patternRecurringCount" class="form-label">Recurring count</label>
+                                            <input type="text" class="form-control" id="patternRecurringCount" name="RecurringCount">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="modal-footer p-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                            <input type="hidden" id="DaytoGenerateHidden" name="DaytoGenerateHidden" value="" />
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this modal markup at the bottom of your main content div, next to the existing presetModal -->
+    <div class="modal fade" id="activeTasksModal" tabindex="-1" aria-labelledby="activeTasksModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content notification-modal-content">
+                <div class="modal-header notification-modal-header">
+                    <h5 class="modal-title" id="activeTasksModalLabel">Tasks Using This Preset</h5>
+                </div>
+                <div class="modal-body notification-modal-body">
+                    <div class="task-list">
+                        <!-- Task items will be dynamically inserted here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #6c63ff;
+        --secondary-color: #3f3d56;
+        --background-light: #f8fafc;
+        --card-shadow: 10px 10px 10px rgba(0, 0, 0, 0.5);
+    }
+    /* Add this CSS for task description container */
+    .notification-description {
+        min-height: 65px; /* Fixed height for description area */
+        margin: 0.8rem 0 1rem 0; /* Add margin top and bottom */
+        padding: 0 0.5rem; /* Add some padding on sides */
+    }
+
+    /* Search and Filter */
+    .search-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    /* Timing Pills Display in Cards */
+    .timing-pills-display {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0.75rem;
+    }
+
+    .timing-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: #f1f5f9;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        transition: all 0.3s ease;
+    }
+
+    .timing-pill i {
+        margin-right: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--primary-color);
+    }
+
+    .usage-pills {
+        display: flex;
+        gap: 0.75rem;
+        margin: 0.5rem;
+    }
+
+    .usage-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .usage-pill i:not(.pill-arrow) {
+        margin-right: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--primary-color);
+    }
+
+    .usage-label {
+        font-style: italic;
+        color: #64748b;
+        font-size: 0.85rem;
+    }
+
+    .usage-pill.clickable {
+        cursor: pointer;
+        padding-right: 16px;
+        background-color: #f0f4ff;
+        border: 1px solid #e0e7ff;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .usage-pill.clickable:hover {
+        background-color: #e0e7ff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .usage-pill.clickable:active {
+        transform: translateY(0);
+    }
+
+    .pill-arrow {
+        font-size: 0.7rem;
+        margin-left: 6px;
+        color: var(--primary-color);
+        opacity: 0.7;
+    }
+
+    .usage-pill.clickable:hover .pill-arrow {
+        opacity: 1;
+        transform: translateX(2px);
+        transition: all 0.2s ease;
+    }
+
+    .usage-pill.non-interactive {
+        background-color: #f8fafc;
+        cursor: default;
+    }
+
+    /* Active Tasks Modal Styles */
+    .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .task-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1.25rem;
+        background-color: #f8fafc;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        gap: 1rem;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+
+    .task-item:hover {
+        background-color: #f1f5f9;
+        border-color: #e2e8f0;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .task-item:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    /* Add focus styles for accessibility */
+    .task-item:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .task-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border-radius: 10px;
+        margin-right: 1rem;
+        color: var(--primary-color);
+    }
+
+    .task-details {
+        flex: 1;
+        margin-right: 1rem;
+    }
+
+    /* Update task title style */
+    .task-title {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--secondary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .task-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-ongoing {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .status-completed {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    .task-indicators {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: 200px;
+    }
+
+    .indicator-group {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .indicator-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        white-space: nowrap;
+    }
+
+    .task-priority, .task-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 100px;
+        justify-content: center;
+    }
+
+    .priority-urgent {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .priority-high {
+        background-color: #fff7ed;
+        color: #ea580c;
+    }
+
+    .priority-medium {
+        background-color: #fef9c3;
+        color: #854d0e;
+    }
+
+    .priority-low {
+        background-color: #f0fdf4;
+        color: #166534;
+    }
+
+    .status-ongoing {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .status-completed {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    .task-header.notification-task-header {
+        margin-bottom: 0.5rem;
+        margin-top: 0rem; /* Space for priority badge */
+    }
+
+    .task-type {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .type-assignment {
+        background-color: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .type-meeting {
+        background-color: #fae8ff;
+        color: #a21caf;
+    }
+
+    .type-exam {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .type-custom {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .subtask-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background-color: #e0f2fe;
+        color: #0369a1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        display: inline-flex;
+    }
+
+    /* Optional: if you want to ensure pills are always aligned */
+    .task-type, .subtask-pill {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+
+    /* Completed - All subtasks done */
+    .subtask-completed {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    .subtask-completed i {
+        color: #16a34a;
+    }
+
+    /* In Progress - Some subtasks completed */
+    .subtask-in-progress {
+        background-color: #fef9c3;
+        color: #854d0e;
+    }
+
+    .subtask-in-progress i {
+        color: #ca8a04;
+    }
+
+    /* Not Started - No subtasks completed */
+    .subtask-not-started {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .subtask-not-started i {
+        color: #0284c7;
+    }
+
+    /* Optional: Style for tasks with no subtasks */
+    .subtask-no-subtasks {
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+
+    .subtask-no-subtasks i {
+        color: #94a3b8;
+    }
+
+    /* Optional: Add a subtle progress indicator */
+    .subtask-in-progress::after {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, #ca8a04 var(--progress), transparent 0);
+        border-radius: 0 0 20px 20px;
+    }
+
+    .form-check-label {
+        font-weight: 500;
+    }
+
+    .form-check-input {
+        width: 3rem !important;
+        height: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .input-group-text {
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+        color: #64748b;
+    }
+
+    /* Radio button container */
+
+    /* Hide the default radio button */
+    .notification-type-container input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    /* Custom radio button style */
+    .notification-type-container input[type="radio"] + label {
+        position: relative;
+        padding-left: 28px;
+        cursor: pointer;
+        line-height: 20px;
+        display: inline-block;
+        margin-right: 20px;
+        color: #666;
+    }
+
+    /* The custom radio circle */
+    .notification-type-container input[type="radio"] + label:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ccc;
+        border-radius: 100%;
+        background: white;
+    }
+
+    /* The dot inside when selected */
+    .notification-type-container input[type="radio"]:checked + label:after {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 100%;
+        background: #0078D4;
+    }
+
+    /* Hover state */
+    .notification-type-container input[type="radio"] + label:hover:before {
+        border-color: #0078D4;
+    }
+
+    /* Focus state for accessibility */
+    .notification-type-container input[type="radio"]:focus + label:before {
+        box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
+    }
+
+    /* Remove the validation icons */
+    .form-control.is-invalid,
+    .form-control.is-valid {
+        background-image: none !important;
+        padding-right: 0.75rem !important;
+    }
+
+    .was-validated .form-control:invalid,
+    .was-validated .form-control:valid {
+        background-image: none !important;
+        padding-right: 0.75rem !important;
+    }
+
+    /* If you're using input groups */
+    .input-group .form-control.is-invalid,
+    .input-group .form-control.is-valid {
+        padding-right: 0.75rem !important;
+    }
+
+    /* Update the weekday-radio-group styles */
+    .weekday-radio-group {
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        background-color: #f8fafc;
+    }
+
+    .weekday-options.horizontal {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .form-check-inline {
+        margin-right: 0; /* Override default margin */
+    }
+
+    .weekday-radio-group .form-check-input {
+        margin-right: 0.5rem;
+    }
+
+    .weekday-radio-group .form-check-label {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Style for the "Same as Created Day" option */
+    #sameAsCreated + .form-check-label {
+        color: #6c63ff;
+        font-weight: 500;
+    }
+
+    /* Simplified checkbox styling with centered text */
+    .notification-type-container input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.5rem;
+        accent-color: #6c63ff;
+        cursor: pointer;
+        vertical-align: middle; /* Align checkbox vertically */
+    }
+
+    .notification-type-container input[type="checkbox"] + label {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center; /* Center items vertically */
+        color: #666;
+        margin-bottom: 0; /* Remove default margin */
+        line-height: 1.5rem; /* Match checkbox height */
+    }
+
+    /* Hover state */
+    .notification-type-container input[type="checkbox"]:hover {
+        transform: scale(1.1);
+        transition: transform 0.2s ease;
+    }
+
+    /* Disabled state */
+    .notification-type-container input[type="checkbox"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .notification-type-container input[type="checkbox"]:disabled + label {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Container alignment */
+    .notification-type-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center; /* Center items vertically */
+    }
+
+    .notification-type-container {
+        display: flex;
+        align-items: center;
+        white-space: nowrap; /* Prevents month names from wrapping */
+    }
+
+    /* Ensure consistent width for each month container */
+    .notification-type-container input[type="checkbox"] {
+        flex-shrink: 0; /* Prevents checkbox from shrinking */
+    }
+
+    .notification-type-container label {
+        margin: 0; /* Removes any default margins */
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // ===============================================
+        // Modal Handling (Create/Edit Preset)
+        // ===============================================
+        function setupModal(isCreate) {
+            const modal = document.getElementById('presetModal');
+            const modalTitle = modal.querySelector('.modal-title-text');
+            const form = modal.querySelector('form');
+            
+            modalTitle.textContent = isCreate ? 'Create Recurring Pattern' : 'Edit Recurring Pattern';
+            setupFormValidation();
+            if (isCreate) {
+                form.reset();
+                document.querySelector('input[name="Type"][value="@((int)NotificationPresetType.Days)"]').checked = true;
+                document.querySelector('input[name="DaytoGenerateRadio"][value="0"]').checked = true;
+                form.setAttribute('action', '/RecurringPreset/AjaxCreate');
+            } else {
+                form.setAttribute('action', '/RecurringPreset/AjaxEdit');
+            }
+            setupRadioButtonControls();
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+
+        }
+
+        // ===============================================
+        // AJAX Form Submission
+        // ===============================================
+        function setupAjaxForm() {
+            const form = document.querySelector('#presetModal form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                console.log(data);
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitBtn.disabled = true;
+
+                $.ajax({
+                    url: form.getAttribute('action'),
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        if (response.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('presetModal')).hide();
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Recurring pattern has been created successfully.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message || 'Something went wrong.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to create recurring pattern. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // ===============================================
+        // Radio Button Visibility Control
+        // ===============================================
+        function setupRadioButtonControls() {
+            const typeRadios = document.querySelectorAll('input[name="Type"]');
+            const daySection = document.querySelector('.day-selection-section');
+            const weekSection = document.querySelector('.week-selection-section');
+            const monthSection = document.querySelector('.month-selection-section');
+            const reminderTimeSection = document.querySelector('.reminder-time-section');
+
+            // Setup "All Days" checkbox handler
+            const weekdayCheckboxes = document.querySelectorAll('.weekday-options .weekday');
+            
+            const allDaysCheckbox = document.getElementById('allDays');
+            const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+            const allMonthsCheckbox = document.getElementById('allMonths');
+            const monthCheckboxes = document.querySelectorAll('.month-checkbox');
+
+            allDaysCheckbox.addEventListener('change', function() {
+                weekdayCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    checkbox.disabled = this.checked;
+                });
+            });
+
+            // Update weekday checkboxes state
+            weekdayCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(weekdayCheckboxes).every(cb => cb.checked);
+                    allDaysCheckbox.checked = allChecked;
+                });
+            });
+
+            function hideAllSections() {
+                daySection.style.display = 'none';
+                weekSection.style.display = 'none';
+                monthSection.style.display = 'none';
+            }
+
+            typeRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    hideAllSections();
+                    reminderTimeSection.style.display = 'block';
+
+                    switch (this.value) {
+                        case '@((int)RecurringType.Day)':
+                            daySection.style.display = 'block';
+                            document.getElementById('DaytoGenerateHidden').value = '';
+                            allDaysCheckbox.checked = false;
+                            allDaysCheckbox.indeterminate = false;
+                            dayCheckboxes.forEach(checkbox => {
+                                checkbox.checked = false;
+                                checkbox.disabled = false;  // Re-enable all checkboxes
+                            });
+                            monthCheckboxes.forEach(checkbox => {
+                                checkbox.checked = false;
+                                checkbox.disabled = false;  // Re-enable all checkboxes
+                            });
+                            break;
+                        case '@((int)RecurringType.Week)':
+                            weekSection.style.display = 'block';
+                            document.getElementById('DaytoGenerateHidden').value = '';
+                            break;
+                        case '@((int)RecurringType.Month)':
+                            monthSection.style.display = 'block';
+                            document.getElementById('allDays').checked = false;
+                            allMonthsCheckbox.checked = false;
+                            allMonthsCheckbox.indeterminate = false;
+                            dayCheckboxes.forEach(checkbox => {
+                                checkbox.checked = false;
+                                checkbox.disabled = false;  // Re-enable all checkboxes
+                            });
+                            monthCheckboxes.forEach(checkbox => {
+                                checkbox.checked = false;
+                                checkbox.disabled = false;  // Re-enable all checkboxes
+                            });
+                            document.getElementById('DaytoGenerateHidden').value = '';
+                            break;
+                    }
+                });
+            });
+
+            // Trigger change event on the checked radio button
+            const checkedRadio = document.querySelector('input[name="Type"]:checked');
+            if (checkedRadio) {
+                checkedRadio.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // ===============================================
+        // Active Tasks Modal
+        // ===============================================
+        function showActiveTasks(patternId) {
+            const tasks = [
+                {
+                    id: 1,
+                    title: "Complete Project Presentation",
+                    dueDate: "2024-02-20",
+                    status: "ongoing",
+                    type: "Assignment",
+                    priority: "high",
+                    subtasks: {
+                        total: 3,
+                        completed: 1
+                    }
+                },
+                {
+                    id: 2,
+                    title: "Weekly Team Meeting",
+                    dueDate: "2024-02-22",
+                    status: "completed",
+                    type: "Meeting",
+                    priority: "medium",
+                    subtasks: {
+                        total: 5,
+                        completed: 5
+                    }
+                },
+                {
+                    id: 3,
+                    title: "Final Exam Preparation",
+                    dueDate: "2024-02-25",
+                    status: "ongoing",
+                    type: "Exam",
+                    priority: "urgent",
+                    subtasks: {
+                        total: 4,
+                        completed: 2
+                    }
+                }
+            ];
+
+            const taskList = document.querySelector('#activeTasksModal .task-list');
+            taskList.innerHTML = '';
+
+            tasks.forEach(task => {
+                const subtaskStatus = getSubtaskStatus(task.subtasks);
+                const dueDateStatus = getDueDateStatus(task.dueDate);
+                
+                const taskElement = createTaskElement(task, subtaskStatus, dueDateStatus);
+                taskList.insertAdjacentHTML('beforeend', taskElement);
+            });
+
+            const modal = new bootstrap.Modal(document.getElementById('activeTasksModal'));
+            modal.show();
+        }
+
+        // ===============================================
+        // Helper Functions
+        // ===============================================
+        function getSubtaskStatus(subtasks) {
+            if (!subtasks.total) return 'no-subtasks';
+            if (subtasks.completed === subtasks.total) return 'completed';
+            return subtasks.completed > 0 ? 'in-progress' : 'not-started';
+        }
+
+        function getDueDateStatus(dueDate) {
+            const today = new Date();
+            const due = new Date(dueDate);
+            return due.toDateString() === today.toDateString() ? 'due-today' : 'normal';
+        }
+
+        function createTaskElement(task, subtaskStatus, dueDateStatus) {
+            // Your task element HTML template...
+            return `...`;
+        }
+
+        function navigateToTask(taskId) {
+            window.location.href = `/Task/Details/${taskId}`;
+        }
+
+        function formatDate(dateString) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        //
+        //
+        //
+        function loadPresets(page = 1, searchTerm = '', type = '') {
+            const presetGrid = document.getElementById('presetGrid');
+            presetGrid.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+            $.ajax({
+                url: '/RecurringPreset/GetPresets',
+                type: 'GET',
+                data: {
+                    page: page,
+                    searchTerm: searchTerm,
+                    type: type
+                },
+                success: function(response) {
+                    if (response.success) {
+                        presetGrid.innerHTML = '';
+                        
+                        response.data.presets.forEach(preset => {
+                            const presetCard = createPresetCard(preset);
+                            presetGrid.insertAdjacentHTML('beforeend', presetCard);
+                        });
+
+                        // Update pagination
+                        updatePagination(response.data.currentPage, response.data.totalPages);
+                    } else {
+                        presetGrid.innerHTML = `
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No recurring pattern found
+                            </div>`;
+                    }
+                },
+                error: function() {
+                    presetGrid.innerHTML = `
+                        <div class="alert alert-danger text-center">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Failed to load pattern. Please try again.
+                        </div>`;
+                }
+            });
+        }
+
+        function createPresetCard(preset) {
+            return `
+                <div class="preset-card recurring-pattern-card">
+                    <div class="preset-header">
+                        <span class="preset-type">${preset.type}</span>
+                        <div class="preset-actions">
+                            <button class="btn-icon" onclick="editSetting(${preset.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" onclick="deleteSetting(${preset.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h4 class="preset-title">${preset.name}</h4>
+                    <div class="notification-description mb-4">
+                        <p class="preset-description">${preset.description}</p>
+                    </div>
+                    <div class="preset-details">
+                        <div class="timing-pills-display">
+                             <span class="timing-pill">
+                                <i class="fas fa-calendar-day"></i> ${preset.dayToGenerate}
+                            </span>
+                        </div>
+                        <div class="timing-pills-display">
+                            ${createTimingPills(preset.recurringCount)}
+                        </div>
+                    </div>
+                    <div class="preset-footer">
+                        ${createTaskSubTaskPills(preset.recurringCount)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createTimingPills(preset) {
+            if(preset)
+            {
+                return `
+                        <span class="timing-pill">
+                            <i class="fas fa-calendar-day"></i>Recurs ${preset} times(s)
+                        </span>
+                `
+            }
+            
+            return "";
+        }
+
+        function createTaskSubTaskPills(preset) {
+            const pills = [];
+            if (preset.activeTasksCount == 0 && preset.subItemsCount == 0) {
+                pills.push(
+                    `<div class="preset-usage">
+                        <span class="usage-label">Currently in use by:</span>
+                        <div class="usage-pills">
+                            <span class="usage-pill empty-usage-pill">
+                                <span>No task or subtask is applying this preset.</span>
+                            </span>
+                        </div>
+                    </div>`);
+            }
+            else {
+                pills.push(
+                    `<div class="preset-usage">
+                        <span class="usage-label">Currently in use by:</span>
+                        <div class="usage-pills">
+                            <span class="usage-pill clickable" onclick="showActiveTasks(${preset.id})">
+                                <i class="fas fa-tasks"></i>
+                                <span>${preset.activeTasksCount} active tasks</span>
+                                <i class="fas fa-chevron-right pill-arrow"></i>
+                            </span>
+                        </div>
+                    </div>`);
+            }
+
+            return pills.join('');
+        }
+
+        function updatePagination(currentPage, totalPages) {
+            const pagination = document.querySelector('.pagination');
+            let paginationHtml = '';
+            if (totalPages >= 1) 
+            {
+                // Previous button
+                paginationHtml += `
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="loadPresets(${currentPage - 1})" tabindex="-1">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                `;
+            
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="loadPresets(${i})">${i}</a>
+                        </li>
+                    `;
+                }
+            
+                // Next button
+                paginationHtml += `
+                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="loadPresets(${currentPage + 1})">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                `;
+            }
+            pagination.innerHTML = paginationHtml;
+        }
+
+
+        // ===============================================
+        // Initialize Everything
+        // ===============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup event listeners for create/edit buttons
+            const editButtons = document.querySelectorAll('.btn-icon .fa-edit');
+            const createButton = document.querySelector('#createPresetBtn');
+            
+            editButtons.forEach(button => {
+                button.parentElement.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const card = this.closest('.preset-card');
+                    const presetData = {
+                        name: card.querySelector('.preset-title').textContent,
+                        description: card.querySelector('.preset-description').textContent,
+                        type: card.querySelector('.preset-type').textContent.trim()
+                    };
+                    setupModal(false, presetData);
+                });
+            });
+
+            createButton.addEventListener('click', () => setupModal(true));
+
+            // Setup radio button controls
+            setupRadioButtonControls();
+            // Initial load of presets
+            loadPresets();
+
+            // Search input handler
+            const searchInput = document.getElementById('customSearch');
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadPresets(1, this.value, document.getElementById('Type').value);
+                }, 300);
+            });
+
+            // Type filter handler
+            document.getElementById('Type').addEventListener('change', function() {
+                loadPresets(1, searchInput.value, this.value);
+            });
+
+            setupCheckboxControls();
+        });
+
+        // Add this in your Scripts section, after the existing code
+        function setupFormValidation(isEdit = false) {
+            const form = document.querySelector('#presetModal form');
+            
+            const validator = $(form).validate({
+                rules: {
+                    Name: {
+                        required: true,
+                    },
+                    DaytoGenerate: {
+                        required: true,
+                    }
+                },
+
+                errorElement: 'span',
+                errorClass: 'text-danger',
+                errorPlacement: function(error, element) {
+                    //error.insertAfter(element);
+                    if (element.closest('.input-group').length > 0) {
+                        error.insertAfter(element.parent('.input-group'));
+                        error.fadeIn('fast');
+                    }
+                    else {
+                        error.hide();
+                        error.insertAfter(element);
+                        error.fadeIn('fast');
+                    }
+                },
+                highlight: function(element) {
+                    $(element).addClass('is-invalid').removeClass('is-valid');
+                },
+                unhighlight: function(element) {
+                    $(element).addClass('is-valid').removeClass('is-invalid');
+                },
+                submitHandler: function(form) {
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    submitBtn.disabled = true;
+
+                    const isEdit = document.getElementById('patternId').value !== '';
+                    const url = isEdit ? '/RecurringPreset/AjaxEdit' : '/RecurringPreset/AjaxCreate';
+
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: data,
+                        success: function(response) {
+                            if (response.success) {
+                                console.log("edit win");
+                                bootstrap.Modal.getInstance(document.getElementById('presetModal')).hide();
+                                resetForm();
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: response.message,
+                                    icon: 'success',
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    loadPresets();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: response.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: 'Failed to create notification preset. Please try again.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                        },
+                        complete: function() {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    });
+                }
+            });
+
+            //validator.resetForm();
+            //// Remove validation styling classes
+            //$('.is-invalid').removeClass('is-invalid');
+            //$('.is-valid').removeClass('is-valid');
+            // Reset the form
+            //form.reset();
+
+            // Only clear form and validation states when creating new preset
+            if (!isEdit) {
+                validator.resetForm();        // Clears validation states
+                $('.is-invalid').removeClass('is-invalid');  // Removes error styling
+                $('.is-valid').removeClass('is-valid');      // Removes success styling
+                form.reset();                // Clears form values
+            }
+
+            return validator;  // Optionally return validator if needed elsewhere
+        }
+
+        function editSetting(patternId) {
+        // Show loading state in modal
+        const modal = document.getElementById('presetModal');
+        const modalBody = modal.querySelector('.modal-body');
+        const originalContent = modalBody.innerHTML;
+        modalBody.innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+        // Show modal while loading
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+
+            // Fetch preset details using AJAX
+            $.ajax({
+                url: '/RecurringPreset/AjaxGetPresetDetails',
+                type: 'GET',
+                data: { id: patternId },
+                success: function(response) {
+                    if (response.success) {
+                        const preset = response.data;
+                        
+                        // Reset modal content
+                        modalBody.innerHTML = originalContent;
+                        
+                        // Update modal title
+                        document.querySelector('.modal-title-text').textContent = 'Edit Notification Preset';
+                        
+                        // Update form action and method
+                        const form = modal.querySelector('form');
+                        form.setAttribute('action', '/RecurringPreset/AjaxEdit');
+
+                        // Setup radio button controls
+                        setupRadioButtonControls();
+                        // Populate form fields
+                        $('#patternId').val(preset.id);
+                        $('#patternName').val(preset.name);
+                        $('#patternDescription').val(preset.description);
+                        $('#patternRecurringCount').val(preset.recurringCount);
+                        // Set reminder type radio
+                        const typeRadio = document.querySelector(`input[name="Type"][value="${preset.type}"]`);
+                        typeRadio.checked = true;
+                        typeRadio.dispatchEvent(new Event('change'));
+
+                        // Set reminder values based on type
+                        if (preset.type == '@((int)RecurringType.Day)') {
+                            // Reset all checkboxes first
+                            document.querySelectorAll('input[name="DaytoGenerate"]').forEach(checkbox => {
+                                checkbox.checked = false;
+                                checkbox.disabled = false;
+                            });
+                            console.log(preset.dayToGenerate);
+                            // Check if "All" is selected
+                            if (preset.dayToGenerate == "0") {
+                                console.log("ss");
+                                // If type is Day (1)
+                                const allDaysCheckbox = document.getElementById('allDays');
+                                if (allDaysCheckbox) {
+                                    allDaysCheckbox.checked = true;
+                                    // Disable individual day checkboxes
+                                    document.querySelectorAll('.day-checkbox').forEach(cb => {
+                                        console.log("aaaa");
+                                        cb.checked = true;
+                                        cb.disabled = true;
+                                    });
+                                }
+                            }else{
+                                // Check individual checkboxes based on values
+                                const selectedDays = preset.dayToGenerate.split(',').map(day => day.trim());
+                                selectedDays.forEach(day => {
+                                    const checkbox = document.querySelector(`input[name="DaytoGenerate"][value="${day}"]`);
+                                    if (checkbox) {
+                                        checkbox.checked = true;
+                                    }
+                                });
+                            }
+                        }
+                        else if(preset.type == '@((int)RecurringType.Week)') {
+                            const dayGenerateRadio = document.querySelector(`input[name="DaytoGenerateRadio"][value="${preset.DaytoGenerate}"]`);
+                            typeRadio.checked = true;
+                            typeRadio.dispatchEvent(new Event('change'));
+                        } 
+                        else if(preset.type == '@((int)RecurringType.Month)') {
+                            // Check if "All" is selected
+                            if (preset.dayToGenerate == "0") {
+                                // If type is Day (1)
+                                const allMonthsCheckbox = document.getElementById('allMonths');
+                                if (allMonthsCheckbox) {
+                                    allMonthsCheckbox.checked = true;
+                                    // Disable individual month checkboxes
+                                    document.querySelectorAll('.month-checkbox').forEach(cb => {
+                                        cb.checked = true;
+                                        cb.disabled = true;
+                                    });
+                                }
+                            }else
+                            {   const selectedDays = preset.dayToGenerate.split(',').map(day => day.trim());
+                                // Check individual checkboxes based on values
+                                selectedDays.forEach(day => {
+                                    const checkbox = document.querySelector(`input[name="DaytoGenerate"][value="${day}"]`);
+                                    if (checkbox) {
+                                        checkbox.checked = true;
+                                    }
+                                });
+                            }                            
+                        } 
+                        
+                        // Setup form validation
+                        setupFormValidation(true);
+                        
+
+                    } else {
+                        modalInstance.hide();
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.message || 'Failed to load preset details',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function() {
+                    modalInstance.hide();
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to load preset details. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+        function deleteSetting(patternId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This notification preset will be permanently deleted!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Proceed with deletion
+            $.ajax({
+                url: '/RecurringPreset/AjaxDelete',
+                type: 'POST',
+                data: { id: patternId },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'The notification preset has been deleted.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // Reload the presets grid
+                            loadPresets();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.message || 'Failed to delete the preset.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Failed to delete the preset. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+    });
+}
+
+        function setupCheckboxControls() {
+            // Day Selection
+            const allDaysCheckbox = document.getElementById('allDays');
+            const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+
+            allDaysCheckbox.addEventListener('change', function() {
+                dayCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    checkbox.disabled = this.checked;  // Disable individual checkboxes when "All" is selected
+                });
+                updateDaytoGenerateHidden();  // Update hidden input
+            });
+
+            dayCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(dayCheckboxes).every(cb => cb.checked);
+                    const anyChecked = Array.from(dayCheckboxes).some(cb => cb.checked);
+                    allDaysCheckbox.checked = allChecked;
+                    allDaysCheckbox.indeterminate = anyChecked && !allChecked;
+                    updateDaytoGenerateHidden();  // Update hidden input
+                });
+            });
+
+            // Month Selection
+            const allMonthsCheckbox = document.getElementById('allMonths');
+            const monthCheckboxes = document.querySelectorAll('.month-checkbox');
+
+            allMonthsCheckbox.addEventListener('change', function() {
+                monthCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    checkbox.disabled = this.checked;  // Disable individual checkboxes when "All" is selected
+                });
+                updateDaytoGenerateHidden();  // Update hidden input
+            });
+
+            monthCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(monthCheckboxes).every(cb => cb.checked);
+                    const anyChecked = Array.from(monthCheckboxes).some(cb => cb.checked);
+                    allMonthsCheckbox.checked = allChecked;
+                    allMonthsCheckbox.indeterminate = anyChecked && !allChecked;
+                    updateDaytoGenerateHidden();  // Update hidden input
+                });
+            });
+        }
+
+        // Add this function to handle checkbox changes
+        function updateDaytoGenerateHidden() {
+            const selectedDays = Array.from(document.querySelectorAll('input[name="DaytoGenerate"]:checked'))
+                .map(cb => cb.value)
+                .join(',');
+            
+            document.getElementById('DaytoGenerateHidden').value = selectedDays || '0';
+        }
+
+        // Add event listeners to all checkboxes
+        document.querySelectorAll('input[name="DaytoGenerate"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateDaytoGenerateHidden);
+        });
+
+        // Function to reset form and checkboxes while preserving select all functionality
+        function resetForm() {
+            // Reset all checkboxes and their states
+            const allDaysCheckbox = document.getElementById('allDays');
+            const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+            const allMonthsCheckbox = document.getElementById('allMonths');
+            const monthCheckboxes = document.querySelectorAll('.month-checkbox');
+
+            // Reset days section
+            allDaysCheckbox.checked = false;
+            allDaysCheckbox.indeterminate = false;
+            dayCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;  // Re-enable all checkboxes
+            });
+
+            // Reset months section
+            allMonthsCheckbox.checked = false;
+            allMonthsCheckbox.indeterminate = false;
+            monthCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = false;  // Re-enable all checkboxes
+            });
+
+            // Reset hidden input
+            document.getElementById('DaytoGenerateHidden').value = '';
+
+            // Reset patternId if it exists
+            const patternIdInput = document.getElementById('patternId');
+            if (patternIdInput) {
+                patternIdInput.value = '';
+            }
+
+            // Re-setup the checkbox controls to ensure proper functionality
+            setupCheckboxControls();
+        }
+
+        // Update your modal close handler
+        document.getElementById('presetModal').addEventListener('hidden.bs.modal', function () {
+            resetForm();
+        });
+
+        // Add click handler for cancel button
+        document.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function() {
+            resetForm();
+        });
+
+    </script>
+}

@@ -1,0 +1,46 @@
+﻿namespace StudentTaskManagement.wwwroot.css
+/* Filter Dropdown Colors 
+    #statusFilter option[value="notstarted"] {
+        color: #495057;
+    }
+
+    #statusFilter option[value="inprogress"] {
+        color: #228be6;
+    }
+
+    #statusFilter option[value="completed"] {
+        color: #40c057;
+    }
+
+    #statusFilter option[value="onhold"] {
+        color: #fab005;
+    }
+
+    #statusFilter option[value="cancelled"] {
+        color: #fa5252;
+    }
+
+    #statusFilter option[value="rescheduled"] {
+        color: #fd7e14;
+    }
+
+    #priorityFilter option[value="critical"] {
+        color: #dc3545;
+    }
+
+    #priorityFilter option[value="high"] {
+        color: #ff4d4d;
+    }
+
+    #priorityFilter option[value="medium"] {
+        color: #ffc107;
+    }
+
+    #priorityFilter option[value="low"] {
+        color: #28a745;
+    }
+
+    #priorityFilter option[value="trivial"] {
+        color: #6c757d;
+    }
+    */

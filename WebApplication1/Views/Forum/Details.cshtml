@@ -1,0 +1,247 @@
+@model StudentTaskManagement.ViewModels.ForumDetailsViewModel
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Forum Post -->
+            <div class="card mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h1 class="card-title h2">@Model.Title</h1>
+                        @if (Model.IsAuthor)
+                        {
+                            <div class="action-buttons">
+                                <a href="@Url.Action("EditTopic", new { id = Model.Id })" 
+                                   class="btn btn-link text-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-link text-danger" 
+                                        onclick="confirmDelete(@Model.Id)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="post-meta mb-4">
+                        <div class="d-flex align-items-center">
+                            <img src="https://ui-avatars.com/api/?name=@Model.AuthorName&background=random" 
+                                 class="rounded-circle me-2" 
+                                 alt="@Model.AuthorName" 
+                                 width="32" 
+                                 height="32">
+                            <span class="text-primary fw-bold">@Model.AuthorName</span>
+                            <span class="text-muted mx-2">•</span>
+                            <span class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                    </div>
+
+                    <div class="post-content mb-4">
+                        @Html.Raw(Model.Content)
+                    </div>
+
+                    <div class="post-tags">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="badge rounded-pill tag-badge">
+                                <i class="fas fa-tag me-1"></i>@tag
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="card-title h4 mb-4">Comments</h3>
+
+                    <!-- Add Comment Form -->
+                    <form id="commentForm" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <textarea id="commentContent" class="form-control" 
+                                    rows="3" placeholder="Write a comment..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Add Comment
+                        </button>
+                    </form>
+
+                    <!-- Comments List -->
+                    <div id="commentsList">
+                        <!-- Comments will be loaded here -->
+                    </div>
+
+                    <!-- Load More Comments -->
+                    <div class="text-center mt-4" id="loadMoreContainer" style="display: none;">
+                        <button id="loadMoreComments" class="btn btn-outline-primary">
+                            Load More Comments
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .post-content {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .tag-badge {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            font-weight: 500;
+        }
+
+        .comment {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+
+        .comment:last-child {
+            border-bottom: none;
+        }
+
+        .action-buttons .btn-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons .btn-link:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let hasMoreComments = false;
+
+        // Load initial comments when page loads
+        $(document).ready(function() {
+            loadComments(1);
+        });
+
+        // Load comments function
+        function loadComments(page) {
+            $.ajax({
+                url: '@Url.Action("GetComments", "Forum")',
+                type: 'GET',
+                data: {
+                    topicId: @Model.Id,
+                    page: page,
+                    pageSize: pageSize
+                },
+                success: function(response) {
+                    const comments = response.comments;
+                    hasMoreComments = response.hasMore;
+                    
+                    if (page === 1) {
+                        $('#commentsList').empty();
+                    }
+
+                    comments.forEach(comment => {
+                        $('#commentsList').append(createCommentHtml(comment));
+                    });
+
+                    $('#loadMoreContainer').toggle(hasMoreComments);
+                    currentPage = page;
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load comments'
+                    });
+                }
+            });
+        }
+
+        // Load more comments button handler
+        $('#loadMoreComments').click(function() {
+            loadComments(currentPage + 1);
+        });
+
+        // Create HTML for a single comment
+        function createCommentHtml(comment) {
+            return `
+                <div class="comment">
+                    <div class="d-flex align-items-start">
+                        <img src="https://ui-avatars.com/api/?name=${comment.authorName}&background=random" 
+                             class="rounded-circle me-2" 
+                             alt="${comment.authorName}" 
+                             width="32" 
+                             height="32">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="fw-bold">${comment.authorName}</span>
+                                    <small class="text-muted ms-2">${comment.createdAt}</small>
+                                </div>
+                                ${comment.isAuthor ? `
+                                    <div class="comment-actions">
+                                        <button class="btn btn-link text-danger p-0" 
+                                                onclick="deleteComment(${comment.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="comment-content">${comment.content}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Optional: Delete comment function
+        function deleteComment(commentId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteComment", "Forum")',
+                        type: 'POST',
+                        data: {
+                            commentId: commentId,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire(
+                                    'Deleted!',
+                                    'Your comment has been deleted.',
+                                    'success'
+                                );
+                                loadComments(1); // Reload first page
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message || 'Failed to delete comment',
+                                    'error'
+                                );
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+} 

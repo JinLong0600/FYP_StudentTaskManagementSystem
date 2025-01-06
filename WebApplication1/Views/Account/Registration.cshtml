@@ -1,0 +1,625 @@
+﻿@model StudentTaskManagement.ViewModels.L1StudentsViewModel;
+@using static StudentTaskManagement.Utilities.GeneralEnum;
+
+@{
+    ViewData["Title"] = "Registration";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        /* Modern Datepicker Styling */
+        .ui-datepicker {
+            background: #fff;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 10px;
+            width: 300px;
+        }
+
+        .ui-datepicker-header {
+            background: #f8f9fa;
+            border: none;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .ui-datepicker-title {
+            color: #212529;
+            font-weight: 600;
+        }
+
+        .ui-datepicker-prev, .ui-datepicker-next {
+            cursor: pointer;
+        }
+
+        .ui-datepicker select.ui-datepicker-month,
+        .ui-datepicker select.ui-datepicker-year {
+            width: 45%;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin: 0 2px;
+            height: auto;
+        }
+
+        .ui-datepicker th {
+            color: #495057;
+            font-weight: 600;
+            padding: 8px;
+        }
+
+        .ui-datepicker td {
+            padding: 2px;
+        }
+
+            .ui-datepicker td span, .ui-datepicker td a {
+                text-align: center;
+                padding: 8px;
+                border-radius: 4px;
+                border: none !important;
+                background: transparent !important;
+                color: #212529 !important;
+            }
+
+                .ui-datepicker td a:hover {
+                    background: #e9ecef !important;
+                }
+
+                .ui-datepicker td a.ui-state-active {
+                    background: #0d6efd !important;
+                    color: #fff !important;
+                }
+
+                .ui-datepicker td a.ui-state-highlight {
+                    background: #f8f9fa !important;
+                    border: 1px solid #0d6efd !important;
+                }
+
+            /* Disabled dates */
+            .ui-datepicker td.ui-state-disabled {
+                opacity: 0.3;
+            }
+
+        /* Input styling */
+        .datepicker {
+            background-color: #fff !important;
+            cursor: pointer;
+        }
+
+        /* Calendar icon container */
+        .input-group-text {
+            background-color: #fff;
+            border-color: #ced4da;
+            color: #6c757d;
+        }
+
+            .input-group-text:hover {
+                background-color: #f8f9fa;
+                cursor: pointer;
+            }
+
+        .invalid-feedback {
+            display: block;
+            font-size: 0.875rem;
+            color: #dc3545;
+        }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+            .is-invalid:focus {
+                border-color: #dc3545;
+                box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+            }
+    </style>
+}
+
+<div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <!-- Header -->
+                <div class="card-header text-white text-center py-4">
+                    <h3 class="mb-0 fw-bold">Student Registration</h3>
+                </div>
+
+                <div class="card-body p-4">
+                    <form id="registrationForm" method="post" asp-action="Register" asp-controller="Account" enctype="multipart/form-data">
+                        <!-- Account Information -->
+                        <h5 class="h5-subtitle mb-4">Account Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="Username" class="form-label fw-semibold lb-required">Username</label>
+                                <input type="text" class="form-control" name="Username" id="Username">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="EmailAddress" class="form-label fw-semibold lb-required">Email Address</label>
+                                <input type="email" class="form-control" name="EmailAddress" id="EmailAddress">
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="Password" class="form-label fw-semibold lb-required">Password</label>
+                                <input type="password" class="form-control" name="Password" id="Password">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="ConfirmPassword" class="form-label fw-semibold lb-required">Confirm Password</label>
+                                <input type="password" class="form-control" name="ConfirmPassword" id="ConfirmPassword">
+                            </div>
+                        </div>
+
+                        <hr />
+                        <!-- Personal Information -->
+                        <h5 class="mb-4 mt-4">Personal Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="FirstName" class="form-label fw-semibold lb-required">First Name</label>
+                                <input type="text" class="form-control" name="FirstName" id="FirstName">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="LastName" class="form-label fw-semibold lb-required">Last Name</label>
+                                <input type="text" class="form-control" name="LastName" id="LastName">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="DOB" class="form-label fw-semibold lb-required">Date of Birth</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control datepicker" name="DOB" id="DOB" readonly>
+                                    <span class="input-group-text" style="cursor: pointer;">
+                                        <i class="fas fa-calendar"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Gender" class="form-label fw-semibold lb-required">Gender</label>
+                                <div class="custom-dropdown">
+                                    <select class="form-select" name="Gender" id="Gender">
+                                        <option value="" selected>- Please Select -</option>
+                                        <option value="@((int)Gender.Male)">Male</option>
+                                        <option value="@((int)Gender.Female)">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Guardian Information Section -->
+                        <div id="guardianSection" style="display: none;">
+                            <hr />
+                            <h5 class="mb-4 mt-4">Guardian Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="GuardianName" class="form-label fw-semibold lb-required">Guardian Name</label>
+                                    <input type="text" class="form-control guardian-field" name="GuardianName" id="GuardianName">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="GuardianContact" class="form-label fw-semibold lb-required">Guardian Contact Number</label>
+                                    <input type="tel" class="form-control guardian-field" name="GuardianContactNumber" id="GuardianContactNumber">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label for="GuardianEmail" class="form-label fw-semibold lb-required">Guardian Email</label>
+                                    <input type="email" class="form-control guardian-field" name="GuardianEmailAddress" id="GuardianEmailAddress">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="GuardianRelationship" class="form-label fw-semibold lb-required">Guardian Relationship</label>
+                                    <div class="custom-dropdown">
+                                        <select class="form-select" name="GuardianRelationship" id="GuardianRelationship">
+                                            <option value="" selected>- Please Select -</option>
+                                            <option value="@((int)GuardianRelationship.Parent)">Parent</option>
+                                            <option value="@((int)GuardianRelationship.Grandparent)">Grandparent</option>
+                                            <option value="@((int)GuardianRelationship.Guardian)">Guardian</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <!-- Educational Information -->
+                        <h5 class="mb-4 mt-4">Educational Information</h5>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="EducationStage" class="form-label fw-semibold lb-required">Education Stage</label>
+                                <div class="custom-dropdown">
+                                    <select class="form-select" name="EducationStage" id="EducationStage" onchange="updateEducationalYear()">
+                                        <option value="" selected>- Please Select -</option>
+                                        <option value="@((int)EducationStage.Primary)">Primary</option>
+                                        <option value="@((int)EducationStage.Secondary)">Secondary</option>
+                                        <option value="@((int)EducationStage.HighEducation)">High Education</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="EducationalYear" class="form-label fw-semibold lb-required">Educational Year</label>
+                                <div class="custom-dropdown">
+                                    <select class="form-select" name="EducationalYear" id="EducationalYear">
+                                        <option value="" selected>- Please Select -</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="InstitutionName" class="form-label fw-semibold lb-required">Institution Name</label>
+                                <input type="text" class="form-control" name="InstitutionName" id="InstitutionName">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">Register</button>
+                        </div>
+                    </form>
+
+                    <!-- Login Link -->
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a asp-action="Login" class="text-accent-blue fw-bold text-decoration-none">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function checkAge() {
+            const dobInput = document.getElementById('DOB');
+            const guardianSection = document.getElementById('guardianSection');
+            const guardianFields = document.getElementsByClassName('guardian-field');
+
+            // Return early if no date is selected
+            if (!dobInput || !dobInput.value) {
+                return;
+            }
+
+            // Parse the date string (assuming format is dd-mm-yyyy from datepicker)
+            const [day, month, year] = dobInput.value.split('-').map(num => parseInt(num, 10));
+            const dob = new Date(year, month - 1, day); // month is 0-based in JavaScript
+
+            // Validate date
+            if (isNaN(dob.getTime())) {
+                console.error('Invalid date format');
+                return;
+            }
+
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+
+            // Check if birthday hasn't occurred this year
+            if (today.getMonth() < dob.getMonth() || 
+                (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            // Update guardian section visibility and field requirements
+            if (age < 12) {
+                guardianSection.style.display = 'block';
+                // Make guardian fields required
+                Array.from(guardianFields).forEach(field => {
+                    field.required = true;
+                });
+            } else {
+                guardianSection.style.display = 'none';
+                // Remove required attribute
+                Array.from(guardianFields).forEach(field => {
+                    field.required = false;
+                    field.value = ''; // Clear the values
+                });
+            }
+        }
+
+        // Check age on page load in case of form validation failure
+        document.addEventListener('DOMContentLoaded', checkAge);
+
+        function updateEducationalYear() {
+            const educationStage = document.getElementById('EducationStage');
+            const educationalYear = document.getElementById('EducationalYear');
+
+            // Clear existing options
+            educationalYear.innerHTML = '<option value="" selected>- Please Select -</option>';
+
+            if (!educationStage.value) return;
+
+            const stage = parseInt(educationStage.value);
+            let maxYears;
+            let suffix;
+
+            // Determine max years based on education stage
+            switch (stage) {
+                case @((int)EducationStage.Primary):
+                case @((int)EducationStage.Secondary):
+                    maxYears = 6;
+                    suffix = 'Year';
+                    break;
+                case @((int)EducationStage.HighEducation):
+                    maxYears = 4;
+                    suffix = 'Year';
+                    break;
+                default:
+                    return;
+            }
+
+            // Add year options
+            for (let i = 1; i <= maxYears; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+
+                // Special handling for 1st, 2nd, 3rd, etc.
+                let yearText;
+                if (i === 1) yearText = '1st';
+                else if (i === 2) yearText = '2nd';
+                else if (i === 3) yearText = '3rd';
+                else yearText = `${i}th`;
+
+                option.text = `${yearText} ${suffix}`;
+                educationalYear.appendChild(option);
+            }
+        }
+
+        $(document).ready(function() {
+            $("#registrationForm").on("submit", function(e) {
+                e.preventDefault();
+                validateForm();
+                if ($(this).valid()) {
+                    var formData = $(this).serialize();
+                    
+                    $.ajax({
+                        url: this.action,
+                        type: "POST",
+                        data: formData,
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: response.title,
+                                    text: response.message,
+                                    icon: "success",
+                                    confirmButtonText: "OK"
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = "/Account/Login";  // Redirect to login page
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: response.title,
+                                    text: response.message,
+                                    icon: "error",
+                                    confirmButtonText: "OK"
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                title: "Error!",
+                                text: "An unexpected error occurred. Please try again.",
+                                icon: "error",
+                                confirmButtonText: "OK"
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        function validateForm() {
+            $.validator.addMethod("checkUsername", function(value, element) {
+                var isValid = false;
+                $.ajax({
+                    url: '/Account/AjaxCheckDuplicateUsername',
+                    type: 'POST',
+                    async: false, // Synchronous call for validation
+                    data: { username: value },
+                    success: function(response) {
+                        if (response.success) {
+                            isValid = !response.isDuplicate;
+                            if (response.isDuplicate) {
+                                $.validator.messages.checkUsername = response.message;
+                            }
+                        }
+                    }
+                });
+                return isValid;
+            }, "This username is already taken");
+            
+            // Add custom validation method
+            $.validator.addMethod("checkEmail", function(value, element) {
+                var isValid = false;
+                $.ajax({
+                    url: '/Account/AjaxCheckDuplicateEmail',
+                    type: 'POST',
+                    async: false, // Synchronous call for validation
+                    data: { email: value },
+                    success: function(response) {
+                        if (response.success) {
+                            isValid = !response.isDuplicate;
+                            if (response.isDuplicate) {
+                                $.validator.messages.checkUsername = response.message;
+                            }
+                        }
+                    }
+                });
+                return isValid;
+            }, "This email address is already taken");
+
+            $("#registrationForm").validate({
+                rules: {
+                    Username: {
+                        required: true,
+                        checkUsername: true,
+                        maxlength: 50
+                    },
+                    EmailAddress: {
+                        required: true,
+                        checkEmail: true,
+                        email: true
+                    },
+                    Password: {
+                        required: true,
+                        minlength: 6
+                    },
+                    ConfirmPassword: {
+                        required: true,
+                        equalTo: "#Password"
+                    },
+                    FirstName: {
+                        required: true,
+                        minlength: 2
+                    },
+                    LastName: {
+                        required: true,
+                        minlength: 2
+                    },
+                    DOB: {
+                        required: true
+                    },
+                    Gender: {
+                        required: true
+                    },
+                    PhoneNumber: {
+                        required: true,
+                        pattern: "^[0-9]{10}$"  // Adjust pattern as needed
+                    },
+                    EducationStage: {
+                        required: true
+                    },
+                    EducationalYear: {
+                        required: true
+                    },
+                    InstitutionName: {
+                        required: true
+                    },
+                    GuardianName: {
+                        required: true
+                    },
+                    GuardianContactNumber: {
+                        required: true
+                    },
+                    GuardianEmailAddress: {
+                        required: true
+                    },
+                    GuardianRelationship: {
+                        required: true
+                    }
+                },
+                messages: {
+                    Username: {
+                        required: "Please enter a username",
+                        minlength: "Username must be at least 3 characters",
+                        maxlength: "Username cannot exceed 50 characters"
+                    },
+                    EmailAddress: {
+                        required: "Please enter your email address",
+                        email: "Please enter a valid email address"
+                    },
+                    Password: {
+                        required: "Please enter a password",
+                        minlength: "Password must be at least 6 characters"
+                    },
+                    ConfirmPassword: {
+                        required: "Please confirm your password",
+                        equalTo: "Passwords do not match"
+                    },
+                    PhoneNumber: {
+                        required: "Please enter your phone number",
+                        pattern: "Please enter a valid phone number"
+                    }
+                },
+                errorElement: 'span',
+                errorClass: 'invalid-feedback',
+                highlight: function(element, errorClass, validClass) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function(element, errorClass, validClass) {
+                    $(element).removeClass('is-invalid');
+                },
+                errorPlacement: function(error, element) {
+                    error.insertAfter(element);
+                }
+            });
+
+            // Add dynamic validation for guardian fields
+            function updateGuardianValidation() {
+                if ($("#guardianSection").is(":visible")) {
+                    $("#GuardianName, #GuardianContact, #GuardianEmail, #GuardianRelationship").rules("add", {
+                        required: true
+                    });
+                } else {
+                    $("#GuardianName, #GuardianContact, #GuardianEmail, #GuardianRelationship").rules("remove");
+                }
+            }
+
+            // Call when age check happens
+            $("#DOB").change(function() {
+                updateGuardianValidation();
+            });
+        }
+
+        
+        // Run on page load in case of form validation failure
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('EducationStage').value) {
+                updateEducationalYear();
+
+                // If there's a previously selected value, restore it
+                const previousValue = '@Model?.EducationalYear';
+                if (previousValue) {
+                    document.getElementById('EducationalYear').value = previousValue;
+                }
+            }
+            // Check if jQuery is loaded
+            if (typeof jQuery != 'undefined') {
+                // Initialize datepicker
+                $('.datepicker').datepicker({
+                    dateFormat: 'dd-mm-yy',
+                    changeMonth: true,
+                    changeYear: true,
+                    yearRange: '-80:+0', // Allow selection from 100 years ago to current year
+                    maxDate: new Date(new Date().getFullYear() - 6, 11, 31), // Set max date to Dec 31st of 6 years ago
+                    onSelect: function (dateText) {
+                        if (typeof checkAge === 'function') {
+                            checkAge();
+                        }
+                    },
+                    beforeShow: function(input, inst) {
+                        // Add custom class for styling
+                        setTimeout(function() {
+                            inst.dpDiv.find('.ui-datepicker-year').addClass('year-dropdown');
+                        }, 0);
+                    }
+                });
+            } else {
+                console.error('jQuery is not loaded!');
+            }
+        });
+    </script>
+}
+
+<style>
+    .ui-datepicker {
+        font-size: 14px;
+        z-index: 1000;
+    }
+
+        .ui-datepicker select.ui-datepicker-month,
+        .ui-datepicker select.ui-datepicker-year {
+            width: 45%;
+            padding: 2px;
+            height: auto;
+        }
+
+    .input-group-text {
+        border-left: none;
+    }
+</style>
+

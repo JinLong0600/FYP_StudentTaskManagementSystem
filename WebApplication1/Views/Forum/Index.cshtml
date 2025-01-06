@@ -1,0 +1,385 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@model List<StudentTaskManagement.ViewModels.L1DiscussionsViewModel>;
+
+<div class="container mt-4">
+    <!-- Forum Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="display-5 mb-0">Discussion Forum</h4>
+            <p class="text-muted">Join the conversation with our community</p>
+        </div>
+            <div>
+                <a href="@Url.Action("CreateForum", "Forum")" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> New Forum
+                </a>
+            </div>
+    </div>
+
+    <!-- Search and Sort Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search discussions...">
+                        <button class="btn btn-primary">Search</button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-sort"></i> Sort
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forum Categories -->
+    <div id="forumCategories" class="forum-categories">
+        @foreach (var forum in Model)
+        {
+            <div class="card mb-3 forum-card" id="forum-@forum.ForumId">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="d-flex align-items-center mb-2">
+                                <h5 class="mb-0">
+                                    <a href="@Url.Action("Topics", "Forum", new { id = forum.ForumId })"
+                                       class="text-decoration-none text-dark fw-bold">
+                                        @forum.Title
+                                    </a>
+                                </h5>
+                                <span class="badge rounded-pill bg-primary ms-2">New</span>
+                                <span class="badge rounded-pill bg-light text-dark ms-2">
+                                    <i class="fas fa-comments"></i> @forum.CommentCount
+                                </span>
+                            </div>
+                            <p class="text-muted mb-2">@forum.Description</p>
+                            <div class="tags-container">
+                                @foreach (var tag in forum.Tags)
+                                {
+                                    <span class="badge rounded-pill tag-badge">
+                                        <i class="fas fa-tag me-1"></i>@tag
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                                <div class="latest-post">
+                                    <small class="text-muted d-block mb-1">
+                                        Posted by
+                                    </small>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://ui-avatars.com/api/?name=@forum.CreatedByStudentId&background=random"
+                                             class="rounded-circle me-2" 
+                                             alt="@forum.CreatedByStudentId" 
+                                             width="32" 
+                                             height="32">
+                                        <div>
+                                            <div class="fw-bold text-truncate" style="max-width: 200px;">
+                                                @forum.CreatedByStudentId
+                                            </div>
+                                            <small class="text-muted">
+                                                <span title="@forum.CreatedDateTime.ToString("MMM dd, yyyy HH:mm")">
+                                                    @GetTimeAgo(forum.CreatedDateTime)
+                                                </span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-center mt-4 mb-4">
+        <nav aria-label="Forum navigation">
+            <ul class="pagination" id="forumPagination">
+                <!-- Pagination will be generated here -->
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@functions {
+    public string GetTimeAgo(DateTime dateTime)
+    {
+        var span = DateTime.Now - dateTime;
+        
+        if (span.TotalMinutes < 2) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+        return dateTime.ToString("MMM dd");
+    }
+}
+
+@section Styles {
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        /* Card Styling */
+        .forum-card {
+            border: 1px solid rgba(0,0,0,.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .forum-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Latest Post */
+        .latest-post {
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .latest-post:hover {
+            background-color: rgba(0,0,0,.03);
+            transition: all 0.2s ease;
+        }
+
+        /* Badge Styling */
+        .badge.rounded-pill {
+            font-size: 0.75rem;
+            padding: 0.35em 0.8em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.bg-primary {
+            background: var(--bg-gradient) !important;
+        }
+
+        /* Search Bar */
+        .input-group {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+        }
+
+        .input-group-text {
+            border: none;
+            background-color: white;
+            padding-left: 20px;
+        }
+
+        .input-group .form-control {
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+        }
+
+        .input-group .btn-primary {
+            background: var(--bg-gradient);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 0;
+        }
+
+        .input-group .btn-outline-secondary {
+            border-color: #e2e8f0;
+            color: #64748b;
+            padding: 12px 24px;
+            border-radius: 0;
+            border-left: none;
+        }
+
+        .input-group .btn-outline-secondary:hover {
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+
+        /* Description Text */
+        .text-muted {
+            line-height: 1.5;
+        }
+
+        /* Tags Styling */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .tag-badge {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            padding: 0.35em 0.8em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tag-badge:hover {
+            background: rgba(79, 70, 229, 0.15);
+            transform: translateY(-1px);
+        }
+
+        /* Comment Count Badge */
+        .badge.bg-light {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0;
+            padding: 0.35em 0.8em;
+        }
+
+        .badge.bg-light i {
+            color: #64748b;
+            margin-right: 0.25rem;
+        }
+
+        /* Pagination Styling */
+        .pagination .page-link {
+            color: var(--primary-color);
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--bg-gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #94a3b8;
+            background-color: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+
+        .pagination .page-link:hover:not(.disabled) {
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // Load posts when page loads
+        $(document).ready(function() {
+            loadForumPosts(currentPage);
+        });
+
+        function loadForumPosts(page) {
+            $.ajax({
+                url: '@Url.Action("GetForumPosts", "Forum")',
+                type: 'GET',
+                data: {
+                    page: page,
+                    pageSize: pageSize,
+                    searchTerm: $('#searchInput').val(),
+                    sortOrder: getCurrentSortOrder()
+                },
+                success: function(response) {
+                    // Update posts
+                    $('#forumCategories').html(response.html);
+                    
+                    // Update pagination
+                    updatePagination(response.totalPages, page);
+                    
+                    // Update current page
+                    currentPage = page;
+                },
+                error: function(error) {
+                    console.error('Error loading forum posts:', error);
+                }
+            });
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            const pagination = $('#forumPagination');
+            pagination.empty();
+
+            // Previous button
+            pagination.append(`
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage - 1}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                pagination.append(`
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `);
+            }
+
+            // Next button
+            pagination.append(`
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${currentPage + 1}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `);
+
+            // Add click handlers
+            $('.page-link').click(function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page && !$(this).parent().hasClass('disabled')) {
+                    loadForumPosts(page);
+                }
+            });
+        }
+
+        function getCurrentSortOrder() {
+            // Implement your sort logic here
+            return 'newest'; // or other sort options
+        }
+
+        // Search handler
+        let searchTimeout;
+        $('#searchInput').on('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                loadForumPosts(currentPage);
+            }, 500);
+        });
+
+        // Sort handler
+        $('.btn-sort').click(function() {
+            currentPage = 1;
+            loadForumPosts(currentPage);
+        });
+    </script>
+}

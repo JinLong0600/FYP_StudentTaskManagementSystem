@@ -1,0 +1,1359 @@
+/* ==========================================================================
+   CSS VARIABLES
+   Define all color schemes and reusable values
+========================================================================== */
+:root {
+    --primary-blue: #2B4865; /* Main brand color - used for primary actions and highlights */
+    --secondary-blue: #256D85; /* Secondary brand color - used for hover states and accents */
+    --third-blue: #6d89b4; /* Secondary brand color - used for hover states and accents */
+    --dark-blue: #000957; /* Used for high contrast elements */
+    --accent-blue: #1A4B6E; /* Used for interactive elements and call-to-actions */
+    --bg-blue: #DFF5FF; /* Main background color */
+    --text-dark: #2A2A2A; /* Primary text color */
+}
+
+/* ==========================================================================
+   BASE STYLES
+   Basic styling for HTML elements
+========================================================================== */
+body {
+    background: var(--bg-blue);
+    color: var(--text-dark);
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   LAYOUT COMPONENTS
+   Grid system and container modifications
+========================================================================== */
+.container-fluid {
+    max-width: none;
+    padding-right: 2rem;
+    padding-left: 2rem;
+}
+
+.row {
+    margin-right: -1rem;
+    margin-left: -1rem;
+}
+
+.col-md-3 {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+/* ==========================================================================
+   SIDEBAR STYLES
+   Styling for the main navigation sidebar
+========================================================================== */
+.sidebar {
+    transition: width 0.3s ease;
+    width: 250px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    background-color: #8CD4EB !important;
+    border-radius: 15px;
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar.collapsed .menu-text {
+    display: none;
+}
+
+/* User Profile Section in Sidebar */
+.user-profile {
+    padding: 1rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    background-color: #41A6C6;
+}
+
+.user-profile:hover {
+    background-color: var(--accent-blue);
+}
+
+.profile-icon {
+    color: var(--bg-blue);
+}
+
+.profile-info {
+    line-height: 1.2;
+}
+
+/* ==========================================================================
+   NAVIGATION STYLES
+   Styling for navigation links and menus
+========================================================================== */
+.nav-link {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    padding: 8px 15px;
+    font-weight: bold;
+    background-color: #57A5BE;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav-link:hover, 
+.nav-link.active:hover {
+    background-color: var(--accent-blue);
+    color: white;
+}
+
+.nav-link.active {
+    background-color: var(--dark-blue);
+    color: white;
+}
+
+.nav-link.nav-item-danger {
+    background-color: #A92B2B;
+}
+
+.nav-link.nav-item-danger:hover {
+    background-color: #B24848;
+}
+
+/* Settings Submenu Styles */
+.setting-toggle {
+    color: var(--bg-blue) !important;
+}
+
+.setting-toggle[aria-expanded="true"] {
+    background-color: var(--dark-blue) !important;
+    color: white !important;
+}
+
+.setting-arrow {
+    transition: transform 0.3s ease;
+    color: inherit;
+}
+
+.setting-toggle[aria-expanded="true"] .setting-arrow {
+    transform: rotate(90deg);
+}
+
+/* ==========================================================================
+   MAIN CONTENT AREA
+   Styles for the main content section
+========================================================================== */
+.main-content {
+    /*border: solid 3px red !important;*/
+    margin-left: 265px;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+    width: auto;
+    padding: 1.5rem 6rem 1.5rem 2rem;
+    max-width: 2200px;
+    background-color: var(--bg-blue);
+}
+
+.main-content.expanded {
+    margin-left: 75px;
+}
+
+/* ==========================================================================
+   FORM ELEMENTS
+   Styling for all form inputs and controls
+========================================================================== */
+.form-control {
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(43, 72, 101, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    color: black;
+    font-size: 1rem;
+}
+
+.form-control:focus,
+.custom-dropdown:focus .form-select {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: var(--secondary-blue) !important;
+    box-shadow: 0 0 0 6px rgba(37, 109, 133, 0.2);
+    color: var(--text-dark);
+    border-radius: 15px;
+}
+
+.form-control:hover,
+.custom-dropdown:hover,
+.form-select:hover {
+    background-color: white !important;
+    border: 1px solid var(--secondary-blue);
+    border-radius: 15px;
+}
+
+.form-control::placeholder {
+    color: #B2BEB5;
+}
+
+.form-control-lg {
+    padding: 12px;
+}
+
+.form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+/* ==========================================================================
+   BUTTON STYLES
+   All button variations and states
+========================================================================== */
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: var(--secondary-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+    .btn-primary:hover {
+        background: var(--primary-blue);
+    }
+
+
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: #64748b;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+
+    .btn-secondary:hover {
+        background-color: #e2e8f0;
+        color: #4b5563;
+    }
+
+.btn-outline-primary {
+    border: 1px solid var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-blue);
+        border-color: var(--primary-blue);
+        color: white;
+    }
+
+.btn-dark {
+    background: var(--primary-blue);
+    border: none;
+    color: white;
+}
+
+    .btn-dark:hover {
+        background: var(--secondary-blue);
+        color: white;
+    }
+
+/* Create Button */
+.btn-create {
+    background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+    color: white;
+    transition: all 0.3s ease;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+}
+
+    .btn-create:hover {
+        background: linear-gradient(135deg, var(--secondary-blue), var(--dark-blue));
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
+    }
+
+
+
+/* ==========================================================================
+   CUSTOM COMPONENTS
+   Specific styling for custom UI components
+========================================================================== */
+.user-input-col-5 {
+    background: white;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(43, 72, 101, 0.1);
+    border-radius: 20px;
+    padding: 2.5rem;
+}
+
+.search-filter-container {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ==========================================================================
+   TEXT AND LINK STYLES
+   Typography and link styling
+========================================================================== */
+.text-accent-blue {
+    color: var(--accent-blue) !important;
+}
+
+.text-muted {
+    color: #566573 !important;
+}
+
+.text-light-emphasis {
+    opacity: 0.8;
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   Helper classes and misc styles
+========================================================================== */
+.sub-nav-link {
+    font-size: 0.9rem;
+    padding-left: 1rem !important;
+    background-color: rgba(88 182 221, 0.2) !important;
+    color: white !important;
+}
+
+.sub-nav-link:hover {
+    background-color: rgba(88 182 221, 0.2) !important;
+    color: white !important;
+}
+
+.sub-nav-link.active {
+    background-color: var(--dark-blue) !important;
+    color: white !important;
+}
+
+#settingsSubmenu {
+    transition: all 0.3s ease;
+}
+
+/* ==========================================================================
+   MAIN CONTENT OVERWRITE
+   Helper classes and misc styles
+========================================================================== */
+.main-content.parent-content {
+    margin-left: 20rem;
+    padding: 1.5rem 1rem 1.5rem 1rem !important;
+}
+
+.main-content.child-content {
+    
+    margin-left: 0px !important;
+}
+
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Icon styles for different statuses */
+.status-notstarted i {
+    @apply fas fa-circle-dot;
+}
+
+.status-completed i {
+    @apply fas fa-check-circle;
+}
+
+.status-onhold i {
+    @apply fas fa-pause-circle;
+}
+
+.status-cancelled i {
+    @apply fas fa-times-circle;
+}
+
+.status-rescheduled i {
+    @apply fas fa-clock;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* Row animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+tbody tr {
+    opacity: 0;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+
+/* Animation for Options */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .preset-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .pagination {
+        gap: 0.25rem;
+    }
+
+    .page-link {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .timing-pills {
+        flex-direction: column;
+    }
+
+        .timing-pills .btn {
+            width: 100%;
+        }
+}
+
+/* Pulse Animations */
+@keyframes pulse-warning {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse-urgent {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Pulse animation for due today */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.2);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+    }
+}
+
+.lb-required::after {
+    content: " *"; /* Adds the asterisk */
+    color: red; /* Makes it red */
+}
+
+
+/* Card Styling */
+.card {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    border-radius: 25px;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--secondary-blue), var(--dark-blue));
+}
+
+.card-body {
+    padding: 2.5rem;
+    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
+}
+
+/* Section Headers - More playful style */
+.h5-subtitle {
+    margin-bottom: 1.5rem;
+}
+
+/* File Input Styling */
+input[type="file"].form-control {
+    padding: 0.75rem 1.25rem;
+}
+
+/* Form Section Spacing */
+/*form > div:not(:last-child) {
+    margin-bottom: 2rem;
+}*/
+
+/* Login Link Container */
+.text-center.mt-4 {
+    margin-top: 2rem !important;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Error State */
+.form-control.is-invalid {
+    border-color: var(--bs-danger);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 16px;
+}
+
+/* Success State */
+.form-control.is-valid {
+    border-color: var(--bs-success);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 16px;
+}
+
+.custom-dropdown .form-select {
+    padding: 0.65rem 1.25rem;
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    background-color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+    .custom-dropdown .form-select option {
+        padding: 12px;
+        background-color: white;
+        color: #333;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* Dropdown menu animation */
+    .custom-dropdown .form-select option {
+        opacity: 0;
+        animation: slideIn 0.2s ease forwards;
+    }
+
+    /* Add icons to options */
+    .custom-dropdown .form-select option {
+        padding: 12px 15px;
+        margin: 2px 0;
+        transition: all 0.2s ease;
+    }
+
+        .custom-dropdown .form-select option:checked {
+            background-color: #f0f7ff;
+            color: var(--bs-primary);
+        }
+
+
+
+/* ==========================================================================
+   1. Layout & Container Styles
+   ========================================================================== */
+/* Update existing container styles */
+.main-content.child-content {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ==========================================================================
+   2. Task Card Styles
+   ========================================================================== */
+/* Task Card Title */
+.card-title {
+    color: #343a40;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Task Card Description */
+.card-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.25;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Show only 3 lines */
+    -webkit-box-orient: vertical;
+    flex: 1;
+}
+
+/* Task card updates to match the simpler design */
+.task-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 22rem; /* Fixed height */
+    overflow: hidden;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.2s ease;
+}
+.task-card.priority-trivial {
+    border-left: 7px solid #78909C; /* Example for critical priority */
+}
+
+.task-card.priority-low {
+    border-left: 7px solid #43A047; /* Example for critical priority */
+}
+
+.task-card.priority-medium {
+    border-left: 7px solid #FFA33B; /* Example for critical priority */
+}
+
+.task-card.priority-high {
+    border-left: 7px solid #DC3545; /* Example for critical priority */
+}
+
+.task-card.priority-critical {
+    border-left: 7px solid black; /* Example for critical priority */
+}
+
+    .task-card:hover {
+        border-color: #C7CBCF;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+    }
+    
+
+/* Task Header (Title and Status) */
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem; /* Space for priority badge */
+    margin-bottom: 1rem;
+}
+
+
+
+/* ==========================================================================
+   3. Task Content Styles
+   ========================================================================== */
+.task-details-content {
+    color: #495057;
+}
+/* Add this CSS for task description container */
+.task-description {
+    min-height: 65px; /* Fixed height for description area */
+    margin: 0.8rem 0 1rem 0; /* Add margin top and bottom */
+    padding: 0 0.5rem; /* Add some padding on sides */
+}
+
+/* Due Date Pill Styles */
+.task-due-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    margin-bottom: 0.5rem;
+}
+
+    .task-due-pill i {
+        font-size: 0.875rem;
+    }
+
+    /* Due Date Status Colors */
+    .task-due-pill.deadline-safe {
+        background-color: #e7f5ff;
+        color: #4c6ef5;
+    }
+
+    .task-due-pill.deadline-warning {
+        background-color: #fff9db;
+        color: #fab005;
+    }
+
+    .task-due-pill.deadline-urgent {
+        background-color: #fff5f5;
+        color: #fa5252;
+        animation: pulse-urgent 1s infinite;
+    }
+
+    .task-due-pill.completed {
+        background-color: #ebfbee;
+        color: #40c057;
+    }
+
+
+/* ==========================================================================
+   4. Tab Navigation Styles
+   ========================================================================== */
+/* Tab Navigation Styles - Design A */
+.simple-tabs {
+    margin-bottom: 2rem;
+}
+
+.tab-links {
+    display: flex;
+    gap: 2rem;
+    padding: 0;
+    margin-bottom: -1px;
+}
+
+.tab-link {
+    text-decoration: none;
+    color: #6c757d;
+    padding: 1rem 0.5rem;
+    font-weight: 500;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+    .tab-link:hover {
+        color: #0d6efd;
+    }
+
+    .tab-link.active {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+
+        .tab-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0d6efd;
+        }
+
+.task-count {
+    font-size: 0.8rem;
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    color: #6c757d;
+}
+
+.tab-link.active .task-count {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+}
+
+
+
+/* ==========================================================================
+   5. Progress Bar Styles
+   ========================================================================== */
+.subtask-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.subtask-info {
+    font-size: 0.875rem;
+    color: #495057;
+    font-weight: 500;
+}
+    .subtask-info.no-subtask {
+        font-size: 0.75rem;
+        font-style: italic;
+        color: #94979a;
+        font-weight: 400;
+        text-align: center  ;
+    }
+
+.subtask-ratio {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Progress Bar Styles */
+.progress {
+    height: 8px;
+    background-color: #e1e1e1;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    background: linear-gradient(to right, #748ffc, #4c6ef5);
+    border-radius: 10px;
+}
+    /* Normal Progress (Deadline not close) */
+    .progress-bar.deadline-safe {
+        background: linear-gradient(to right, #4c6ef5, #4263eb);
+        box-shadow: 0 0 10px rgba(76, 110, 245, 0.3);
+    }
+
+    /* Warning Progress (Deadline approaching - within 3 days) */
+    .progress-bar.deadline-warning {
+        background: linear-gradient(to right, #fab005, #f59f00);
+        box-shadow: 0 0 10px rgba(250, 176, 5, 0.3);
+        animation: pulse-warning 2s infinite;
+    }
+
+    /* Urgent Progress (Deadline very close - within 1 day) */
+    .progress-bar.deadline-urgent {
+        background: linear-gradient(to right, #ff6b6b, #fa5252);
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        animation: pulse-urgent 1s infinite;
+    }
+
+    /* Completed Progress */
+    .progress-bar.completed {
+        background: linear-gradient(to right, #40c057, #37b24d);
+        box-shadow: 0 0 10px rgba(64, 192, 87, 0.3);
+    }
+
+
+
+
+/* ==========================================================================
+   6. Task Header & Section Styles
+   ========================================================================== */
+/* Section Titles */
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #495057;
+    padding-bottom: 0.5rem;
+    margin-left: -0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* ==========================================================================
+   7. Pagination Styles
+   ========================================================================== */
+/* Pagination Styles */
+.pagination-container {
+    margin: 2rem 0;
+}
+
+.pagination .page-link {
+    border: none;
+    padding: 8px 16px;
+    color: #6c757d;
+    border-radius: 8px;
+    margin: 0 4px;
+    transition: all 0.2s ease;
+}
+
+    .pagination .page-link:hover {
+        background-color: #e9ecef;
+        transform: translateY(-1px);
+    }
+
+.pagination .page-item.active .page-link {
+    font-weight: 600;
+    background-color: var(--dark-blue);
+    color: white;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.page-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.page-item:not(.active):not(.disabled) .page-link:hover::after {
+    transform: scaleX(1);
+}
+
+/* Pagination icons */
+.page-link i {
+    font-size: 0.875rem;
+}
+
+
+/* ==========================================================================
+   9. Badge & Status Styles
+   ========================================================================== */
+/* Priority Badge (Black pill) */
+.priority-badge {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    padding: 4px 24px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.priority-badge-modal {
+    background-color: #212529;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.priority-badge.priority-critical {
+    color: white;
+    background-color: black;
+}
+
+.priority-badge.priority-high {
+    color: white;
+    background-color: #DC3545;
+}
+
+.priority-badge.priority-medium {
+    color: white;
+    background-color: #FFA33B;
+}
+
+.priority-badge.priority-low {
+    color: white;
+    background-color: #43A047;
+}
+.priority-badge.priority-trivial {
+    color: white;
+    background-color: #78909C;
+}
+
+/* Add new modal-specific priority badge styles */
+.priority-badge-modal.priority-critical {
+    color: #fa5252;
+}
+
+.priority-badge-modal.priority-high {
+    color: #ff6b6b;
+}
+
+.priority-badge-modal.priority-medium {
+    color: #fab005;
+}
+
+.priority-badge-modal.priority-low {
+    color: #40c057;
+}
+
+/* Priority Colors */
+.priority-badge-modal.priority-high {
+    background-color: #fff0f0;
+    color: #ff6b6b;
+    border-color: transparent;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    color: #495057;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+}
+
+.status-badge-modal {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    color: #495057;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+}
+
+    /* Status Colors */
+
+    .status-badge.status-notstarted {
+        background-color: #e6e6e6;
+        color: #495057;
+        font-weight: 700;
+        border-color: transparent;
+    }
+
+    .status-badge.status-inprogress {
+        background-color: #c4e5fd;
+        color: #00549d;
+        font-weight: 700;
+        border-color: transparent;
+    }
+
+    .status-badge.status-completed {
+        background-color: #b9ffc6;
+        color: #18892d;
+        font-weight: 700;
+        border-color: transparent;
+    }
+
+    .status-badge.status-onhold {
+        background-color: #fbeca1;
+        color: #d96f00;
+        font-weight: 700;
+        border-color: transparent;
+    }
+    .status-badge.status-overdue {
+        background-color: #d01f1f;
+        color: #ffeeee;
+        font-weight: 700;
+        border-color: transparent;
+    }
+
+/* Notification Badge */
+.notification-badge {
+    background: #e7f5ff;
+    color: #228be6;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+}
+/* ==========================================================================
+   10. Dropdown & Action Styles
+   ========================================================================== */
+
+.dropdown-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.dropdown-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.dropdown-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   11. Subtask Styles
+   ========================================================================== */
+
+/* Progress and Subtask Section */
+.progress-section {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   12. Utility Styles
+   ========================================================================== */
+
+/* Separator Line */
+.task-separator {
+    margin: 0.75rem 0;
+    border-top: 1px solid #000000;
+}
+
+.separator {
+    margin: 0 12px;
+    color: #adb5bd;
+}
+
+.status-priority-line {
+    display: inline-flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 4px 8px;
+}
+
+
+/* ==========================================================================
+   13. Preset Grip for Notification & Recurring
+   ========================================================================== */
+/* Preset Grid */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+/* Preset Card */
+.preset-card {
+    cursor: pointer;
+    background: white;
+    border-radius: 0px 16px 16px 0px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    border-left: 15px double #dc3545;
+    border-top: 1px solid #c2c2c2;
+    border-bottom: 1px solid #c2c2c2;
+    border-right: 1px solid #c2c2c2;
+    transition: all 0.3s ease;
+}
+
+    .preset-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow);
+    }
+
+.notification-preset-card {
+    cursor: pointer;
+    background: white;
+    border-radius: 0px 16px 16px 0px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    border-left: 25px double #0098c8;
+    transition: all 0.3s ease;
+}
+
+.recurring-pattern-card {
+    cursor: pointer;
+    background: white;
+    border-radius: 10px 16px 16px 0px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    border-top: 10px groove #0098c8;
+    border-left: 10px groove #0098c8;
+    transition: all 0.3s ease;
+}
+
+
+/* Preset Header */
+.preset-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Preset Content */
+.preset-type {
+    font-size: 1.1rem;
+    color: var(--third-blue);
+    font-weight: 500;
+    font-style: italic;
+}
+
+.preset-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.preset-description {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Preset Footer */
+.preset-footer {
+    border-top: 2px dashed #e2e8f0;
+    padding-top: 0.5rem;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.preset-usage {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+.form-check-input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 6px rgba(37, 109, 133, 0.2);
+}
+
+/* Modal Styling */
+
+.modal-title.title-white {
+    color: white;
+}
+
+.modal-content.notification-modal-content {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header.notification-modal-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #4FAECE, #1A4B6E);
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-body.notification-modal-body {
+    padding: 1.5rem;
+}
+
+/* Date pill styles */
+.date-pill-notification-preset {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+    .date-pill-notification-preset i {
+        color: #64748b;
+    }
+
+    /* Due today styling */
+    .date-pill-notification-preset.due-today {
+        background-color: #fee2e2; /* Light red background */
+        color: #dc2626; /* Red text */
+        animation: pulse 2s infinite;
+    }
+
+/* BTN ICON */
+
+/* Add this to your existing <style> section */
+.btn-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 8px;
+    border: 2px groove;
+    background: transparent;
+    color: #64748b;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 2px;
+}
+
+    .btn-icon:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-icon.edit-btn:hover {
+        background-color: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .btn-icon.delete-btn:hover {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .btn-icon i {
+        font-size: 1rem;
+    }

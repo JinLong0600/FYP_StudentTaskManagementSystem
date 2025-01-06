@@ -1,0 +1,130 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using StudentTaskManagement.Models
+@using static StudentTaskManagement.Utilities.GeneralEnum;
+
+@inject SignInManager<L1Students> signInManager;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites/dist/jsuites.min.css" type="text/css" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="content-wrapper">
+        <nav class="sidebar position-fixed start-0 top-0 h-100 bg-light py-3 transition-all mx-3 my-3 rounded-4"
+             style="width: 275px; @(ViewBag.ActiveMenu == "LoginRegistration" ? "display: none;" : "")" id="sidebar">
+            <div class="d-flex flex-column h-100">
+                <!-- Logo -->
+                <div class="user-profile px-3 mb-3">
+                    <a href="/Account/EditProfile" class="text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <div class="profile-icon me-3">
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </div>
+                            <div class="profile-info">
+                                <span class="fw-bold text-light">Greeting,</span> <br />
+                                <span class="fw-bold text-light">John Doe</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                <ul class="nav flex-column px-3">
+                    <li class="nav-item mb-1">
+                        <a class="nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "Home" ? "active" : string.Empty)" href="/home/index">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a class="nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "Tasks" ? "active" : string.Empty)" href="/task/index">
+                            <i class="fas fa-tasks me-2"></i>Tasks
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a class="nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "Forums" ? "active" : string.Empty)" href="/forum/index">
+                            <i class="fas fa-tasks me-2"></i>Forums
+                        </a>
+                    </li>
+                    <li class="nav-item mb-1">
+                        <a class="nav-link d-flex align-items-center py-2 setting-toggle @(ViewBag.ActiveMenu == "Notification" || ViewBag.ActiveMenu == "Recurring" || ViewBag.ActiveMenu == "EditProfile" ? string.Empty : "collapsed")"
+                           data-bs-toggle="collapse"
+                           href="#settingsSubmenu"
+                           role="button"
+                           aria-expanded=@(ViewBag.ActiveMenu == "Notification" || ViewBag.ActiveMenu == "Recurring" || ViewBag.ActiveMenu == "EditProfile" ? "true" : "false")
+                           aria-controls="settingsSubmenu">
+                            <i class="fas fa-cog me-2"></i>
+                            <span class="flex-grow-1">Settings</span>
+                            <i class="fas fa-chevron-right setting-arrow"></i>
+                        </a>
+                        <div class="collapse @(ViewBag.ActiveMenu == "Notification" || ViewBag.ActiveMenu == "Recurring" || ViewBag.ActiveMenu == "EditProfile" ? "show" : string.Empty)" id="settingsSubmenu">
+                            <ul class="nav flex-column ms-3 mt-1">
+                                <li class="nav-item">
+                                    <a class="nav-link sub-nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "Notification" ? "active" : string.Empty)" href="/NotificationPreset/Index">
+                                        <i class="fas fa-bell me-2"></i>Notification Settings
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link sub-nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "Recurring" ? "active" : string.Empty)" href="/RecurringPreset/Index">
+                                        <i class="fas fa-redo me-2"></i>Recurring Task Settings
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link sub-nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "EditProfile" ? "active" : string.Empty)" href="/Account/EditProfile">
+                                        <i class="fas fa-user-edit me-2"></i>Edit Profile
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+
+                <!-- Bottom Items -->
+                <div class="mt-auto mb-3 px-3">
+                    <a class="nav-link nav-item-danger d-flex align-items-center py-2" href="#">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="@(ViewBag.ActiveMenu == "LoginRegistration" ? string.Empty : "main-content parent-content")">
+            @RenderBody()
+        </div>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery-validate/jquery.validate.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
+    <script src="https://unpkg.com/@@popperjs/core@2/dist/umd/popper.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script>
+        document.querySelector('.sidebar').addEventListener('click', function () {
+            this.classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+        });
+    </script>
+    @if (IsSectionDefined("Scripts"))
+    {
+        @RenderSection("Scripts", required: true)
+    }
+    else
+    {
+       @await RenderSectionAsync("Scripts", required: false)
+    }
+</body>
+
+</html>
+

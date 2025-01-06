@@ -1,0 +1,339 @@
+@model StudentTaskManagement.ViewModels.L1DiscussionsViewModel;
+@using static StudentTaskManagement.Utilities.GeneralEnum;
+@{
+    ViewData["Title"] = Model.IsEdit ? "Edit Forum" : "Create Forum";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h2 class="card-title mb-4">@(Model.IsEdit ? "Edit" : "Create New") Forum</h2>
+                    
+                    <form id="createForumForm" method="post" action="@(Model.IsEdit ? "/Forum/Update/" + Model.ForumId : "/Forum/Add")" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label class="form-label lb-required">Title</label>
+                            <input name="Title" id="Title" class="form-control" placeholder="Enter topic title" disabled=@(Model.Status == (int)ForumStatus.Resolved) value="@Model.Title">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label lb-required">Description</label>
+                            <textarea name="Description" id="Description" class="form-control" rows="8"
+                                      placeholder="Write your post description here..." disabled=@(Model.Status == (int)ForumStatus.Resolved)>@Model.Description</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label lb-required">Category</label>
+                            <select name="Category" id="Category" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                <option value="">- Please select-</option>
+                                <option value="@((int)ForumCategory.GeneralDiscussions)" selected=@(Model.Status == (int)ForumCategory.GeneralDiscussions)>General Discussions</option>
+                                <option value="@((int)ForumCategory.HomeworkHelp)" selected=@(Model.Status == (int)ForumCategory.HomeworkHelp)>Homework Help</option>
+                                <option value="@((int)ForumCategory.ExamsTestPrep)" selected=@(Model.Status == (int)ForumCategory.ExamsTestPrep)>Exam Prep</option>
+                                <option value="@((int)ForumCategory.InternshipsVolunteering)" selected=@(Model.Status == (int)ForumCategory.InternshipsVolunteering)>Interships & Volunteering</option>
+                                <option value="@((int)ForumCategory.ScholarshipsFinancialAid)" selected=@(Model.Status == (int)ForumCategory.ScholarshipsFinancialAid)>Scholarships & Financial Aid</option>
+                                <option value="@((int)ForumCategory.QnA)" selected=@(Model.Status == (int)ForumCategory.QnA)>QnA</option>
+                                <option value="@((int)ForumCategory.StudyGroups)" selected=@(Model.Status == (int)ForumCategory.StudyGroups)>Study Groups</option>
+                                <option value="@((int)ForumCategory.PeerAdvice)" selected=@(Model.Status == (int)ForumCategory.PeerAdvice)>Peer Advice</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label lb-required">Tags</label>
+                            <div class="tags-input-wrapper">
+                                <input type="text" id="tagInput" class="form-control" name="TagsInDisplay"
+                                       placeholder="Add tags (press Enter to add)" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                <div id="selectedTags" class="mt-2">
+                                    <!-- Tags will be added here -->
+                                </div>
+                                <input type="hidden" name="LabelTags" id="tagsInput" value="@Model.LabelTags">
+                            </div>
+                        </div>
+                        @if(Model.IsEdit)
+                        {
+                            <div class="mb-4">
+                                <label class="form-label lb-required">Status</label>
+                                <select name="Status" id="Status" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                    <option value="@((int)ForumStatus.Active)" selected=@(Model.Status == (int)ForumStatus.Active)>Active</option>
+                                    <option value="@((int)ForumStatus.Resolved)" selected=@(Model.Status == (int)ForumStatus.Resolved)>Resolved</option>
+                                </select>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Forum
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                <i class="fas fa-paper-plane"></i> @(Model.IsEdit ? "Edit post" : "Post now")
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border-color: #e2e8f0;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+
+        .tags-input-wrapper .tag {
+            display: inline-block;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin: 0 8px 8px 0;
+            font-size: 0.875rem;
+        }
+
+            .tags-input-wrapper .tag .remove-tag {
+                margin-left: 6px;
+                cursor: pointer;
+                opacity: 0.6;
+            }
+
+                .tags-input-wrapper .tag .remove-tag:hover {
+                    opacity: 1;
+                }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Initialize form validation
+        $(document).ready(function() {
+            $("#createForumForm").validate({
+                rules: {
+                    Title: {
+                        required: true,
+                        minWords: 3,
+                    },
+                    Description: {
+                        required: true,
+                        minWords: 15,
+                    },
+                    Category: {
+                        required: true
+                    },
+                    TagsInDisplay: {
+                        tagsRequired: true
+                    }
+                },
+                messages: {
+                    Title: {
+                        minlength: "Title must be at least 5 characters",
+                        maxlength: "Title cannot exceed 100 characters"
+                    },
+                    Description: {
+                        minlength: "Content must be at least 20 characters"
+                    },
+                    Category: {
+                        required: "Please select a category"
+                    },
+                    TagsInDisplay: {
+                        required: "Please add at least one tag"
+                    }
+                },
+                errorElement: 'span',
+                errorClass: 'text-danger',
+                highlight: function(element) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function(element) {
+                    $(element).removeClass('is-invalid');
+                },
+                errorPlacement: function(error, element) {
+                    if (element.attr("id") === "tagInput") {
+                        error.insertAfter(element.closest('.tags-input-wrapper'));
+                    } else {
+                        error.insertAfter(element);
+                    }
+                },
+                submitHandler: function(form) {
+                    // Check word count and tags before submission
+                    const wordCountTitle = $('#Title').val().trim().split(/\s+/).filter(word => word.length > 0).length;
+                    const wordCount = $('#Description').val().trim().split(/\s+/).filter(word => word.length > 0).length;
+                    if (wordCountTitle < 3) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Title must be at least 3 words.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        return false;
+                    }
+                    if (wordCount < 15) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Content must be at least 15 words.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        return false;
+                    }
+
+                    if (tags.length === 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: 'Please add at least one tag.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        return false;
+                    }
+
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Please wait a moment...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit form via AJAX
+                    $.ajax({
+                        url: form.action,
+                        type: 'POST',
+                        data: $(form).serialize(),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    text: 'Your topic has been created successfully.',
+                                    confirmButtonColor: '#4f46e5'
+                                }).then((result) => {
+                                    window.location.href = '@Url.Action("Index", "Forum")';
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Oops...',
+                                    text: response.message || 'Something went wrong!',
+                                    confirmButtonColor: '#4f46e5'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: 'Something went wrong! Please try again.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                        }
+                    });
+
+                    return false; // Prevent default form submission
+                }
+            });
+        });
+
+        // Add custom validation method for minimum words
+        $.validator.addMethod("minWords", function(value, element, params) {
+            return this.optional(element) || value.trim().split(/\s+/).filter(word => word.length > 0).length >= params;
+        }, $.validator.format("Please enter at least {0} words"));
+
+        // Add custom validation method for tags
+        $.validator.addMethod("tagsRequired", function(value, element) {
+            // Check if the hidden tags input has values
+            const hiddenTagsValue = $('#tagsInput').val();
+            return hiddenTagsValue && hiddenTagsValue.length > 0;
+        }, "Please add at least one tag");
+
+        // Initialize tags array with existing tags if any
+        let tags = @Html.Raw(Json.Serialize(Model.LabelTags ?.Split(',').Where(t => !string.IsNullOrEmpty(t)).ToArray() ?? new string[]{}));
+        console.log(tags);
+        // Initialize tags display on page load
+        $(document).ready(function() {
+            updateTags();  // This will display the existing tags
+        });
+
+        $('#tagInput').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tag = $(this).val().trim();
+                
+                if (tag) {
+                    if (tags.length >= 5) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Maximum Tags Reached',
+                            text: 'You can only add up to 5 tags.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        return;
+                    }
+                    
+                    if (!tags.includes(tag)) {
+                        tags.push(tag);
+                        updateTags();
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Duplicate Tag',
+                            text: 'This tag has already been added.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    }
+                }
+                
+                $(this).val('');
+            }
+        });
+
+        function updateTags() {
+            const tagsHtml = tags.map(tag => `
+                <span class="tag">
+                    ${tag}
+                    <span class="remove-tag" data-tag="${tag}">×</span>
+                </span>
+            `).join('');
+            
+            $('#selectedTags').html(tagsHtml);
+            $('#tagsInput').val(tags.join(','));
+
+            // Trigger validation on tag input
+            $('#tagInput').valid();  // This will trigger the validation check
+        }
+
+        $(document).on('click', '.remove-tag', function() {
+            const tagToRemove = $(this).data('tag');
+            tags = tags.filter(tag => tag !== tagToRemove);
+            updateTags();
+        });
+
+        // Prevent form submission on enter key
+        $(document).on('keypress', function(e) {
+            if (e.keyCode === 13 && e.target.nodeName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+    </script>
+}

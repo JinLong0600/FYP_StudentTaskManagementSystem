@@ -1,0 +1,757 @@
+﻿@model StudentTaskManagement.ViewModels.L1TasksViewModel;
+@{
+    ViewData["Title"] = "Task";
+}
+
+<script>
+document.querySelector('.sidebar').addEventListener('click', function() {
+    this.classList.toggle('collapsed');
+    document.querySelector('.main-content').classList.toggle('expanded');
+});
+</script>
+@{
+    string TruncateDescription(string description, int wordCount = 15)
+    {
+        if (string.IsNullOrEmpty(description)) return description;
+        
+        var words = description.Split(' ');
+        if (words.Length <= wordCount) return description;
+        
+        return string.Join(" ", words.Take(wordCount)) + "...";
+    }
+}
+
+
+<!-- Main Content Container -->
+<div class="main-content child-content p-4">
+    <!-- Single Tab Navigation with counts -->
+    <div class="simple-tabs mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="tab-links">
+                <a href="#" class="tab-link active" data-tab="thisWeek" onclick="loadTasks('thisWeek');">
+                    This week's Tasks
+                    <span class="task-count" id="thisWeekTasks"></span>
+                </a>
+                <a href="#" class="tab-link" data-tab="upcoming"  onclick="loadTasks('upcoming');">
+                    Upcoming's Task
+                    <span class="task-count" id="upcomingTask"></span>
+                </a>
+                <a href="#" class="tab-link" data-tab="completed"  onclick="loadTasks('completed');">
+                    Completed
+                    <span class="task-count" id="completedTask"></span>
+                </a>
+            </div>
+            
+            <!-- Add New Task Button -->
+            <button class="btn btn-primary" onclick="window.location.href='@Url.Action("CreateTask", "Task")'">
+                <i class="fas fa-plus me-2"></i>Add New Task
+            </button>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div id="taskContent">
+        <!-- Search and Filter Bar -->
+        <div class="filter-section mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-4">
+                    <input type="text" class="form-control" placeholder="Search tasks...">
+                </div>
+                <div class="col-lg-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Status: All</option>
+                        <option value="notstarted">Not Started</option>
+                        <option value="inprogress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="onhold">On Hold</option>
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <select class="form-select" id="priorityFilter">
+                        <option value="">Priority: All</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="col-lg-2">
+                    <input type="date" class="form-control" placeholder="Due Date">
+                </div>
+                <div class="col-lg-2">
+                    <button class="btn btn-primary w-100">Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Cards Grid -->
+        <div class="row g-4" id="taskGrid">
+
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container mt-4">
+            <nav aria-label="Task pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Task Details Modal -->
+<div class="modal fade" id="taskDetailsModal" tabindex="-1" aria-labelledby="taskDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTaskTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTaskDetails(taskId) {
+        // Get the modal element
+        const modalElement = document.getElementById('taskDetailsModal');
+
+        if (!modalElement) {
+            console.error('Modal element not found');
+            return;
+        }
+
+        try {
+            // Create and show the modal
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } catch (error) {
+            console.error('Error showing modal:', error);
+        }
+    }
+    function getTaskDetails(taskId) {
+        const modalElement = document.getElementById('taskDetailsModal');
+        const modal = new bootstrap.Modal(modalElement);
+        $.ajax({
+            url: `/Task/GetTaskDetails/${taskId}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Update modal title
+                    $('#modalTaskTitle').text(response.data.task.title);
+
+                    // Create modal body content
+                    let modalContent = `
+                        <!-- Quick Actions Row -->
+                        <div class="quick-actions mb-4">
+                            <div class="status-priority-line">
+                                <!-- Status -->
+                                <div class="status-group">
+                                    <span class="status-label me-2">Status:</span>
+                                    <span class="badge status-badge-modal status-${response.data.task.status}" id="taskStatus">
+                                        ${getStatusText(response.data.task.status)}
+                                    </span>
+                                </div>
+
+                                <span class="separator">•</span>
+
+                                <!-- Priority -->
+                                <div class="priority-group">
+                                    <span class="priority-label me-2">Priority:</span>
+                                    <span class="badge priority-badge-modal priority-${response.data.task.priority}" id="taskPriority">
+                                        ${getPriorityText(response.data.task.priority)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="task-description mb-4">
+                            <h6 class="section-title">Description</h6>
+                            <p id="modalTaskDescription" class="description-text">
+                                ${response.data.task.description || 'No description provided'}
+                            </p>
+                        </div>
+
+                        <!-- Task Settings -->
+                        <div class="task-settings mb-4">
+                            <div class="row">
+                                <!-- Notification Preset -->
+                                <div class="col-md-6">
+                                    <div class="setting-card">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-bell me-2"></i>Notification Preset
+                                        </h6>
+                                        <p class="setting-value">
+                                            ${response.data.notificationPreset ? response.data.notificationPreset.name : 'No notification preset'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Recurring Pattern -->
+                                <div class="col-md-6">
+                                    <div class="setting-card">
+                                        <h6 class="section-title">
+                                            <i class="fas fa-redo me-2"></i>Recurring Pattern
+                                        </h6>
+                                        <p class="setting-value">
+                                            ${response.data.recurringPreset ? response.data.recurringPreset.name : 'No recurring pattern'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+
+                        if(response.data.subtasks.length != 0)
+                        {
+                        modalContent += `
+                            <!-- Subtasks Section -->
+                            <div class="subtasks-section">
+                                <h6 class="section-title mb-3">
+                                    Subtasks (${response.data.subtasks.filter(st => st.status === 2).length}/${response.data.subtasks.length} Completed)
+                                </h6>
+                                <div class="subtask-list">
+                                    ${response.data.subtasks.map(subtask => `
+                                        <div class="subtask-item mb-3">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="subtask-main w-100">
+                                                    <h6 class="subtask-title mb-2">${subtask.title}</h6>
+                                                    <div class="subtask-description-container mb-2">
+                                                        <p class="subtask-description">
+                                                            ${subtask.description || 'No description'}
+                                                        </p>
+                                                    </div>
+                                                    <div class="subtask-actions d-flex align-items-center gap-3">
+                                                        <!-- Status Badge -->
+                                                        <div class="status-group">
+                                                            <span class="status-label">Status:</span>
+                                                            <span class="badge status-badge-modal status-${subtask.status}">
+                                                                ${getStatusText(subtask.status)}
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- Priority Badge -->
+                                                        <div class="priority-group">
+                                                            <span class="priority-label">Priority:</span>
+                                                            <span class="badge priority-badge-modal priority-${subtask.priority}">
+                                                                ${getPriorityText(subtask.priority)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                ${subtask.notificationPreset ? `
+                                                    <div class="subtask-notification ms-3">
+                                                        <span class="notification-badge" data-bs-toggle="tooltip" 
+                                                              title="${subtask.notificationPreset.name}">
+                                                            <i class="fas fa-bell"></i>
+                                                        </span>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>`;
+                        }
+                        
+                        let modalFooter = `
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="window.location.href='/Task/CreateTask/${response.data.task.taskId}'">View Full Details</button>
+                        `
+
+                        // Update modal body
+                        $('.modal-body').html(modalContent);
+                        $('.modal-footer').html(modalFooter);
+
+                        // Reinitialize tooltips
+                        $('[data-bs-toggle="tooltip"]').tooltip();
+                        modal.show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('.modal-body').html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error loading task details. Please try again.
+                        </div>
+                    `);
+                    console.error('Error fetching task details:', error);
+                }
+            });
+        }
+
+        // Helper functions for status and priority text
+        function getStatusText(status) {
+            const statusMap = {
+                0: 'Not Started',
+                1: 'In Progress',
+                2: 'Completed',
+                3: 'On Hold'
+            };
+            return statusMap[status] || 'Unknown';
+        }
+
+        function getPriorityText(priority) {
+            const priorityMap = {
+                0: 'Low',
+                1: 'Medium',
+                2: 'High',
+                3: 'Critical'
+            };
+            return priorityMap[priority] || 'Unknown';
+        }
+
+    function loadTasks(type = 'thisweek', page = 1, searchTerm = '', status = '', priority = '') {
+        const taskGrid = document.getElementById('taskGrid');
+        taskGrid.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        
+        const urlMap = {
+            'thisWeek': '/Task/GetThisWeekTasks',
+            'upcoming': '/Task/GetUpcomingTasks',
+            'completed': '/Task/GetCompletedTasks'
+        };
+
+        $.ajax({
+            url: "/Task/GetTasks?type=" + type,
+            type: 'GET',
+            data: {
+                page: page,
+                searchTerm: searchTerm,
+                status: status,
+                priority: priority
+            },
+            success: function (response) {
+                if (response.success) {
+                    taskGrid.innerHTML = '';
+
+                    response.data.tasks.forEach(task => {
+                        const taskCard = createTaskCardItem(task);
+                        taskGrid.insertAdjacentHTML('beforeend', taskCard);
+                    });
+
+                    // Update pagination
+                    updatePagination(response.data.currentPage, response.data.totalPages);
+
+                    // Update task counts in tabs
+                    //getTaskCounts(response.data);
+                } else {
+                    taskGrid.innerHTML = `
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No tasks found
+                                </div>`;
+                }
+            },
+            error: function () {
+                taskGrid.innerHTML = `
+                            <div class="alert alert-danger text-center">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Failed to load tasks. Please try again.
+                            </div>`;
+            }
+        });
+    }
+
+    function updatePagination(type, currentPage, totalPages) {
+        const pagination = document.querySelector('.pagination');
+        let paginationHtml = '';
+        if (totalPages >= 1) {
+            // Previous button
+            paginationHtml += `
+                                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadTasks(${type}, ${currentPage - 1})" tabindex="-1">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            `;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHtml += `
+                                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                                        <a class="page-link" href="#" onclick="loadTasks(${type}, ${i})">${i}</a>
+                                    </li>
+                                `;
+            }
+
+            // Next button
+            paginationHtml += `
+                                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="#" onclick="loadTasks(${type}, ${currentPage + 1})">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            `;
+        }
+        pagination.innerHTML = paginationHtml;
+    }
+
+    function createTaskCardItem(task) {
+        let modelContent = `<div class="col-md-4">
+                                <div class="task-card priority-${task.prioritycss}" onclick="getTaskDetails(${task.id})">
+                                <div class="priority-badge priority-${task.prioritycss}">Priority: ${task.priority}</div>
+                                <div class="task-header">
+                                    <h5 class="card-title">${task.title}</h5>
+                                    <span class="status-badge status-${task.statuscss}">${task.statusDisplay}</span>
+                                </div>
+                                    <!-- Added protective container for description -->
+                                <div class="task-description">
+                                    <p class="card-text">${task.description}</p>
+                                </div>
+                                <!-- Main Task Due Date (as a pill) -->
+                                <div class="task-due-pill ${task.dueDatecss}">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Due : ${task.dueDate}
+                                </div>
+                    `;
+        console.log(task.totalSubtasksCount);
+        if (task.totalSubtasksCount != "0") {
+            modelContent += `<hr class="task-separator">
+
+                                <div class="progress-section">
+                                    <div class="subtask-header">
+                                        <div class="subtask-info">
+                                            <i class="fas fa-tasks"></i> Subtasks
+                                        </div>
+                                        <div class="subtask-ratio"> ${task.completedSubtasksCount} / ${task.totalSubtasksCount} </div>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar ${task.dueDatecss}"
+                                             role="progressbar"
+                                             style="width: ${task.progress}%"
+                                             data-bs-toggle="tooltip"
+                                             data-bs-placement="top">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+        } else {
+            modelContent += `<hr class="task-separator">
+
+                                    <div class="progress-section">
+                                        <div class="subtask-header">
+                                            <div class="subtask-info no-subtask">
+                                                This task doesn't have any Subtasks
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+        }
+        return modelContent;
+    }
+
+    function getTaskCounts() {
+        $.ajax({
+            url: '/Task/GetTaskCount',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Update the task counts in the tabs
+                    $('#thisWeekTasks').text(response.data.thisWeekTask);
+                    $('#upcomingTask').text(response.data.upcomingTask);
+                    $('#completedTask').text(response.data.completedTask);
+                } else {
+                    console.error('Failed to fetch task counts:', response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching task counts:', error);
+                // Optionally show an error message to the user
+                // You could add error indicators to the count displays
+                $('#thisWeekTasks, #upcomingTask, #completedTask').text('-');
+            }
+        });
+    }
+
+    function getTasksByType(type) {
+        // Map of URLs for different task types
+        const urlMap = {
+            'thisWeek': '/Task/GetThisWeekTasks',
+            'upcoming': '/Task/GetUpcomingTasks',
+            'completed': '/Task/GetCompletedTasks'
+        };
+
+        $.ajax({
+            url: urlMap[type],
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Update task list
+                    updateTaskList(response.data.tasks);
+                    // Update count for the specific tab
+                    $(`#${type}Tasks`).text(response.data.count);
+                } else {
+                    console.error(`Failed to fetch ${type} tasks:`, response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(`Error fetching ${type} tasks:`, error);
+                // Show error message in task list
+                $('#taskList').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Failed to load tasks. Please try again.
+                    </div>
+                `);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabLinks = document.querySelectorAll('.tab-link');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                tabLinks.forEach(tab => tab.classList.remove('active'));
+                link.classList.add('active');
+                // In this demo version, we're not loading new content
+            });
+        });
+    });
+
+    document.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Remove active class from all page items
+            document.querySelectorAll('.page-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Add active class to clicked page item's parent
+            if (!link.getAttribute('aria-disabled')) {
+                link.parentElement.classList.add('active');
+            }
+        });
+    });
+
+    // Add filter functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initial load of presets
+        getTaskCounts();
+        // Search input handler
+
+
+        // Type filter handler
+        const statusFilter = document.getElementById('statusFilter');
+        const priorityFilter = document.getElementById('priorityFilter');
+
+        function filterTasks() {
+            const selectedStatus = statusFilter.value;
+            const selectedPriority = priorityFilter.value;
+
+            // Add your filtering logic here
+            console.log('Status:', selectedStatus, 'Priority:', selectedPriority);
+        }
+
+        statusFilter.addEventListener('change', filterTasks);
+        priorityFilter.addEventListener('change', filterTasks);
+
+            // Initial load (default tab - This Week's Tasks)
+            loadTasks('thisWeek');
+
+    });
+
+    // Initialize tooltips if you're using them
+    document.addEventListener('DOMContentLoaded', function () {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const progressBars = document.querySelectorAll('.progress');
+        progressBars.forEach(bar => {
+            const dueDate = new Date(bar.getAttribute('data-due-date'));
+            const subtasks = bar.getAttribute('data-subtasks');
+
+            new bootstrap.Tooltip(bar, {
+                title: `Due: ${dueDate.toLocaleDateString()}\nSubtasks: ${subtasks}`,
+                placement: 'top'
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize all dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl)
+            });
+        });
+    });
+</script>
+
+    <style>
+
+/* ==========================================================================
+   8. Modal Styles
+   ========================================================================== */
+    /* Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #e9ecef;
+        padding: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    /* Preset Cards */
+    .setting-card {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        height: 100%;
+    }
+
+    .setting-value {
+        color: #495057;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    /* Status Priority */
+    .quick-actions {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+    }
+
+    .quick-actions .dropdown {
+        margin-right: 8px;
+    }
+
+    .quick-actions .dropdown-toggle {
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .quick-actions button {
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+
+    /* Subtask Styles */
+    .subtask-item {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .subtask-title {
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .subtask-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+        .subtask-actions .btn {
+            font-size: 0.875rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .subtask-actions select {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .subtask-actions .btn {
+            font-size: 0.875rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .subtask-actions .dropdown-toggle::after {
+            margin-left: 6px;
+        }
+
+    .subtask-description-container {
+        position: relative;
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin: 8px 0;
+        max-height: 80px;
+        overflow-y: auto;
+    }
+
+    .subtask-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    /* Add scrollbar styling for the description container */
+    .subtask-description-container::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .subtask-description-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .subtask-description-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        .subtask-description-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    .subtask-description-container {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 12px;
+    }
+
+</style>
