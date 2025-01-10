@@ -3,21 +3,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using StudentTaskManagement.Models;
 using StudentTaskManagement.ViewModels;
 using Microsoft.EntityFrameworkCore;
-using System;
-using Humanizer.Localisation;
 using StudentTaskManagement.Controllers;
 using Newtonsoft.Json;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
+using Microsoft.AspNetCore.Authorization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.VisualBasic;
-using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-using MailKit.Search;
 
 
 namespace WebApplication1.Controllers
 {
-    public class TaskController : Controller
+    [Authorize]
+    public class TaskController : _BaseController
     {
         private readonly StudentTaskManagementContext dbContext;
         private readonly ILogger<NotificationPresetController> _logger;
@@ -39,9 +37,11 @@ namespace WebApplication1.Controllers
         [Route("Task/CreateTask/{taskId?}")]
         public async Task<IActionResult> CreateTask(int? taskId)
         {
+            L1NotificationPresets defaultNotification = dbContext.L1NotificationPresets.Where(x => x.IsSystemDefault && x.Status == (int)PresetPatternStatus.Active).FirstOrDefault();
+            L1RecurringPatterns defaultRecurring = dbContext.L1RecurringPresets.Where(x => x.IsSystemDefault && x.Status == (int)PresetPatternStatus.Active).FirstOrDefault();
             // Get the list for dropdown and store in ViewBag
-            ViewBag.SelectNotificationPresetList = GetNotificationPreset();
-            ViewBag.SelectRecurringPresetList = GetRecurringPreset();
+            ViewBag.SelectNotificationPresetList = GetNotificationPreset(defaultNotification);
+            ViewBag.SelectRecurringPresetList = GetRecurringPreset(defaultRecurring);
             ViewData["ActiveMenu"] = "Tasks";
 
             if (taskId != null)
@@ -63,16 +63,19 @@ namespace WebApplication1.Controllers
                     Title = task.Title,
                     Category = task.Category,
                     Description = task.Description,
-                    StartDate = task.StartDate,
-                    DueDate = task.DueDate,
+                    StartDate = task.StartDate.ToString("dd-MM-yyyy hh:mm tt"),
+                    DueDate = task.DueDate.ToString("dd-MM-yyyy hh:mm tt"),
                     Priority = task.Priority,
                     Status = task.Status,
                     IsRecurring = task.IsRecurring,
+                    IsParentRecurring = task.IsParentRecurring,
                     L1RecurringPresetId = task.L1RecurringPresetId,
                     DefaultRecurringOptions = task.DefaultRecurringOptions,
                     IsNotification = task.IsNotification,
                     L1NotificationPresetId = task.L1NotificationPresetId,
                     DefaultNotificationOptions = task.DefaultNotificationOptions,
+                    DefaultSystemL1NotificationPresetId = defaultNotification.Id,
+                    DefaultSystemL1RecurringPresetId = defaultRecurring.Id,
                     // Map subtasks
                     SubtasksList = task.L1SubTasks.Select(s => new SubtaskListViewModel
                     {
@@ -81,18 +84,13 @@ namespace WebApplication1.Controllers
                         Category = s.Category,
                         Status = s.Status,
                         Priority = s.Priority,
-                        StartDate = s.StartDate,
-                        DueDate = s.DueDate,
-                        Description = s.Description,
+                        StartDate = s.StartDate.ToString("dd-MM-yyyy hh:mm tt"),
+                        DueDate = s.DueDate.ToString("dd-MM-yyyy hh:mm tt"),
                         IsNotification = s.IsNotification,
                         L1NotificationPresetId = s.L1NotificationPresetId,
                         DefaultNotificationOptions = s.DefaultNotificationOptions
                     }).ToList()
                 };
-
-                // Add any necessary ViewBag data
-                ViewBag.SelectNotificationPresetList = GetNotificationPreset();
-                ViewBag.SelectRecurringPresetList = GetRecurringPreset();
                 
                 return View(viewModel);
             }
@@ -100,6 +98,8 @@ namespace WebApplication1.Controllers
             {
                 var model = new L1TasksViewModel();
                 model.IsEdit = false;
+                model.DefaultSystemL1NotificationPresetId = defaultNotification.Id;
+                model.DefaultSystemL1RecurringPresetId = defaultRecurring.Id;
                 return View(model);
             }
             
@@ -118,15 +118,16 @@ namespace WebApplication1.Controllers
                     Description = viewModel.Description,
                     Priority = viewModel.Priority,
                     Status = viewModel.Status,
-                    StartDate = viewModel.StartDate,
-                    DueDate = viewModel.DueDate,
+                    StartDate = DateTime.Parse(viewModel.StartDate),
+                    DueDate = DateTime.Parse(viewModel.DueDate),
                     IsRecurring = viewModel.IsRecurring,
+                    IsParentRecurring = viewModel.IsRecurring ? true : null,
                     L1RecurringPresetId = viewModel.L1RecurringPresetId,
                     DefaultRecurringOptions = viewModel.DefaultRecurringOptions,
                     IsNotification = viewModel.IsNotification,
                     L1NotificationPresetId = viewModel.L1NotificationPresetId,
                     DefaultNotificationOptions = viewModel.DefaultNotificationOptions,
-                    CreatedByStudentId = "1",//userId,
+                    CreatedByStudentId = LoginStudentId,
                     LastModifiedDateTime = DateTime.Now,
                     DeletionDateTime = DateTime.Now,
                 };
@@ -144,15 +145,14 @@ namespace WebApplication1.Controllers
                             L1TaskId = task.Id, // Use the newly created task's ID
                             Title = item.Title,
                             Category = item.Category,
-                            Description = item.Description,
                             Priority = item.Priority,
                             Status = item.Status,
-                            StartDate = item.StartDate,
-                            DueDate = item.DueDate,
+                            StartDate = DateTime.Parse(item.StartDate),
+                            DueDate = DateTime.Parse(item.DueDate),
                             IsNotification = item.IsNotification,
                             L1NotificationPresetId = viewModel.L1NotificationPresetId,
                             DefaultNotificationOptions = viewModel.DefaultNotificationOptions,
-                            CreatedByStudentId = "1",//userId,
+                            CreatedByStudentId = LoginStudentId,
                             LastModifiedDateTime = DateTime.Now,
                             DeletionDateTime = DateTime.Now,
                             // Add other properties as needed
@@ -191,6 +191,7 @@ namespace WebApplication1.Controllers
             using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
+
                 // Get existing task with its subtasks
                 var existingTask = await dbContext.L1Tasks
                     .Include(t => t.L1SubTasks)
@@ -207,9 +208,12 @@ namespace WebApplication1.Controllers
                 existingTask.Description = viewModel.Description;
                 existingTask.Priority = viewModel.Priority;
                 existingTask.Status = viewModel.Status;
-                existingTask.StartDate = viewModel.StartDate;
-                existingTask.DueDate = viewModel.DueDate;
+                existingTask.StartDate = DateTime.Parse(viewModel.StartDate);
+                existingTask.DueDate = DateTime.Parse(viewModel.DueDate);
                 existingTask.IsRecurring = viewModel.IsRecurring;
+                existingTask.IsParentRecurring = existingTask.IsParentRecurring == false ? false : viewModel.IsRecurring ? true : null;
+                if (existingTask.L1RecurringPresetId != viewModel.L1RecurringPresetId)
+                    existingTask.GeneratedCount = 0;
                 existingTask.L1RecurringPresetId = viewModel.L1RecurringPresetId;
                 existingTask.DefaultRecurringOptions = viewModel.DefaultRecurringOptions;
                 existingTask.IsNotification = viewModel.IsNotification;
@@ -250,11 +254,10 @@ namespace WebApplication1.Controllers
                             {
                                 existingSubtask.Title = subtaskModel.Title;
                                 existingSubtask.Category = subtaskModel.Category;
-                                existingSubtask.Description = subtaskModel.Description;
                                 existingSubtask.Priority = subtaskModel.Priority;
                                 existingSubtask.Status = subtaskModel.Status;
-                                existingSubtask.StartDate = subtaskModel.StartDate;
-                                existingSubtask.DueDate = subtaskModel.DueDate;
+                                existingSubtask.StartDate = DateTime.Parse(subtaskModel.StartDate);
+                                existingSubtask.DueDate = DateTime.Parse(subtaskModel.DueDate);
                                 existingSubtask.IsNotification = subtaskModel.IsNotification;
                                 existingSubtask.L1NotificationPresetId = subtaskModel.L1NotificationPresetId;
                                 existingSubtask.DefaultNotificationOptions = subtaskModel.DefaultNotificationOptions;
@@ -269,15 +272,14 @@ namespace WebApplication1.Controllers
                                 L1TaskId = existingTask.Id,
                                 Title = subtaskModel.Title,
                                 Category = subtaskModel.Category,
-                                Description = subtaskModel.Description,
                                 Priority = subtaskModel.Priority,
                                 Status = subtaskModel.Status,
-                                StartDate = subtaskModel.StartDate,
-                                DueDate = subtaskModel.DueDate,
+                                StartDate = DateTime.Parse(subtaskModel.StartDate),
+                                DueDate = DateTime.Parse(subtaskModel.DueDate),
                                 IsNotification = subtaskModel.IsNotification,
                                 L1NotificationPresetId = subtaskModel.L1NotificationPresetId,
                                 DefaultNotificationOptions = subtaskModel.DefaultNotificationOptions,
-                                CreatedByStudentId = "1",//userId,
+                                CreatedByStudentId = LoginStudentId,
                                 LastModifiedDateTime = DateTime.Now,
                                 DeletionDateTime = DateTime.Now
                             };
@@ -308,7 +310,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        public List<SelectListItem> GetNotificationPreset()
+        public List<SelectListItem> GetNotificationPreset(L1NotificationPresets defaultNotification)
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>();
             // Add default option
@@ -316,7 +318,7 @@ namespace WebApplication1.Controllers
 
             // Get notification presets from database
             var notificationPresets = dbContext.L1NotificationPresets
-                .Where(x => x.CreatedByStudentId == 1)
+                .Where(x => x.CreatedByStudentId == LoginStudentId && x.Status == (int)PresetPatternStatus.Active)
                 .ToList();
 
             if (notificationPresets != null)
@@ -332,11 +334,19 @@ namespace WebApplication1.Controllers
             }
 
             selectListItems.OrderBy(x => x.Text).ToList();
-            selectListItems.Add(new SelectListItem { Text = "Custom", Value = "0" });
-            return selectListItems.OrderBy(x => x.Text).ToList();
+
+            if (defaultNotification != null)
+            {
+                selectListItems.Add(new SelectListItem
+                {
+                    Text = defaultNotification.Name,  // Or whatever field you want to display
+                    Value = defaultNotification.Id.ToString()
+                });
+            }
+            return selectListItems;
         }
 
-        public List<SelectListItem> GetRecurringPreset()
+        public List<SelectListItem> GetRecurringPreset(L1RecurringPatterns defaultRecurring)
         {
             List<SelectListItem> selectListItems = new List<SelectListItem>();
             // Add default option
@@ -344,7 +354,7 @@ namespace WebApplication1.Controllers
 
             // Get notification presets from database
             var recurringPreset = dbContext.L1RecurringPresets
-                .Where(x => x.CreatedByStudentId == 1)  // Optionally filter only active presets
+                .Where(x => x.CreatedByStudentId == LoginStudentId && x.Status == (int)PresetPatternStatus.Active)
                 .ToList();
 
             if (recurringPreset != null)
@@ -359,7 +369,14 @@ namespace WebApplication1.Controllers
                 }
             }
             selectListItems.OrderBy(x => x.Text).ToList();
-            selectListItems.Add(new SelectListItem { Text = "Custom", Value = "0" });
+            if (defaultRecurring != null)
+            {
+                selectListItems.Add(new SelectListItem
+                {
+                    Text = defaultRecurring.Name,  // Or whatever field you want to display
+                    Value = defaultRecurring.Id.ToString()
+                });
+            }
 
             return selectListItems;
         }
@@ -381,16 +398,18 @@ namespace WebApplication1.Controllers
 
 
                 // Initialize query
-                int completedTask = dbContext.L1Tasks.Where(t => t.CreatedByStudentId == "1" && t.Status == (int)ItemTaskStatus.Completed).Count();
+                int completedTask = dbContext.L1Tasks.Where(t => t.CreatedByStudentId == LoginStudentId && t.Status == (int)ItemTaskStatus.Completed).Count();
                 int thisWeekTask = await dbContext.L1Tasks
-                    .Where(t => t.CreatedByStudentId == "1"
-                           && t.Status != (int)ItemTaskStatus.Completed
-                           && t.DueDate >= currentWeekStart
-                           && t.DueDate <= currentWeekEnd)
-                    .CountAsync();
+
+                    .Where(t => t.CreatedByStudentId == LoginStudentId
+                           && t.Status != (int)ItemTaskStatus.Completed &&
+                           (// This week's tasks
+                            (t.DueDate >= currentWeekStart && t.DueDate <= currentWeekEnd) ||
+                            // Overdue tasks (due date is in the past and status is overdue)
+                            (t.DueDate < currentWeekStart && t.Status == (int)ItemTaskStatus.Overdue))).CountAsync();
 
                 int upcomingTask = await dbContext.L1Tasks
-                    .Where(t => t.CreatedByStudentId == "1"
+                    .Where(t => t.CreatedByStudentId == LoginStudentId
                            && t.DueDate > currentWeekEnd  // Tasks due after this week
                            && t.Status != (int)ItemTaskStatus.Completed)
                     .CountAsync();
@@ -426,7 +445,7 @@ namespace WebApplication1.Controllers
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 // Initialize query
-                var query = dbContext.L1Tasks.Include(t => t.L1SubTasks).Where(t => t.CreatedByStudentId == "1"); // TODO: Replace with actual userId
+                var query = dbContext.L1Tasks.Include(t => t.L1SubTasks).Where(t => t.CreatedByStudentId == LoginStudentId); // TODO: Replace with actual userId
 
                 // Get the start and end dates of the current week (Monday to Sunday)
                 var today = DateTime.Today;
@@ -437,13 +456,15 @@ namespace WebApplication1.Controllers
 
                 if (type == "thisWeek")
                 {
-                    query = query.Where(t => t.Status != (int)ItemTaskStatus.Completed
-                                           && t.DueDate >= currentWeekStart
-                                           && t.DueDate <= currentWeekEnd).OrderByDescending(t => t.Priority);
+                    query = query.Where(t => t.Status != (int)ItemTaskStatus.Completed &&
+                                        // This week's tasks
+                                        (t.DueDate >= currentWeekStart && t.DueDate <= currentWeekEnd) ||
+                                        // Overdue tasks (due date is in the past and status is overdue)
+                                        (t.DueDate < currentWeekStart && t.Status == (int)ItemTaskStatus.Overdue)).OrderByDescending(t => t.Priority);
                 }
                 else if (type == "upcoming")
                 {
-                    query = query.Where(t => t.DueDate > currentWeekEnd && t.Status != (int)ItemTaskStatus.Completed).OrderByDescending(t => t.Priority); ;
+                    query = query.Where(t => t.DueDate > currentWeekEnd && t.Status != (int)ItemTaskStatus.Completed).OrderByDescending(t => t.Priority);
                 }
                 else {
                     query = query.Where(t => t.Status == (int)ItemTaskStatus.Completed).OrderByDescending(t => t.Priority);
@@ -490,6 +511,12 @@ namespace WebApplication1.Controllers
                         id = t.Id,
                         title = t.Title,
                         description = string.IsNullOrEmpty(t.Description) ? string.Empty : t.Description,
+                        category = t.Category == (int)ItemTaskCategory.Academic ? "Academic" :
+                        t.Category == (int)ItemTaskCategory.Extracurricular ? "Extracurricular" :
+                        t.Category == (int)ItemTaskCategory.PersonalDevelopment ? "Personal Development" :
+                        t.Category == (int)ItemTaskCategory.Social ? "Social" :
+                        t.Category == (int)ItemTaskCategory.HealthWellness ? "Health & Wellness" : "Miscellaneous",
+
                         statusDisplay = t.Status == (int)ItemTaskStatus.NotStarted ? "Not started" :
                         t.Status == (int)ItemTaskStatus.InProgress ? "In-progress" :
                         t.Status == (int)ItemTaskStatus.Completed ? "Completed" :
@@ -510,12 +537,11 @@ namespace WebApplication1.Controllers
                         t.Priority == (int)PriorityLevel.Medium ? "medium" :
                         t.Priority == (int)PriorityLevel.High ? "high" : "critical",
 
-                        startDate = t.StartDate.HasValue? t.StartDate.Value.ToString("yyyy-MM-dd") : string.Empty,
-                        dueDate = t.DueDate.ToString("yyyy-MM-dd"),
+                        startDate = t.StartDate.ToString("yyyy-MM-dd"),
+                        dueDate = t.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
 
                         dueDatecss = (t.DueDate - DateTime.Now).TotalDays <= 1 ? "deadline-urgent" :
-                        (t.DueDate - DateTime.Now).TotalDays <= 3 ? "deadline-warning" :
-                        (t.L1SubTasks.Count(s => s.Status == (int)ItemTaskStatus.Completed)) == t.L1SubTasks.Count ? "completed": "deadline-safe",
+                        (t.DueDate - DateTime.Now).TotalDays <= 3 ? "deadline-warning" : "deadline-safe",
 
                         isRecurring = t.IsRecurring,
                         recurringPresetId = t.L1RecurringPresetId,
@@ -528,6 +554,13 @@ namespace WebApplication1.Controllers
                             : 0
                     })
                     .ToListAsync();
+                if (tasks.Count == 0)
+                {
+                    return Json(new
+                    {
+                        success = false
+                    });
+                }
 
                 return Json(new
                 {
@@ -545,11 +578,7 @@ namespace WebApplication1.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching tasks");
-                return Json(new
-                {
-                    success = false,
-                    message = "An error occurred while fetching tasks"
-                });
+                return StatusCode(500, new { message = "An unexpected error occurred" });
             }
         }
 
@@ -559,10 +588,10 @@ namespace WebApplication1.Controllers
                 return description;
 
             var words = description.Split(' ');
-            if (words.Length <= 15)
+            if (words.Length <= 20)
                 return description;
 
-            return string.Join(" ", words.Take(15)) + "...";
+            return string.Join(" ", words.Take(20)) + "...";
         }
 
         [HttpGet]
@@ -594,12 +623,37 @@ namespace WebApplication1.Controllers
                     {
                         taskId = existingTask.Id,
                         title = existingTask.Title,
-                        description = string.IsNullOrEmpty(existingTask.Description) ? "No description provided" : existingTask.Description,
-                        category = existingTask.Category,
-                        priority = existingTask.Priority,
-                        status = existingTask.Status,
+                        description = string.IsNullOrEmpty(existingTask.Description) ? null : existingTask.Description,
+                        category = existingTask.Category == (int)ItemTaskCategory.Academic ? "Academic" :
+                        existingTask.Category == (int)ItemTaskCategory.Extracurricular ? "Extracurricular" :
+                        existingTask.Category == (int)ItemTaskCategory.PersonalDevelopment ? "Personal Development" :
+                        existingTask.Category == (int)ItemTaskCategory.Social ? "Social" :
+                        existingTask.Category == (int)ItemTaskCategory.HealthWellness ? "Health & Wellness" : "Miscellaneous",
+
+                        priorityDisplay = existingTask.Priority == (int)PriorityLevel.Trivial ? "Trivial" :
+                        existingTask.Priority == (int)PriorityLevel.Low ? "Low" :
+                        existingTask.Priority == (int)PriorityLevel.Medium ? "Medium" :
+                        existingTask.Priority == (int)PriorityLevel.High ? "High" : "Critical",
+
+                        prioritycss = existingTask.Priority == (int)PriorityLevel.Trivial ? "trivial" :
+                        existingTask.Priority == (int)PriorityLevel.Low ? "low" :
+                        existingTask.Priority == (int)PriorityLevel.Medium ? "medium" :
+                        existingTask.Priority == (int)PriorityLevel.High ? "high" : "critical",
+
+                        statusDisplay = existingTask.Status == (int)ItemTaskStatus.NotStarted ? "Not started" :
+                        existingTask.Status == (int)ItemTaskStatus.InProgress ? "In-progress" :
+                        existingTask.Status == (int)ItemTaskStatus.Completed ? "Completed" :
+                        existingTask.Status == (int)ItemTaskStatus.OnHold ? "On-hold" : "Overdue",
+
+                        statuscss = existingTask.Status == (int)ItemTaskStatus.NotStarted ? "notstarted" :
+                        existingTask.Status == (int)ItemTaskStatus.InProgress ? "inprogress" :
+                        existingTask.Status == (int)ItemTaskStatus.Completed ? "completed" :
+                        existingTask.Status == (int)ItemTaskStatus.OnHold ? "onhold" : "overdue",
+                        isParent = existingTask.IsParentRecurring,
                         startDate = existingTask.StartDate,
-                        dueDate = existingTask.DueDate,
+                        dueDate = existingTask.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
+                        dueDatecss = (existingTask.DueDate - DateTime.Now).TotalDays <= 1 ? "overdue" :
+                        (existingTask.DueDate - DateTime.Now).TotalDays <= 3 ? "soon" : "deadline-safe",
                         isRecurring = existingTask.IsRecurring,
                         recurringPresetId = existingTask.L1RecurringPresetId,
                         defaultRecurringOptions = existingTask.DefaultRecurringOptions,
@@ -611,15 +665,30 @@ namespace WebApplication1.Controllers
                     {
                         id = taskNotificationPreset.Id,
                         name = taskNotificationPreset.Name,
-                        description = taskNotificationPreset.Description,
-                        type = taskNotificationPreset.Type,
+                        description = string.IsNullOrEmpty(taskNotificationPreset.Description) ? null : taskNotificationPreset.Description,
+                        type = taskNotificationPreset.Type == (int)NotificationPresetType.Days ? "Days-based Preset" :
+                         taskNotificationPreset.Type == (int)NotificationPresetType.Mintues ? "Minutes-based Preset" :
+                         existingTask.DefaultNotificationOptions == 1 ? "Minutes-based Preset" :
+                         existingTask.DefaultNotificationOptions == 2 ? "Minutes-based Preset" : "Days-based Preset",
+                        reminderDaysBefore = taskNotificationPreset.ReminderDaysBefore,
+                        reminderHoursBefore = taskNotificationPreset.ReminderHoursBefore,
+                        reminderMinutesBefore = taskNotificationPreset.ReminderMinutesBefore,
+                        reminderTime = taskNotificationPreset.ReminderTime.HasValue ? taskNotificationPreset.ReminderTime.Value.ToString("hh:mm tt") : "",
+                        isDaily = taskNotificationPreset.IsDaily,
+                        isSystemDefault = taskNotificationPreset.IsSystemDefault,
                     } : null,
                     recurringPreset = taskRecurringPreset != null ? new
                     {
                         id = taskRecurringPreset.Id,
                         name = taskRecurringPreset.Name,
-                        description = taskRecurringPreset.Description,
-                        type = taskRecurringPreset.Type,
+                        description = string.IsNullOrEmpty(taskRecurringPreset.Description) ? null : taskRecurringPreset.Description,
+                        type = taskRecurringPreset.Type == (int)RecurringType.Day ? "Recurs by Day(s)" :
+                        taskRecurringPreset.Type == (int)RecurringType.Week ? "Recurs by Week(s)" :
+                        taskRecurringPreset.Type == (int)RecurringType.BiWeek ? "Recurs by Bi-Weeks" :
+                        taskRecurringPreset.Type == (int)RecurringType.Month ? "Recurs by Month(s)" : "Recurs by Bi-Months",
+                        daytoGenerate = getDisplayContext(taskRecurringPreset.Type, taskRecurringPreset.DaytoGenerate),
+                        recurringCount = taskRecurringPreset.RecurringCount,
+                        isSystemDefault = taskNotificationPreset.IsSystemDefault,
                     } : null,
                     subtasks = (await Task.WhenAll(existingTask.L1SubTasks.Select(async st => 
                     {
@@ -631,12 +700,32 @@ namespace WebApplication1.Controllers
                         {
                             id = st.Id,
                             title = st.Title,
-                            description = st.Description,
-                            category = st.Category,
-                            priority = st.Priority,
-                            status = st.Status,
+                            category = st.Category == (int)ItemTaskCategory.Academic ? "Academic" :
+                            st.Category == (int)ItemTaskCategory.Extracurricular ? "Extracurricular" :
+                            st.Category == (int)ItemTaskCategory.PersonalDevelopment ? "Personal Development" :
+                            st.Category == (int)ItemTaskCategory.Social ? "Social" :
+                            st.Category == (int)ItemTaskCategory.HealthWellness ? "Health & Wellness" : "Miscellaneous",
+
+                            priorityDisplay = st.Priority == (int)PriorityLevel.Trivial ? "Trivial" :
+                            st.Priority == (int)PriorityLevel.Low ? "Low" :
+                            st.Priority == (int)PriorityLevel.Medium ? "Medium" :
+                            st.Priority == (int)PriorityLevel.High ? "High" : "Critical",
+                            prioritycss = st.Priority == (int)PriorityLevel.Trivial ? "trivial" :
+                            st.Priority == (int)PriorityLevel.Low ? "low" :
+                            st.Priority == (int)PriorityLevel.Medium ? "medium" :
+                            st.Priority == (int)PriorityLevel.High ? "high" : "critical",
+                            statusDisplay = st.Status == (int)ItemTaskStatus.NotStarted ? "Not started" :
+                            st.Status == (int)ItemTaskStatus.InProgress ? "In-progress" :
+                            st.Status == (int)ItemTaskStatus.Completed ? "Completed" :
+                            st.Status == (int)ItemTaskStatus.OnHold ? "On-hold" : "Overdue",
+                            statuscss = st.Status == (int)ItemTaskStatus.NotStarted ? "notstarted" :
+                            st.Status == (int)ItemTaskStatus.InProgress ? "inprogress" :
+                            st.Status == (int)ItemTaskStatus.Completed ? "completed" :
+                            st.Status == (int)ItemTaskStatus.OnHold ? "onhold" : "overdue",
                             startDate = st.StartDate,
-                            dueDate = st.DueDate,
+                            dueDate = st.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
+                            dueDatecss = (st.DueDate - DateTime.Now).TotalDays <= 1 ? "overdue" :
+                            (st.DueDate - DateTime.Now).TotalDays <= 3 ? "soon" : "deadline-safe",
                             isNotification = st.IsNotification,
                             notificationPresetId = st.L1NotificationPresetId,
                             defaultNotificationOptions = st.DefaultNotificationOptions,
@@ -645,7 +734,13 @@ namespace WebApplication1.Controllers
                                 id = subtaskNotificationPreset.Id,
                                 name = subtaskNotificationPreset.Name,
                                 description = subtaskNotificationPreset.Description,
-                                type = subtaskNotificationPreset.Type,
+                                type = subtaskNotificationPreset.Type == (int)NotificationPresetType.Days ? "Days-based Preset" : "Minutes-based Preset",
+                                reminderDaysBefore = subtaskNotificationPreset.ReminderDaysBefore,
+                                reminderHoursBefore = subtaskNotificationPreset.ReminderHoursBefore,
+                                reminderMinutesBefore = subtaskNotificationPreset.ReminderMinutesBefore,
+                                reminderTime = subtaskNotificationPreset.ReminderTime.HasValue ? subtaskNotificationPreset.ReminderTime.Value.ToString("hh:mm tt") : "",
+                                isDaily = subtaskNotificationPreset.IsDaily,
+                                isSystemDefault = subtaskNotificationPreset.IsSystemDefault,
                             } : null
                         };
                     })
@@ -664,6 +759,183 @@ namespace WebApplication1.Controllers
                 _logger.LogError(ex, "Error occurred while fetching task details");
                 return Json(new { success = false, message = "An error occurred while fetching task details" });
             }
+        }
+
+        public static string getDisplayContext(int type, string dayToGenerate)
+        {
+            string context = string.Empty;
+
+            if (type == (int)RecurringType.Day)
+            {
+                if (dayToGenerate == "0")
+                {
+                    context = "Recurs daily";
+                }
+                else
+                {
+                    context = "Recurs on every ";
+                    if (dayToGenerate.Contains(','))
+                    {
+                        List<string> items = dayToGenerate.Split(',').ToList();
+                        foreach (var item in items)
+                        {
+                            switch (item)
+                            {
+                                case "1":
+                                    context += "Mon, ";
+                                    break;
+                                case "2":
+                                    context += "Tue, ";
+                                    break;
+                                case "3":
+                                    context += "Wed, ";
+                                    break;
+                                case "4":
+                                    context += "Thu, ";
+                                    break;
+                                case "5":
+                                    context += "Fri, ";
+                                    break;
+                                case "6":
+                                    context += "Sat, ";
+                                    break;
+                                case "7":
+                                    context += "Sun, ";
+                                    break;
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        switch (dayToGenerate)
+                        {
+                            case "1":
+                                context = "Monday";
+                                break;
+                            case "2":
+                                context = "Tuesday";
+                                break;
+                            case "3":
+                                context = "Wednesday";
+                                break;
+                            case "4":
+                                context = "Thursday";
+                                break;
+                            case "5":
+                                context = "Friday";
+                                break;
+                            case "6":
+                                context = "Saturday";
+                                break;
+                            case "7":
+                                context = "Sunday";
+                                break;
+
+                        }
+                    }
+                }
+            }
+            else if (type == (int)RecurringType.Week)
+            {
+                if (dayToGenerate == "0")
+                {
+                    context = "Recurs on same day";
+                }
+                else
+                {
+                    switch (dayToGenerate)
+                    {
+                        case "1":
+                            context = "Recurs on weekly' Monday";
+                            break;
+                        case "2":
+                            context = "Recurs on weekly' Tuesday";
+                            break;
+                        case "3":
+                            context = "Recurs on weekly' Wednesday";
+                            break;
+                        case "4":
+                            context = "Recurs on weekly' Thursday";
+                            break;
+                        case "5":
+                            context = "Recurs on weekly' Friday";
+                            break;
+                        case "6":
+                            context = "Recurs on weekly' Saturday";
+                            break;
+                        case "7":
+                            context = "Recurs on weekly' Sunday";
+                            break;
+                    }
+                }
+            }
+            else if (type == (int)RecurringType.BiWeek)
+            {
+                context = "Recurs on every two weeks";
+            }
+            else if (type == (int)RecurringType.Month)
+            {
+                if (dayToGenerate == "0")
+                {
+                    context = "Recurs monthly";
+                }
+                else
+                {
+                    context = "Recurs on every ";
+                    if (dayToGenerate.Contains(','))
+                    {
+                        List<string> items = dayToGenerate.Split(',').ToList();
+                        foreach (var item in items)
+                        {
+                            switch (item)
+                            {
+                                case "1":
+                                    context += "Jan, ";
+                                    break;
+                                case "2":
+                                    context += "Feb, ";
+                                    break;
+                                case "3":
+                                    context += "Mar, ";
+                                    break;
+                                case "4":
+                                    context += "Apr, ";
+                                    break;
+                                case "5":
+                                    context += "May, ";
+                                    break;
+                                case "6":
+                                    context += "Jun, ";
+                                    break;
+                                case "7":
+                                    context += "Jul, ";
+                                    break;
+                                case "8":
+                                    context += "Aug, ";
+                                    break;
+                                case "9":
+                                    context += "Sep, ";
+                                    break;
+                                case "10":
+                                    context += "Oct, ";
+                                    break;
+                                case "11":
+                                    context += "Nov, ";
+                                    break;
+                                case "12":
+                                    context += "Dec, ";
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                context = "Recurring every two months";
+            }
+            return context.TrimEnd(' ').TrimEnd(',');
         }
     }
 

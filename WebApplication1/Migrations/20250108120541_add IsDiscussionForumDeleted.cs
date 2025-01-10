@@ -5,25 +5,25 @@
 namespace StudentTaskManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class category : Migration
+    public partial class addIsDiscussionForumDeleted : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "Category",
-                table: "L1DiscussionForums",
-                type: "int",
+            migrationBuilder.AddColumn<bool>(
+                name: "IsDiscussionForumDeleted",
+                table: "L1DiscussionForumComments",
+                type: "bit",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Category",
-                table: "L1DiscussionForums");
+                name: "IsDiscussionForumDeleted",
+                table: "L1DiscussionForumComments");
         }
     }
 }

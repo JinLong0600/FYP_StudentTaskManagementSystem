@@ -21,7 +21,7 @@ namespace StudentTaskManagement.Models
         [Required]
         public int Gender { get; set; }
 
-        public string? GuardianRelationship { get; set; }
+        public int? GuardianRelationship { get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianEmailAddress { get; set; }
         public string? GuardianContactNumber { get; set; }

@@ -12,57 +12,37 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<L1Students> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        //private readonly IHostingEnvironment hostingEnvironment;
-        //private readonly IDataProtector protector;
         public HomeController(
-            //IHostingEnvironment hostingEnvironment,
             UserManager<L1Students> userManager,
             ILogger<HomeController> logger,
             IWebHostEnvironment webHostEnvironment
-            //IDataProtectionProvider dataProtectionProvider,
-            //DataProtectionPurposeStrings dataProtectionPurposeStrings
             )
         {
             this._userManager = userManager;
             this._logger = logger;
             this._webHostEnvironment = webHostEnvironment;
-            //this.hostingEnvironment = hostingEnvironment;
-            //_logger = logger;
-            //protector = dataProtectionProvider.CreateProtector(dataProtectionPurposeStrings.StudentIdRouteValue);
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             ViewData["ActiveMenu"] = "Home";
             return View();
         }
 
-        public IActionResult Home()
+        public IActionResult EmailContentConfrimation()
         {
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-        public IActionResult Task()
-        {
-            return View();
-        }
-
-        public IActionResult NotificationSetting()
-        {
-            return View();
-        }
-
-        public IActionResult RecurringTaskSetting()
+        public IActionResult EmailContentResetPassword()
         {
             return View();
         }

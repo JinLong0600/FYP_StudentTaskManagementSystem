@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.InteropServices;
 
 namespace StudentTaskManagement.Models
 {
@@ -26,7 +28,7 @@ namespace StudentTaskManagement.Models
 
         public int? ReminderMinutesBefore { get; set; }
 
-        
+
         public DateTime? ReminderTime { get; set; }
 
         public int Status { get; set; } //active //removed
@@ -35,16 +37,20 @@ namespace StudentTaskManagement.Models
         public bool IsDaily { get; set; }
 
         [Required]
-        public int CreatedByStudentId { get; set; }
+        public string CreatedByStudentId { get; set; }
 
         [Required]
         public DateTime LastModifiedDateTime { get; set; }
 
         public DateTime? DeletionDateTime { get; set; }
 
-        public virtual ICollection<L1Tasks> Tasks { get; set; }
-        public virtual ICollection<L1SubTasks> SubTasks { get; set; }
+        [DefaultValue(false)]
+        public bool IsSystemDefault { get; set; }
+
+        public virtual ICollection<L1Tasks> L1Tasks { get; set; }
+        public virtual ICollection<L1SubTasks> L1SubTasks { get; set; }
         public virtual L1Students User { get; set; }
+
     }
 
 

@@ -170,21 +170,21 @@
             <div class="card shadow-lg">
                 <!-- Header -->
                 <div class="card-header text-white text-center py-4">
-                    <h3 class="mb-0 fw-bold">Edit Profile Info</h3>
+                    <h3 class="mb-0 fw-bold"><i class="fas fa-user-edit me-2"></i>Edit Profile Info</h3>
                 </div>
 
                 <div class="card-body p-4">
-                    <form id="registrationForm" method="post" asp-action="UpdateProfile" asp-controller="Account" enctype="multipart/form-data">
+                    <form id="registrationForm" method="post" enctype="multipart/form-data">
                         <!-- Account Information -->
                         <h5 class="h5-subtitle mb-4">Account Information</h5>
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
                                 <label for="Username" class="form-label fw-semibold lb-required">Username</label>
-                                <input type="text" class="form-control" asp-for="Username">
+                                <input type="text" class="form-control" name="Username" id="Username" value="@Model.Username">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="EmailAddress" class="form-label fw-semibold lb-required">Email Address</label>
-                                <input type="email" class="form-control" asp-for="EmailAddress">
+                                <input type="email" class="form-control" name="EmailAddress" id="EmailAddress" value="@Model.EmailAddress">
                             </div>
                         </div>
 
@@ -195,11 +195,11 @@
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
                                 <label for="FirstName" class="form-label fw-semibold lb-required">First Name</label>
-                                <input type="text" class="form-control" asp-for="FirstName">
+                                <input type="text" class="form-control" name="FirstName" id="FirstName" value="@Model.FirstName">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="LastName" class="form-label fw-semibold lb-required">Last Name</label>
-                                <input type="text" class="form-control" asp-for="LastName">
+                                <input type="text" class="form-control" name="LastName" id="LastName" value="@Model.LastName">
                             </div>
                         </div>
 
@@ -207,7 +207,7 @@
                             <div class="col-md-6 mb-3">
                                 <label for="DOB" class="form-label fw-semibold lb-required">Date of Birth</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control datepicker" asp-for="DOB" readonly>
+                                    <input type="text" class="form-control datepicker" readonly name="DOB" id="DOB" value="@Model.DOBDisplay">
                                     <span class="input-group-text" style="cursor: pointer;">
                                         <i class="fas fa-calendar"></i>
                                     </span>
@@ -216,10 +216,10 @@
                             <div class="col-md-6 mb-3">
                                 <label for="Gender" class="form-label fw-semibold lb-required">Gender</label>
                                 <div class="custom-dropdown">
-                                    <select class="form-select" asp-for="Gender">
+                                    <select class="form-select" name="Gender" id="Gender">
                                         <option value="" selected>- Please Select -</option>
-                                        <option value="@((int)Gender.Male)">Male</option>
-                                        <option value="@((int)Gender.Female)">Female</option>
+                                        <option value="@((int)Gender.Male)" selected=@(Model.Gender == (int)Gender.Male)>Male</option>
+                                        <option value="@((int)Gender.Female)" selected=@(Model.Gender == (int)Gender.Female)>Female</option>
                                     </select>
                                 </div>
                             </div>
@@ -228,7 +228,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12 mb-3">
                                 <label for="ProfileImage" class="form-label fw-semibold lb-required">Profile image</label>
-                                <input type="file" class="form-control file-input" asp-for="ProfileImage" accept="image/*" data-show-preview="true">
+                                <input type="file" class="form-control file-input" name="ProfileImage" id="ProfileImage" value="@Model.ProfileImage" accept="image/*" data-show-preview="true">
                             </div>
                         </div>
 
@@ -239,27 +239,27 @@
                             <div class="row mb-3">
                                 <div class="col-md-6 mb-3">
                                     <label for="GuardianName" class="form-label fw-semibold lb-required">Guardian Name</label>
-                                    <input type="text" class="form-control guardian-field" asp-for="GuardianName">
+                                    <input type="text" class="form-control guardian-field" name="GuardianName" id="GuardianName" value="@Model.GuardianName">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="GuardianContact" class="form-label fw-semibold lb-required">Guardian Contact Number</label>
-                                    <input type="tel" class="form-control guardian-field" asp-for="GuardianContactNumber">
+                                    <input type="tel" class="form-control guardian-field" name="GuardianContactNumber" id="GuardianContactNumber" value="@Model.GuardianContactNumber">
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="GuardianEmail" class="form-label fw-semibold lb-required">Guardian Email</label>
-                                    <input type="email" class="form-control guardian-field" asp-for="GuardianEmailAddress">
+                                    <input type="email" class="form-control guardian-field" name="GuardianEmailAddress" id="GuardianEmailAddress" value="@Model.GuardianEmailAddress">
                                 </div>
                                 <div class="col-md-6">
                                     <label for="GuardianRelationship" class="form-label fw-semibold lb-required">Guardian Relationship</label>
                                     <div class="custom-dropdown">
-                                        <select class="form-select" asp-for="GuardianRelationship">
+                                        <select class="form-select" name="GuardianRelationship" id="GuardianRelationship" value="@Model.GuardianRelationship">
                                             <option value="" selected>- Please Select -</option>
-                                            <option value="@((int)GuardianRelationship.Parent)">Parent</option>
-                                            <option value="@((int)GuardianRelationship.Grandparent)">Grandparent</option>
-                                            <option value="@((int)GuardianRelationship.Guardian)">Guardian</option>
+                                            <option value="@((int)GuardianRelationship.Parent)" selected=@(Model.GuardianRelationship.HasValue ? Model.GuardianRelationship.Value == (int)GuardianRelationship.Parent : false)>Parent</option>
+                                            <option value="@((int)GuardianRelationship.Grandparent)" selected=@(Model.GuardianRelationship.HasValue ? Model.GuardianRelationship.Value == (int)GuardianRelationship.Grandparent : false)>Grandparent</option>
+                                            <option value="@((int)GuardianRelationship.Guardian)" selected=@(Model.GuardianRelationship.HasValue ? Model.GuardianRelationship.Value == (int)GuardianRelationship.Guardian : false)>Guardian</option>
                                         </select>
                                     </div>
                                 </div>
@@ -273,25 +273,25 @@
                         <div class="row mb-3">
                             <div class="col-md-12 mb-3">
                                 <label for="InstitutionName" class="form-label fw-semibold lb-required">Institution Name</label>
-                                <input type="text" class="form-control" asp-for="InstitutionName">
+                                <input type="text" class="form-control" name="InstitutionName" id="InstitutionName" value="@Model.InstitutionName">
                             </div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6 mb-3">
                                 <label for="EducationStage" class="form-label fw-semibold lb-required">Education Stage</label>
                                 <div class="custom-dropdown">
-                                    <select class="form-select" asp-for="EducationStage" onchange="updateEducationalYear()">
+                                    <select class="form-select" name="EducationStage" id="EducationStage" value="@Model.EducationStage" onchange="updateEducationalYear()">
                                         <option value="" selected>- Please Select -</option>
-                                        <option value="@((int)EducationStage.Primary)">Primary</option>
-                                        <option value="@((int)EducationStage.Secondary)">Secondary</option>
-                                        <option value="@((int)EducationStage.HighEducation)">High Education</option>
+                                        <option value="@((int)EducationStage.Primary)" selected=@(Model.EducationStage == (int)EducationStage.Primary)>Primary</option>
+                                        <option value="@((int)EducationStage.Secondary)" selected=@(Model.EducationStage == (int)EducationStage.Secondary)>Secondary</option>
+                                        <option value="@((int)EducationStage.HighEducation)" selected=@(Model.EducationStage == (int)EducationStage.HighEducation)>High Education</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="EducationalYear" class="form-label fw-semibold lb-required">Educational Year</label>
                                 <div class="custom-dropdown">
-                                    <select class="form-select" asp-for="EducationalYear">
+                                    <select class="form-select" name="EducationalYear" id="EducationalYear">
                                         <option value="" selected>- Please Select -</option>
                                     </select>
                                 </div>
@@ -300,7 +300,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label for="InstitutionName" class="form-label fw-semibold lb-required">Student Identity Card Image</label>
-                                <input type="file" class="form-control file-input" asp-for="StudentIdentityCard" accept="image/*" data-show-preview="true">
+                                <input type="file" class="form-control file-input" name="StudentIdentityCard" id="StudentIdentityCard" value="@Model.StudentIdentityCard" accept="image/*" data-show-preview="true">
                             </div>
                         </div>
 
@@ -323,9 +323,23 @@
             const guardianSection = document.getElementById('guardianSection');
             const guardianFields = document.getElementsByClassName('guardian-field');
 
-            const dob = new Date(dobInput.value);
+            // Return early if no date is selected
+            if (!dobInput || !dobInput.value) {
+                return;
+            }
+
+            // Parse the date string (assuming format is dd-mm-yyyy from datepicker)
+            const [day, month, year] = dobInput.value.split('-').map(num => parseInt(num, 10));
+            const dob = new Date(year, month - 1, day); // month is 0-based in JavaScript
+
+            // Validate date
+            if (isNaN(dob.getTime())) {
+                console.error('Invalid date format');
+                return;
+            }
+
             const today = new Date();
-            const age = today.getFullYear() - dob.getFullYear();
+            let age = today.getFullYear() - dob.getFullYear();
 
             // Check if birthday hasn't occurred this year
             if (today.getMonth() < dob.getMonth() ||
@@ -333,6 +347,7 @@
                 age--;
             }
 
+            // Update guardian section visibility and field requirements
             if (age < 12) {
                 guardianSection.style.display = 'block';
                 // Make guardian fields required
@@ -364,6 +379,7 @@
             const stage = parseInt(educationStage.value);
             let maxYears;
             let suffix;
+            let selectYearValue = @Model.EducationalYear;
 
             // Determine max years based on education stage
             switch (stage) {
@@ -373,7 +389,7 @@
                     suffix = 'Year';
                     break;
                 case @((int)EducationStage.HighEducation):
-                    maxYears = 4;
+                    maxYears = 3;
                     suffix = 'Year';
                     break;
                 default:
@@ -384,7 +400,10 @@
             for (let i = 1; i <= maxYears; i++) {
                 const option = document.createElement('option');
                 option.value = i;
-
+                if (i == selectYearValue) { 
+                    option.selected = true;
+                }
+                
                 // Special handling for 1st, 2nd, 3rd, etc.
                 let yearText;
                 if (i === 1) yearText = '1st';
@@ -392,7 +411,14 @@
                 else if (i === 3) yearText = '3rd';
                 else yearText = `${i}th`;
 
-                option.text = `${yearText} ${suffix}`;
+                if (i == 3 && stage == @((int)EducationStage.HighEducation)) {
+                    option.text = `${yearText} ${suffix} & Above`;
+                }
+                else {
+                    option.text = `${yearText} ${suffix}`;
+                }
+                
+                
                 educationalYear.appendChild(option);
             }
         }
@@ -473,7 +499,7 @@
                     var formData = new FormData(this);  // Use FormData instead of serialize
                     
                     $.ajax({
-                        url: this.action,
+                        url: "/Account/UpdateProfile",
                         type: "POST",
                         data: formData,
                         processData: false,  // Important for FormData
@@ -487,7 +513,7 @@
                                     confirmButtonText: "OK"
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        window.location.href = "/Account/Login";  // Redirect to login page
+                                        window.location.href = "/Account/EditProfile";  // Redirect to login page
                                     }
                                 });
                             } else {
@@ -519,7 +545,7 @@
                     url: '/Account/AjaxCheckDuplicateUsername',
                     type: 'POST',
                     async: false, // Synchronous call for validation
-                    data: { username: value },
+                    data: { username: value, isEditProfile: true },
                     success: function(response) {
                         if (response.success) {
                             isValid = !response.isDuplicate;
@@ -544,7 +570,7 @@
                     url: '/Account/AjaxCheckDuplicateEmail',
                     type: 'POST',
                     async: false, // Synchronous call for validation
-                    data: { username: value },
+                    data: { email: value, isEditProfile: true },
                     success: function(response) {
                         if (response.success) {
                             isValid = !response.isDuplicate;
@@ -633,16 +659,25 @@
                     }
                 },
                 errorElement: 'span',
-                errorClass: 'invalid-feedback',
+                errorClass: 'text-danger',
                 highlight: function(element, errorClass, validClass) {
                     $(element).addClass('is-invalid');
                 },
                 unhighlight: function(element, errorClass, validClass) {
                     $(element).removeClass('is-invalid');
                 },
-                errorPlacement: function(error, element) {
-                    error.insertAfter(element);
-                }
+                errorPlacement: function (error, element) {
+                    //error.insertAfter(element);
+                    if (element.closest('.input-group').length > 0) {
+                        error.insertAfter(element.parent('.input-group'));
+                        error.fadeIn('fast');
+                    }
+                    else {
+                        error.hide();
+                        error.insertAfter(element);
+                        error.fadeIn('fast');
+                    }
+                },
             });
 
             // Add dynamic validation for guardian fields

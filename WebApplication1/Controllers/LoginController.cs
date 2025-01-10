@@ -17,46 +17,6 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult Add()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> List(L1TasksViewModel viewModel)
-        {
-
-            var task = await dbContext.L0Admins.ToListAsync();
-
-            return View(task);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(Guid id)
-        {
-
-            var task = await dbContext.L0Admins.FindAsync(id);
-
-            return View(task);
-        }
-
-
-        [HttpPost]
-        public async Task<IActionResult> Delete(L1Tasks L1Task)
-        {
-
-            var task = await dbContext.L0Admins.FindAsync(L1Task.Id);
-
-            if (task != null)
-            {
-                dbContext.L1Tasks.Remove(L1Task);
-                await dbContext.SaveChangesAsync();
-            }
-
-
-            return View(task);
-        }
 
         public _GeneralViewModel PasswordVerification(string password, byte[]? salt = null)
         {

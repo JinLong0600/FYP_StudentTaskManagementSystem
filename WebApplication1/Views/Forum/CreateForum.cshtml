@@ -12,20 +12,22 @@
                     <h2 class="card-title mb-4">@(Model.IsEdit ? "Edit" : "Create New") Forum</h2>
                     
                     <form id="createForumForm" method="post" action="@(Model.IsEdit ? "/Forum/Update/" + Model.ForumId : "/Forum/Add")" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
                         <div class="mb-4">
                             <label class="form-label lb-required">Title</label>
-                            <input name="Title" id="Title" class="form-control" placeholder="Enter topic title" disabled=@(Model.Status == (int)ForumStatus.Resolved) value="@Model.Title">
+                            <input name="Title" id="Title" class="form-control" placeholder="Enter topic title"
+                                   readonly=@(Model.Status == (int)ForumStatus.Resolved) value="@Model.Title">
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label lb-required">Description</label>
                             <textarea name="Description" id="Description" class="form-control" rows="8"
-                                      placeholder="Write your post description here..." disabled=@(Model.Status == (int)ForumStatus.Resolved)>@Model.Description</textarea>
+                                      placeholder="Write your post description here..." readonly=@(Model.Status == (int)ForumStatus.Resolved)>@Model.Description</textarea>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label lb-required">Category</label>
-                            <select name="Category" id="Category" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                            <select name="Category" id="Category" class="form-select" readonly=@(Model.Status == (int)ForumStatus.Resolved)>
                                 <option value="">- Please select-</option>
                                 <option value="@((int)ForumCategory.GeneralDiscussions)" selected=@(Model.Status == (int)ForumCategory.GeneralDiscussions)>General Discussions</option>
                                 <option value="@((int)ForumCategory.HomeworkHelp)" selected=@(Model.Status == (int)ForumCategory.HomeworkHelp)>Homework Help</option>
@@ -42,7 +44,7 @@
                             <label class="form-label lb-required">Tags</label>
                             <div class="tags-input-wrapper">
                                 <input type="text" id="tagInput" class="form-control" name="TagsInDisplay"
-                                       placeholder="Add tags (press Enter to add)" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                       placeholder="Add tags (press Enter to add)" readonly=@(Model.Status == (int)ForumStatus.Resolved)>
                                 <div id="selectedTags" class="mt-2">
                                     <!-- Tags will be added here -->
                                 </div>
@@ -53,7 +55,7 @@
                         {
                             <div class="mb-4">
                                 <label class="form-label lb-required">Status</label>
-                                <select name="Status" id="Status" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
+                                <select name="Status" id="Status" class="form-select" readonly=@(Model.Status == (int)ForumStatus.Resolved)>
                                     <option value="@((int)ForumStatus.Active)" selected=@(Model.Status == (int)ForumStatus.Active)>Active</option>
                                     <option value="@((int)ForumStatus.Resolved)" selected=@(Model.Status == (int)ForumStatus.Resolved)>Resolved</option>
                                 </select>
@@ -64,9 +66,15 @@
                             <a asp-action="Index" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Forum
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
-                                <i class="fas fa-paper-plane"></i> @(Model.IsEdit ? "Edit post" : "Post now")
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.ForumId)">
+                                    <i class="fas fa-trash"></i> Delete post
+                                </button>
+                                <button type="submit" class="btn btn-primary" 
+                                        style="@(Model.Status == (int)ForumStatus.Resolved ? "display: none;" : "")">
+                                    <i class="fas fa-paper-plane"></i> @(Model.IsEdit ? "Edit post" : "Post now")
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -126,6 +134,18 @@
 @section Scripts {
     <script>
         // Initialize form validation
+        // Add custom validation method for minimum words
+        $.validator.addMethod("minWords", function (value, element, params) {
+            return this.optional(element) || value.trim().split(/\s+/).filter(word => word.length > 0).length >= params;
+        }, $.validator.format("Please enter at least {0} words"));
+
+        // Add custom validation method for tags
+        $.validator.addMethod("tagsRequired", function (value, element) {
+            // Check if the hidden tags input has values
+            const hiddenTagsValue = $('#tagsInput').val();
+            return hiddenTagsValue && hiddenTagsValue.length > 0;
+        }, "Please add at least one tag");
+
         $(document).ready(function() {
             $("#createForumForm").validate({
                 rules: {
@@ -154,9 +174,6 @@
                     },
                     Category: {
                         required: "Please select a category"
-                    },
-                    TagsInDisplay: {
-                        required: "Please add at least one tag"
                     }
                 },
                 errorElement: 'span',
@@ -255,17 +272,7 @@
             });
         });
 
-        // Add custom validation method for minimum words
-        $.validator.addMethod("minWords", function(value, element, params) {
-            return this.optional(element) || value.trim().split(/\s+/).filter(word => word.length > 0).length >= params;
-        }, $.validator.format("Please enter at least {0} words"));
 
-        // Add custom validation method for tags
-        $.validator.addMethod("tagsRequired", function(value, element) {
-            // Check if the hidden tags input has values
-            const hiddenTagsValue = $('#tagsInput').val();
-            return hiddenTagsValue && hiddenTagsValue.length > 0;
-        }, "Please add at least one tag");
 
         // Initialize tags array with existing tags if any
         let tags = @Html.Raw(Json.Serialize(Model.LabelTags ?.Split(',').Where(t => !string.IsNullOrEmpty(t)).ToArray() ?? new string[]{}));
@@ -335,5 +342,66 @@
                 e.preventDefault();
             }
         });
+
+        function confirmDelete(forumId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This post will be permanently deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Deleting...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send delete request
+                    $.ajax({
+                        url: '/Forum/DeleteForum/' + forumId,
+                        type: 'POST',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message || 'Your post has been deleted.',
+                                    confirmButtonColor: '#4f46e5'
+                                }).then(() => {
+                                    window.location.href = '/Forum';
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Failed to delete the post.',
+                                    confirmButtonColor: '#4f46e5'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to delete the post. Please try again.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                        }
+                    });
+                }
+            });
+        }
     </script>
 }

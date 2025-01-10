@@ -123,7 +123,7 @@ namespace StudentTaskManagement.Utilities
             Mintues = 2
         }
 
-        public enum PresetStatus
+        public enum PresetPatternStatus
         {
             Active = 1,
             Deleted = 0

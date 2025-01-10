@@ -8,11 +8,13 @@ using System;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace StudentTaskManagement.Controllers
 {
-    public class RecurringPresetController : Controller
+    [Authorize]
+    public class RecurringPresetController : _BaseController
     {
         private readonly StudentTaskManagementContext dbContext;
         private readonly ILogger<RecurringPresetController> _logger;
@@ -37,18 +39,21 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-
                 // Create preset object from view model
                 var preset = new L1RecurringPatterns
                 {
                     Name = viewModel.Name,
                     Description = viewModel.Description,
                     Type = viewModel.Type,
-                    DaytoGenerate = viewModel.DaytoGenerateHidden.Contains("0,") ? "0" : viewModel.DaytoGenerateHidden,
+                    DaytoGenerate = 
+                    viewModel.Type == (int)RecurringType.Week ? viewModel.DaytoGenerateRadio :
+                    viewModel.Type == (int)RecurringType.BiWeek || viewModel.Type == (int)RecurringType.BiMonth ? null :
+                    viewModel.Type == (int)RecurringType.Day ? setValueZero(viewModel.DaytoGenerateHidden) :
+                    setValueZero(viewModel.DaytoGenerateHidden),
                     RecurringCount = viewModel.RecurringCount,
-                    Status = (int)PresetStatus.Active,
-                    CreatedByStudentId = 1, // If using authentication
-                    LastModifiedDateTime = DateTime.Now
+                    Status = (int)PresetPatternStatus.Active,
+                    CreatedByStudentId = LoginStudentId,
+                    LastModifiedDateTime = DateTime.Now,
                 };
 
                 // Save to database
@@ -79,18 +84,11 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                // Get current user's ID
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-/*                if (string.IsNullOrEmpty(userId))
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }*/
-
                 // Initialize query
                 var query = dbContext.L1RecurringPresets
-/*                  .Include(np => np.Tasks)
-                    .Include(np => np.SubTasks)*/
-                    .Where(np => np.CreatedByStudentId == 1 && np.Status == (int)PresetStatus.Active);
+                    .Include(np => np.L1Tasks)
+                    .Include(np => np.L1SubTasks)
+                    .Where(np => np.CreatedByStudentId == LoginStudentId && np.Status == (int)PresetPatternStatus.Active);
 
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -123,7 +121,7 @@ namespace StudentTaskManagement.Controllers
                     {
                         id = np.Id,
                         name = np.Name,
-                        description = string.IsNullOrEmpty(np.Description) ? string.Empty : np.Description,
+                        description = string.IsNullOrEmpty(np.Description) ? "- No Description -" : np.Description,
                         type = np.Type == (int)RecurringType.Day ? "Recurring Pattern by Day(s)" :
                         np.Type == (int)RecurringType.Week ? "Recurring Pattern by Week(s)" :
                         np.Type == (int)RecurringType.BiWeek ? "Recurring Pattern by Bi-Weeks" :
@@ -132,6 +130,14 @@ namespace StudentTaskManagement.Controllers
                         recurringCount = np.RecurringCount.HasValue ? np.RecurringCount.ToString() : string.Empty,
                     })
                     .ToListAsync();
+
+                if (presets.Count == 0)
+                {
+                    return Json(new
+                    {
+                        success = false
+                    });
+                }
 
                 return Json(new
                 {
@@ -149,11 +155,7 @@ namespace StudentTaskManagement.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching notification presets");
-                return Json(new
-                {
-                    success = false,
-                    message = "An error occurred while fetching notification presets"
-                });
+                return StatusCode(500, new { message = "An unexpected error occurred" });
             }
         }
 
@@ -162,16 +164,8 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                /*              
-                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        return Json(new { success = false, message = "User not authenticated" });
-                    }
-                */
-
                 var preset = await dbContext.L1RecurringPresets
-                                    .Where(np => np.Id == id && np.CreatedByStudentId == 1)
+                                    .Where(np => np.Id == id && np.CreatedByStudentId == LoginStudentId)
                                     .Select(np => new
                                     {
                                         id = np.Id,
@@ -179,6 +173,7 @@ namespace StudentTaskManagement.Controllers
                                         description = np.Description,
                                         type = np.Type,
                                         dayToGenerate = np.DaytoGenerate,
+                                        daytoGenerateHidden = np.DaytoGenerate,
                                         recurringCount = np.RecurringCount
                                     })
                                     .FirstOrDefaultAsync();
@@ -202,14 +197,8 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-/*              if (string.IsNullOrEmpty(userId))
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }*/
-
                 var existingPreset = await dbContext.L1RecurringPresets
-                    .FirstOrDefaultAsync(np => np.Id == viewModel.Id && np.CreatedByStudentId == 1);
+                    .FirstOrDefaultAsync(np => np.Id == viewModel.Id && np.CreatedByStudentId == LoginStudentId);
 
                 if (existingPreset == null)
                 {
@@ -220,7 +209,12 @@ namespace StudentTaskManagement.Controllers
                 existingPreset.Name = viewModel.Name;
                 existingPreset.Description = viewModel.Description;
                 existingPreset.Type = viewModel.Type;
-
+                existingPreset.DaytoGenerate =
+                viewModel.Type == (int)RecurringType.Week ? viewModel.DaytoGenerateRadio :
+                viewModel.Type == (int)RecurringType.BiWeek || viewModel.Type == (int)RecurringType.BiMonth ? null :
+                viewModel.Type == (int)RecurringType.Day ? setValueZero(viewModel.DaytoGenerateHidden) :
+                setValueZero(viewModel.DaytoGenerateHidden);
+                existingPreset.RecurringCount = viewModel.RecurringCount;
                 existingPreset.LastModifiedDateTime = DateTime.Now;
 
                 await dbContext.SaveChangesAsync();
@@ -228,7 +222,7 @@ namespace StudentTaskManagement.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "Recurring pattern has been created successfully.",
+                    message = "Recurring pattern has been edited successfully.",
                     data = new
                     {
                         id = existingPreset.Id,
@@ -239,11 +233,11 @@ namespace StudentTaskManagement.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while updating preset");
+                _logger.LogError(ex, "Error occurred while updating pattern");
                 return Json(new
                 {
                     success = false,
-                    message = "An error occurred while updating the preset"
+                    message = "An error occurred while updating the pattern"
                 });
             }
         }
@@ -253,21 +247,15 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                // Get current user ID
-/*                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }*/
                 // Find the preset and verify ownership
                 var preset = await dbContext.L1RecurringPresets
-                    .FirstOrDefaultAsync(np => np.Id == id && np.CreatedByStudentId == 1);
+                    .FirstOrDefaultAsync(np => np.Id == id && np.CreatedByStudentId == LoginStudentId);
                 if (preset == null)
                 {
                     return Json(new { success = false, message = "Preset not found or you don't have permission to delete it" });
                 }
                 // Change Status to preset
-                preset.Status = (int)PresetStatus.Deleted;
+                preset.Status = (int)PresetPatternStatus.Deleted;
                 preset.DeletionDateTime = DateTime.Now;
 
                 dbContext.L1RecurringPresets.Update(preset);
@@ -310,25 +298,25 @@ namespace StudentTaskManagement.Controllers
                             switch (item)
                             {
                                 case "1":
-                                    context += "Mon,";
+                                    context += "Mon, ";
                                     break;
                                 case "2":
-                                    context += "Tue,";
+                                    context += "Tue, ";
                                     break;
                                 case "3":
-                                    context += "Wed,";
+                                    context += "Wed, ";
                                     break;
                                 case "4":
-                                    context += "Thu,";
+                                    context += "Thu, ";
                                     break;
                                 case "5":
-                                    context += "Fri,";
+                                    context += "Fri, ";
                                     break;
                                 case "6":
-                                    context += "Sat,";
+                                    context += "Sat, ";
                                     break;
                                 case "7":
-                                    context += "Sun,";
+                                    context += "Sun, ";
                                     break;
                             }
                         }
@@ -375,25 +363,25 @@ namespace StudentTaskManagement.Controllers
                     switch (dayToGenerate)
                     {
                         case "1":
-                            context = "Recurs on Monday weekly";
+                            context = "Recurs on weekly' Monday";
                             break;
                         case "2":
-                            context = "Recurs on Tuesday weekly";
+                            context = "Recurs on weekly' Tuesday";
                             break;
                         case "3":
-                            context = "Recurs on Wednesday weekly";
+                            context = "Recurs on weekly' Wednesday";
                             break;
                         case "4":
-                            context = "Recurs on Thursday weekly";
+                            context = "Recurs on weekly' Thursday";
                             break;
                         case "5":
-                            context = "Recurs on Friday weekly";
+                            context = "Recurs on weekly' Friday";
                             break;
                         case "6":
-                            context = "Recurs on Saturday weekly";
+                            context = "Recurs on weekly' Saturday";
                             break;
                         case "7":
-                            context = "Recurs on Sunday weekly";
+                            context = "Recurs on weekly' Sunday";
                             break;
                     }
                 }
@@ -416,44 +404,43 @@ namespace StudentTaskManagement.Controllers
                         List<string> items = dayToGenerate.Split(',').ToList();
                         foreach (var item in items)
                         {
-                            context = "Recurs on every";
                             switch (item)
                             {
                                 case "1":
-                                    context = "Jan";
+                                    context += "Jan, ";
                                     break;
                                 case "2":
-                                    context = "Feb";
+                                    context += "Feb, ";
                                     break;
                                 case "3":
-                                    context = "Mar";
+                                    context += "Mar, ";
                                     break;
                                 case "4":
-                                    context = "Apr";
+                                    context += "Apr, ";
                                     break;
                                 case "5":
-                                    context = "May";
+                                    context += "May, ";
                                     break;
                                 case "6":
-                                    context = "Jun";
+                                    context += "Jun, ";
                                     break;
                                 case "7":
-                                    context = "Jul";
+                                    context += "Jul, ";
                                     break;
                                 case "8":
-                                    context = "Aug";
+                                    context += "Aug, ";
                                     break;
                                 case "9":
-                                    context = "Sep";
+                                    context += "Sep, ";
                                     break;
                                 case "10":
-                                    context = "Oct";
+                                    context += "Oct, ";
                                     break;
                                 case "11":
-                                    context = "Nov";
+                                    context += "Nov, ";
                                     break;
                                 case "12":
-                                    context = "Dec";
+                                    context += "Dec, ";
                                     break;
                             }
                         }
@@ -463,7 +450,29 @@ namespace StudentTaskManagement.Controllers
             else {
                 context = "Recurring every two months";
             }
-            return context.TrimEnd(',');
+            return context.TrimEnd(' ').TrimEnd(',');
+        }
+
+        public static string setValueZero(string daytoGenerate)
+        {
+            if (daytoGenerate.Contains("10"))
+            {
+                int originalLength = daytoGenerate.Length;
+                int newLength = daytoGenerate.Replace("0", string.Empty).Length;
+                int count = originalLength - newLength;
+                if (count > 1)
+                    return "0";
+
+                return daytoGenerate;
+            }
+            else if (daytoGenerate.Contains("0"))
+            {
+                return "0";
+            }
+            else
+            {
+                return daytoGenerate;
+            }
         }
     }
 

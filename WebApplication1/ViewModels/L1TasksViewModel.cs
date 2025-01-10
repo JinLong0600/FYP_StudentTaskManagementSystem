@@ -11,10 +11,12 @@ namespace StudentTaskManagement.ViewModels
         public string? Description { get; set; }
         public int Priority { get; set; }
         public int Status { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime DueDate { get; set; }
+        public string StartDate { get; set; }
+        public string DueDate { get; set; }
 
         public bool IsRecurring { get; set; }
+        public bool? IsParentRecurring { get; set; }
+
         public int? L1RecurringPresetId { get; set; }
         public int? DefaultRecurringOptions { get; set; }
 
@@ -29,6 +31,9 @@ namespace StudentTaskManagement.ViewModels
         public string Subtasks { get; set; }
         public List<SubtaskListViewModel> SubtasksList { get; set; } = new List<SubtaskListViewModel>();
 
+        public int DefaultSystemL1NotificationPresetId {get; set;}
+        public int DefaultSystemL1RecurringPresetId { get; set; }
+
     }
 
     public class SubtaskListViewModel
@@ -36,11 +41,10 @@ namespace StudentTaskManagement.ViewModels
         public int? Id { get; set; }
         public string Title { get; set; }
         public int Category { get; set; }
-        public string? Description { get; set; }
         public int Priority { get; set; }
         public int Status { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime DueDate { get; set; }
+        public string StartDate { get; set; }
+        public string DueDate { get; set; }
 
         public bool IsNotification { get; set; }
         public int? L1NotificationPresetId { get; set; }

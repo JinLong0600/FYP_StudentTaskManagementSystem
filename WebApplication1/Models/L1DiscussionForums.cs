@@ -22,6 +22,10 @@ namespace StudentTaskManagement.Models
         [Required]
         public int Status { get; set; }
 
+        public int LikeCount { get; set; }
+
+        public int CommentCount { get; set; }
+
         [Required]
         public string CreatedByStudentId { get; set; }
         [Required]
@@ -33,6 +37,11 @@ namespace StudentTaskManagement.Models
         public DateTime? DeletionDateTime { get; set; }
 
         public virtual ICollection<L1DiscussionForumComments> L1DiscussionForumComments { get; set; }
+
+        public virtual ICollection<L1DiscussionForumLikes> L1DiscussionForumLikes { get; set; }
+
+        [ForeignKey("CreatedByStudentId")]
+        public virtual L1Students L1Students { get; set; }
 
     }
 }

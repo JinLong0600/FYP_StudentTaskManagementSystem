@@ -21,12 +21,13 @@ namespace StudentTaskManagement.ViewModels
         public IFormFile? ProfileImage { get; set; }
 
         public DateTime DOB { get; set; }
+        public string? DOBDisplay { get; set; }
 
         public int Gender { get; set; }
 
         public string? State { get; set; }
 
-        public string? GuardianRelationship { get; set; }
+        public int? GuardianRelationship { get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianEmailAddress { get; set; }
         public string? GuardianContactNumber { get; set; }

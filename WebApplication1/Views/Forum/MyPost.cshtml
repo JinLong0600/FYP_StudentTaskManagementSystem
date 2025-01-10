@@ -1,7 +1,7 @@
 ﻿@model List<StudentTaskManagement.ViewModels.L1DiscussionsViewModel>;
 @using static StudentTaskManagement.Utilities.GeneralEnum;
 @{
-    ViewData["Title"] = "Forum";
+    ViewData["Title"] = "My post";
 }
 
 
@@ -10,8 +10,8 @@
     <div class="card mb-4">
         <div class="d-flex justify-content-between align-items-center" style="margin: 25px 25px 0px 25px">
             <div>
-                <h4 class="">Discussion Forum</h4>
-                <p class="text-muted">Join the conversation with our community</p>
+                <h4 class="">My post</h4>
+                <p class="text-muted">Write you question into post and post it in the discussion forum.</p>
             </div>
             <div>
                 <a href="@Url.Action("CreateForum", "Forum")" class="btn btn-primary">
@@ -20,7 +20,7 @@
             </div>
         </div>
         <hr class="separator">
-        <div class="card-body"  style="padding: 1rem 2.5rem 2.5rem 2.5rem;">
+        <div class="card-body" style="padding: 1rem 2.5rem 2.5rem 2.5rem;">
             <div class="row g-3">
                 <!-- Title Search -->
                 <div class="col-md-4">
@@ -30,9 +30,9 @@
                             <i class="fas fa-search text-muted"></i>
                         </span>
                         <input type="text"
-                                class="form-control"
-                                id="titleSearch"
-                                placeholder="Search by title...">
+                               class="form-control"
+                               id="titleSearch"
+                               placeholder="Search by title...">
                     </div>
                 </div>
                 <!-- Tag Search -->
@@ -43,9 +43,9 @@
                             <!-- Selected tags will be inserted here -->
                         </div>
                         <input type="text"
-                                class="tag-input"
-                                id="tagSearch"
-                                placeholder="Search by tags...">
+                               class="tag-input"
+                               id="tagSearch"
+                               placeholder="Search by tags...">
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@
                 <div class="col-md-8"></div>
                 <div class="col-md-4">
                     <div class="row">
-                        <div class="col-6">            
+                        <div class="col-6">
                             <div class="d-flex flex-column justify-content-center h-100">
                                 <button class="btn btn-outline-secondary w-100" style="padding: 8px 16px;" onclick="clearFilters()">
                                     <i class="fas fa-times me-1"></i>Clear Filter
@@ -80,13 +80,13 @@
                         </div>
                         <div class="col-6">
                             <div class="d-flex flex-column justify-content-center h-100">
-                            <button class="btn btn-primary w-100" id="searchButton">
-                                <i class="fas fa-filter me-2"></i>Apply Filters
-                            </button>
+                                <button class="btn btn-primary w-100" id="searchButton">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
                             </div>
                         </div>
                     </div>
-            
+
                 </div>
             </div>
         </div>
@@ -125,10 +125,10 @@
             transition: all 0.3s ease;
         }
 
-        .forum-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
+            .forum-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
 
         /* Latest Post */
         .latest-post {
@@ -146,14 +146,14 @@
             letter-spacing: 0.5px;
         }
 
-        .badge.rounded-pill.interaction {
-            font-size: 1rem;
-            padding: 0.35em 0.8em;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-right: 0.5rem;
-        }
+            .badge.rounded-pill.interaction {
+                font-size: 1rem;
+                padding: 0.35em 0.8em;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-right: 0.5rem;
+            }
 
         .badge.bg-primary {
             background: var(--bg-gradient) !important;
@@ -192,11 +192,11 @@
             border-left: none;
         }
 
-        .input-group .btn-outline-secondary:hover {
-            background-color: #f8fafc;
-            border-color: #e2e8f0;
-            color: #475569;
-        }
+            .input-group .btn-outline-secondary:hover {
+                background-color: #f8fafc;
+                border-color: #e2e8f0;
+                color: #475569;
+            }
 
         /* Description Text */
         .text-muted {
@@ -221,10 +221,10 @@
             cursor: pointer;
         }
 
-        .tag-badge:hover {
-            background: rgba(79, 70, 229, 0.15);
-            transform: translateY(-1px);
-        }
+            .tag-badge:hover {
+                background: rgba(79, 70, 229, 0.15);
+                transform: translateY(-1px);
+            }
 
         /* Comment Count Badge */
         .badge.bg-light {
@@ -234,14 +234,14 @@
             padding: 0.35em 0.8em;
         }
 
-        .badge.bg-light i {
-            color: #64748b;
-            margin-right: 0.25rem;
-        }
+            .badge.bg-light i {
+                color: #64748b;
+                margin-right: 0.25rem;
+            }
 
-        .badge.bg-light i.fa-heart {
-            color: #ef4444;  /* Red color for heart icon */
-        }
+                .badge.bg-light i.fa-heart {
+                    color: #ef4444; /* Red color for heart icon */
+                }
 
         /* Pagination Styling */
         .pagination .page-link {
@@ -291,70 +291,71 @@
             margin-bottom: 0;
             line-height: 1.5;
         }
+
         .tag-input-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    padding: 5px;
-    min-height: 38px;
-    align-items: center;
-}
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 5px;
+            min-height: 38px;
+            align-items: center;
+        }
 
-.tag-input {
-    border: none;
-    outline: none;
-    flex: 1;
-    min-width: 60px;
-    padding: 2px;
-}
+        .tag-input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 60px;
+            padding: 2px;
+        }
 
-.tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
 
-.tag-item {
-    background: rgba(79, 70, 229, 0.1);
-    color: var(--primary-color);
-    padding: 2px 8px;
-    border-radius: 15px;
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+        .tag-item {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-.tag-item .remove-tag {
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
+            .tag-item .remove-tag {
+                cursor: pointer;
+                font-size: 14px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-.tag-item .remove-tag:hover {
-    color: #dc3545;
-}
+                .tag-item .remove-tag:hover {
+                    color: #dc3545;
+                }
 
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: #4b5563;
-}
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
 
-.status-resolved {
-    background-color: #6B7280;  /* Gray-500 color */
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.35em 0.85em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-}
+        .status-resolved {
+            background-color: #6B7280; /* Gray-500 color */
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.35em 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+        }
     </style>
 }
 
@@ -364,7 +365,7 @@
         const pageSize = 10;
 
         // Initial load
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadForumPosts(1);
         });
 
@@ -375,14 +376,14 @@
             filters.pageSize = pageSize;
 
             $.ajax({
-                url: '@Url.Action("AjaxGetForumPosts", "Forum")',
+                url: '@Url.Action("AjaxGetMyPosts", "Forum")',
                 type: 'GET',
                 data: filters,
-                beforeSend: function() {
+                beforeSend: function () {
                     // Show loading state
                     $('#forumPosts').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         renderForumPosts(response.data);
                         updatePagination(response.totalPages, response.currentPage);
@@ -395,7 +396,7 @@
                         });
                     }
                 },
-                error: function(error) {
+                error: function (error) {
                     console.error('Error loading forum posts:', error);
                     Swal.fire({
                         icon: 'error',
@@ -417,68 +418,68 @@
             console.log(posts);
             posts.forEach(post => {
                 const forumHtml = `
-                <div class="card mb-3 forum-card" id="forum-${post.forumId}">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-9">
-                            <div class="d-flex align-items-start flex-column mb-2">
-                                ${renderNew(post.isNew)}
-                                <h5 class="card-title d-flex align-items-center gap-2">
-                                    <span class="text-decoration-none text-dark fw-bold">
-                                        ${post.title}
-                                    </span>
-                                        ${renderResolved(post.isResolved)}
-                                </h5>
-                            </div>
-                            <div class="description-container">
-                                <div class="description-container-transparent mb-3">
-                                    <p class="text-muted description-text">${post.description}</p>
-                                </div>
-                                <div class="tags-container">
-                                ${renderTags(post.tags)}
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center mt-2">
-                                <span class="badge rounded-pill interaction bg-light text-dark">
-                                    <i class="fas fa-heart"></i>${post.likeCount}
-                                </span>
-                                <span class="badge rounded-pill interaction bg-light text-dark me-2">
-                                    <i class="fas fa-comments"></i> ${post.commentCount}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                                <div class="latest-post">
-                                    <small class="text-muted d-block mb-1">
-                                        Posted by
-                                    </small>
-                                    <div class="d-flex align-items-center">
-                                            <img src="https://ui-avatars.com/api/?name=${post.authorName}&background=random"
-                                             class="rounded-circle me-2" 
-                                             alt="${post.authorName}" 
-                                             width="32" 
-                                             height="32">
-                                        <div>
-                                            <div class="fw-bold text-truncate" style="max-width: 200px;">
-                                                ${post.authorName}
-                                            </div>
-                                            <small class="text-muted">
-                                                <span>
-                                                    ${post.lastModifiedDate}
-                                                </span>
-                                            </small>
+                        <div class="card mb-3 forum-card" id="forum-${post.forumId}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-9">
+                                    <div class="d-flex align-items-start flex-column mb-2">
+                                        ${renderNew(post.isNew)}
+                                        <h5 class="card-title d-flex align-items-center gap-2">
+                                            <span class="text-decoration-none text-dark fw-bold">
+                                                ${post.title}
+                                            </span>
+                                                ${renderResolved(post.isResolved)}
+                                        </h5>
+                                    </div>
+                                    <div class="description-container">
+                                        <div class="description-container-transparent mb-3">
+                                            <p class="text-muted description-text">${post.description}</p>
+                                        </div>
+                                        <div class="tags-container">
+                                        ${renderTags(post.tags)}
                                         </div>
                                     </div>
+                                    <div class="d-flex align-items-center mt-2">
+                                        <span class="badge rounded-pill interaction bg-light text-dark">
+                                            <i class="fas fa-heart"></i>${post.likeCount}
+                                        </span>
+                                        <span class="badge rounded-pill interaction bg-light text-dark me-2">
+                                            <i class="fas fa-comments"></i> ${post.commentCount}
+                                        </span>
+                                    </div>
                                 </div>
+                                <div class="col-md-3">
+                                        <div class="latest-post">
+                                            <small class="text-muted d-block mb-1">
+                                                Posted by
+                                            </small>
+                                            <div class="d-flex align-items-center">
+                                                    <img src="https://ui-avatars.com/api/?name=${post.authorName}&background=random"
+                                                     class="rounded-circle me-2"
+                                                     alt="${post.authorName}"
+                                                     width="32"
+                                                     height="32">
+                                                <div>
+                                                    <div class="fw-bold text-truncate" style="max-width: 200px;">
+                                                        ${post.authorName}
+                                                    </div>
+                                                    <small class="text-muted">
+                                                        <span>
+                                                            ${post.lastModifiedDate}
+                                                        </span>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-                `;
+                        `;
                 container.append(forumHtml);
 
                 // Add click handler for the entire card
-                $(`#forum-${post.forumId}`).click(function(e) {
+                $(`#forum-${post.forumId}`).click(function (e) {
                     // Don't redirect if clicking on a link or button
                     if (!$(e.target).is('a, button, .btn')) {
                         window.location.href = `@Url.Action("Details", "Forum")/${post.forumId}`;
@@ -489,21 +490,21 @@
 
         function renderTags(tags) {
             if (!tags || tags.length === 0) return '';
-            
+
             return tags.map(tag => `
-                <span class="badge rounded-pill tag-badge">
-                    <i class="fas fa-tag me-1"></i>${escapeHtml(tag)}
-                </span>
-            `).join('');
+                        <span class="badge rounded-pill tag-badge">
+                            <i class="fas fa-tag me-1"></i>${escapeHtml(tag)}
+                        </span>
+                    `).join('');
         }
-        
+
         function renderNew(isNew) {
             if (isNew) {
-            return `<span class="badge rounded-pill bg-primary mb-2">New</span>`;
-            } else{
+                return `<span class="badge rounded-pill bg-primary mb-2">New</span>`;
+            } else {
                 return ``;
             }
-            
+
         }
 
         function renderResolved(isResolved) {
@@ -527,40 +528,39 @@
         function updatePagination(totalPages, currentPage) {
             const pagination = document.querySelector('.pagination');
             let paginationHtml = '';
-            if (totalPages >= 1) 
-            {
+            if (totalPages >= 1) {
                 // Previous button
                 paginationHtml += `
-                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="loadPresets(${currentPage - 1})" tabindex="-1">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                `;
-            
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" onclick="loadPresets(${currentPage - 1})" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        `;
+
                 // Page numbers
                 for (let i = 1; i <= totalPages; i++) {
                     paginationHtml += `
-                        <li class="page-item ${i === currentPage ? 'active' : ''}">
-                            <a class="page-link" href="#" onclick="loadPresets(${i})">${i}</a>
-                        </li>
-                    `;
+                                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                                    <a class="page-link" href="#" onclick="loadPresets(${i})">${i}</a>
+                                </li>
+                            `;
                 }
-            
+
                 // Next button
                 paginationHtml += `
-                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="loadPresets(${currentPage + 1})">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                `;
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" onclick="loadPresets(${currentPage + 1})">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        `;
             }
             pagination.innerHTML = paginationHtml;
         }
 
         // Update search and filter handlers
-        $('#searchButton').click(function() {
+        $('#searchButton').click(function () {
             currentPage = 1;
             loadForumPosts(1);
         });
@@ -568,12 +568,12 @@
         // Debounced search for title and tags
         let searchTimeout;
 
-/*       $('#titleSearch').on('input', debouncedSearch);
-        $('#statusFilter, #sortOrder').change(function() {
-            currentPage = 1;
-            loadForumPosts(1);
-        });
-*/
+        /*       $('#titleSearch').on('input', debouncedSearch);
+                $('#statusFilter, #sortOrder').change(function() {
+                    currentPage = 1;
+                    loadForumPosts(1);
+                });
+        */
     </script>
     <script>
 
@@ -599,69 +599,69 @@
         }
 
         // Search button click handler
-        $('#searchButton').click(function() {
+        $('#searchButton').click(function () {
             currentPage = 1;
             loadForumPosts(currentPage);
         });
     </script>
     <script>
-let selectedTags = [];
+        let selectedTags = [];
 
-// Tag input handling
-$('#tagSearch').on('keydown', function(e) {
-    if (e.key === 'Enter' || e.key === ',') {
-        e.preventDefault();
-        const tag = $(this).val().trim();
-        if (tag && !selectedTags.includes(tag)) {
-            addTag(tag);
-            $(this).val('');
+        // Tag input handling
+        $('#tagSearch').on('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const tag = $(this).val().trim();
+                if (tag && !selectedTags.includes(tag)) {
+                    addTag(tag);
+                    $(this).val('');
+                }
+            }
+        });
+
+        function addTag(tag) {
+            selectedTags.push(tag);
+            const tagElement = $(`
+                <div class="tag-item">
+                    ${tag}
+                    <span class="remove-tag">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            `);
+
+            tagElement.find('.remove-tag').click(function () {
+                tagElement.remove();
+                selectedTags = selectedTags.filter(t => t !== tag);
+                // Remove the debouncedSearch() call here
+            });
+
+            $('#selectedTags').append(tagElement);
         }
-    }
-});
 
-function addTag(tag) {
-    selectedTags.push(tag);
-    const tagElement = $(`
-        <div class="tag-item">
-            ${tag}
-            <span class="remove-tag">
-                <i class="fas fa-times"></i>
-            </span>
-        </div>
-    `);
-    
-    tagElement.find('.remove-tag').click(function() {
-        tagElement.remove();
-        selectedTags = selectedTags.filter(t => t !== tag);
-        // Remove the debouncedSearch() call here
-    });
-    
-    $('#selectedTags').append(tagElement);
-}
+        // Update getFilterValues function
+        function getFilterValues() {
+            return {
+                titleSearch: $('#titleSearch').val(),
+                tags: selectedTags, // Now sending array of tags
+                status: $('#statusFilter').val(),
+                sortOrder: $('#sortOrder').val(),
+                page: currentPage,
+                pageSize: pageSize
+            };
+        }
 
-// Update getFilterValues function
-function getFilterValues() {
-    return {
-        titleSearch: $('#titleSearch').val(),
-        tags: selectedTags, // Now sending array of tags
-        status: $('#statusFilter').val(),
-        sortOrder: $('#sortOrder').val(),
-        page: currentPage,
-        pageSize: pageSize
-    };
-}
-
-// Clear filters function
-function clearFilters() {
-    $('#titleSearch').val('');
-    selectedTags = [];
-    $('#selectedTags').empty();
-    $('#statusFilter').val('');
-    $('#sortOrder').val('newest');
-    currentPage = 1;
-    loadForumPosts(1);
-}
+        // Clear filters function
+        function clearFilters() {
+            $('#titleSearch').val('');
+            selectedTags = [];
+            $('#selectedTags').empty();
+            $('#statusFilter').val('');
+            $('#sortOrder').val('newest');
+            currentPage = 1;
+            loadForumPosts(1);
+        }
 
 
-</script>
+    </script>
 }

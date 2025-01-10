@@ -127,7 +127,7 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form id="registrationForm" method="post" asp-action="Register" asp-controller="Account" enctype="multipart/form-data">
+                    <form id="registrationForm" method="post" asp-action="Registration" asp-controller="Account" enctype="multipart/form-data">
                         <!-- Account Information -->
                         <h5 class="h5-subtitle mb-4">Account Information</h5>
                         <div class="row mb-3">
@@ -536,16 +536,25 @@
                     }
                 },
                 errorElement: 'span',
-                errorClass: 'invalid-feedback',
+                errorClass: 'text-danger',
                 highlight: function(element, errorClass, validClass) {
                     $(element).addClass('is-invalid');
                 },
                 unhighlight: function(element, errorClass, validClass) {
                     $(element).removeClass('is-invalid');
                 },
-                errorPlacement: function(error, element) {
-                    error.insertAfter(element);
-                }
+                errorPlacement: function (error, element) {
+                    //error.insertAfter(element);
+                    if (element.closest('.input-group').length > 0) {
+                        error.insertAfter(element.parent('.input-group'));
+                        error.fadeIn('fast');
+                    }
+                    else {
+                        error.hide();
+                        error.insertAfter(element);
+                        error.fadeIn('fast');
+                    }
+                },
             });
 
             // Add dynamic validation for guardian fields

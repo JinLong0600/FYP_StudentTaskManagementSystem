@@ -43,10 +43,10 @@
             <div class="col-md-4">
                 <label for="Type" class="form-label fw-semibold">Notification Preset Type</label>
                 <div class="custom-dropdown">
-                    <select class="form-select" id="Type" name="Type" required>
+                    <select class="form-select" id="Type" name="Type">
                         <option value="">All Types</option>
-                        <option value="1">Days-Based</option>
-                        <option value="2">Minutes-Based</option>
+                        <option value="@((int)NotificationPresetType.Days)">Days-Based</option>
+                        <option value="@((int)NotificationPresetType.Mintues)">Minutes-Based</option>
                     </select>
                 </div>
             </div>
@@ -54,9 +54,9 @@
     </div>
 
     <!-- Preset Cards Grid -->
-    <div></div>
-    <div class="preset-grid" id="presetGrid">
-
+    <div id="parentPresetGrid">
+        <div class="preset-grid" id="presetGrid">
+        </div>
     </div>
 
     <!-- Add this after the preset-grid div -->
@@ -124,14 +124,14 @@
                                                 <div class="col-md-6">
                                                     <div class="input-group">
                                                         <input type="number" class="form-control" id="reminderHoursBefore"
-                                                               name="ReminderHoursBefore" min="1" max="23" maxlength="2">
+                                                               name="ReminderHoursBefore" min="0" max="23" maxlength="2">
                                                         <span class="input-group-text">hours</span>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="input-group">
                                                         <input type="number" class="form-control" id="reminderMinutesBefore"
-                                                               name="ReminderMinutesBefore" min="1" max="59" maxlength="2">
+                                                               name="ReminderMinutesBefore" min="0" max="59" maxlength="2">
                                                         <span class="input-group-text">minutes</span>
                                                     </div>
                                                 </div>
@@ -158,8 +158,8 @@
                                 </div>
                             </div>
                     </div>
-                    <div class="modal-footer p-4">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="modal-footer d-flex justify-content-between p-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
                 </form>
@@ -615,52 +615,6 @@
         box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
     }
 
-    /* Remove the validation icons */
-    .form-control.is-invalid,
-    .form-control.is-valid {
-        background-image: none !important;
-        padding-right: 0.75rem !important;
-    }
-
-    .was-validated .form-control:invalid,
-    .was-validated .form-control:valid {
-        background-image: none !important;
-        padding-right: 0.75rem !important;
-    }
-
-    /* If you're using input groups */
-    .input-group .form-control.is-invalid,
-    .input-group .form-control.is-valid {
-        padding-right: 0.75rem !important;
-    }
-
-    /* Optional: Add tooltip styles */
-    .btn-icon[data-tooltip] {
-        position: relative;
-    }
-
-    .btn-icon[data-tooltip]:before {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 4px 8px;
-        border-radius: 4px;
-        background: #1e293b;
-        color: white;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.2s ease;
-    }
-
-    .btn-icon[data-tooltip]:hover:before {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(-50%) translateY(-8px);
-    }
 </style>
 
 @section Scripts {
@@ -860,8 +814,9 @@
         //
         //
         function loadPresets(page = 1, searchTerm = '', type = '') {
-            const presetGrid = document.getElementById('presetGrid');
-            presetGrid.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+            
+            const parentPresetGrid = document.getElementById('parentPresetGrid');
+            parentPresetGrid.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
 
             $.ajax({
                 url: '/NotificationPreset/GetPresets',
@@ -872,9 +827,10 @@
                     type: type
                 },
                 success: function(response) {
+                    parentPresetGrid.innerHTML = '<div class="preset-grid" id="presetGrid"></div >';
+                    const presetGrid = document.getElementById('presetGrid');
                     if (response.success) {
                         presetGrid.innerHTML = '';
-                        
                         response.data.presets.forEach(preset => {
                             const presetCard = createPresetCard(preset);
                             presetGrid.insertAdjacentHTML('beforeend', presetCard);
@@ -883,7 +839,7 @@
                         // Update pagination
                         updatePagination(response.data.currentPage, response.data.totalPages);
                     } else {
-                        presetGrid.innerHTML = `
+                        parentPresetGrid.innerHTML = `
                             <div class="alert alert-info text-center">
                                 <i class="fas fa-info-circle me-2"></i>
                                 No notification presets found
@@ -891,7 +847,7 @@
                     }
                 },
                 error: function() {
-                    presetGrid.innerHTML = `
+                    parentPresetGrid.innerHTML = `
                         <div class="alert alert-danger text-center">
                             <i class="fas fa-exclamation-circle me-2"></i>
                             Failed to load presets. Please try again.
@@ -940,15 +896,30 @@
             if (preset.reminderDaysBefore) {
                 pills.push(`
                     <span class="timing-pill">
-                        <i class="fas fa-calendar-day"></i> Reminder at ${preset.reminderDaysBefore} (${preset.reminderTime}) day(s) before
+                        <i class="fas fa-calendar-day"></i>${preset.reminderDaysBefore} day(s) before, at ${preset.reminderTime}
                     </span>
                 `);
             }
 
-            if (preset.reminderMinutesBefore && preset.reminderMinutesBefore) {
+            if (preset.reminderHoursBefore && preset.reminderMinutesBefore) {
                 pills.push(`
                     <span class="timing-pill">
-                        <i class="fas fa-clock"></i>${preset.reminderMinutesBefore} hour(s) ${preset.reminderMinutesBefore} minute(s) before
+                        <i class="fas fa-clock"></i>${preset.reminderHoursBefore} hour(s) ${preset.reminderMinutesBefore} minute(s) before
+                    </span>
+                `);
+            }else if(preset.reminderHoursBefore)
+            {
+                pills.push(`
+                    <span class="timing-pill">
+                        <i class="fas fa-clock"></i>${preset.reminderHoursBefore} hour(s) before
+                    </span>
+                `);
+            }
+            else if(preset.reminderMinutesBefore)
+            {
+                pills.push(`
+                    <span class="timing-pill">
+                        <i class="fas fa-clock"></i>${preset.reminderMinutesBefore} minute(s) before
                     </span>
                 `);
             }
@@ -1091,21 +1062,31 @@
                     ReminderDaysBefore: {
                         digits: true,
                         required: true,
-                        
                     },
                     ReminderHoursBefore: {
                         digits: true,
-                        required: true,
+                        required: function(element) {
+                            return $("#reminderMinutesBefore").val() === "" || $("#reminderMinutesBefore").val() === "0";
+                        }
                     },
                     ReminderMinutesBefore: {
                         digits: true,
-                        required: true,
+                        required: function(element) {
+                            return $("#reminderHoursBefore").val() === "" || $("#reminderHoursBefore").val() === "0";
+                        }
                     },
                     ReminderTime: {
                         required: true,
                     },
                 },
-
+                messages: {
+                    ReminderHoursBefore: {
+                        required: "Please enter either hours or minutes before",
+                    },
+                    ReminderMinutesBefore: {
+                        required: "Please enter either hours or minutes before",
+                    }
+                },
                 errorElement: 'span',
                 errorClass: 'text-danger',
                 errorPlacement: function(error, element) {

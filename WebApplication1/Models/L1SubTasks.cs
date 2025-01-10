@@ -15,7 +15,6 @@ namespace StudentTaskManagement.Models
         public string Title { get; set; }
 
         public int Category { get; set; }
-        public string? Description { get; set; }
 
         [Required]
         public int Status { get; set; }
@@ -23,7 +22,8 @@ namespace StudentTaskManagement.Models
         [Required]
         public int Priority { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        [Required]
+        public DateTime StartDate { get; set; }
 
         [Required]
         public DateTime DueDate { get; set; }

@@ -1,26 +1,34 @@
 @model StudentTaskManagement.ViewModels.ForumDetailsViewModel
-
-<div class="container mt-4">
+@using static StudentTaskManagement.Utilities.GeneralEnum;
+@{
+    bool isResolved = !(Model.Status == (int)ForumStatus.Resolved);
+}
+<div class="container">
+    @Html.AntiForgeryToken()
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Forum Post -->
             <div class="card mb-4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h1 class="card-title h2">@Model.Title</h1>
-                        @if (Model.IsAuthor)
-                        {
-                            <div class="action-buttons">
-                                <a href="@Url.Action("EditTopic", new { id = Model.Id })" 
-                                   class="btn btn-link text-primary">
+                        <h1 class="card-title h2">
+                            @Model.Title
+                            @if (Model.Status == (int)ForumStatus.Resolved)
+                            {
+                                <span class="badge rounded-pill status-resolved ms-2">RESOLVED</span>
+                            }
+                        </h1>
+                        <div class="action-buttons">
+                            @if (Model.IsAuthor)
+                            {
+                                <button class="btn-icon edit-btn" onclick="window.location.href='/Forum/CreateForum/@Model.Id'">
                                     <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-link text-danger" 
-                                        onclick="confirmDelete(@Model.Id)">
-                                    <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                        }
+                                <button class="btn-icon delete-btn" onclick="confirmDelete(@Model.Id)">
+                                    <i class="fas fa-trash btn-delete"></i>
+                                </button>
+                            }
+                        </div>
                     </div>
 
                     <div class="post-meta mb-4">
@@ -36,17 +44,31 @@
                         </div>
                     </div>
 
-                    <div class="post-content mb-4">
+                    <div class="post-content mb-2">
                         @Html.Raw(Model.Content)
                     </div>
 
-                    <div class="post-tags">
-                        @foreach (var tag in Model.Tags)
-                        {
-                            <span class="badge rounded-pill tag-badge">
-                                <i class="fas fa-tag me-1"></i>@tag
-                            </span>
-                        }
+                    <div class="mb-2">
+                        <!-- Like Button -->
+                        <button class="btn like-button @(Model.IsLiked ? "liked" : "")"
+                                onclick="toggleLike(@Model.Id)"
+                                data-topic-id="@Model.Id">
+                            <i class="fas fa-heart @(Model.IsLiked ? "liked" : "")"></i>
+                            <span class="like-count">@Model.LikeCount</span>
+                        </button>
+                    </div>
+
+                    <!-- Tags and Like Button Row -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="post-tags">
+                            @foreach (var tag in Model.Tags)
+                            {
+                                <span class="badge rounded-pill tag-badge">
+                                    <i class="fas fa-tag me-1"></i>@tag
+                                </span>
+                            }
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -57,17 +79,19 @@
                     <h3 class="card-title h4 mb-4">Comments</h3>
 
                     <!-- Add Comment Form -->
-                    <form id="commentForm" class="mb-4">
-                        @Html.AntiForgeryToken()
-                        <div class="mb-3">
-                            <textarea id="commentContent" class="form-control" 
-                                    rows="3" placeholder="Write a comment..."></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Add Comment
-                        </button>
-                    </form>
-
+                    @if (Model.Status != (int)ForumStatus.Resolved)
+                    {
+                        <form id="commentForm" class="mb-4">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <textarea id="commentContent" class="form-control" 
+                                        rows="3" placeholder="Write a comment..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Add Comment
+                            </button>
+                        </form>
+                    }
                     <!-- Comments List -->
                     <div id="commentsList">
                         <!-- Comments will be loaded here -->
@@ -117,12 +141,60 @@
         .action-buttons .btn-link:hover {
             transform: translateY(-1px);
         }
+
+        .like-button {
+            color: #6c757d;
+            transition: all 0.2s ease;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid;
+        }
+
+        .like-button:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .like-button.liked {
+            color: #ef4444;
+        }
+
+        .fas.fa-heart
+        {
+            font-weight: 100 !important;
+        }
+
+        .fas.fa-heart.liked
+        {
+            font-weight: 900 !important;
+        }
+
+        .like-button i {
+            margin-right: 0.5rem;
+        }
+
+        .like-count {
+            font-size: 0.9rem;
+        }
+
+        .status-resolved {
+            background-color: #6B7280;  /* Gray-500 color */
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.35em 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+        }
     </style>
 }
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        const isResolved = @Json.Serialize(isResolved);
+
         let currentPage = 1;
         const pageSize = 10;
         let hasMoreComments = false;
@@ -130,12 +202,68 @@
         // Load initial comments when page loads
         $(document).ready(function() {
             loadComments(1);
+
+            // Add comment form submission handler
+            $('#commentForm').submit(function (e) {
+                e.preventDefault();
+
+                const content = $('#commentContent').val();
+                if (!content.trim()) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Please enter a comment'
+                    });
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("AjaxAddComment", "Forum")',
+                    type: 'POST',
+                    data: {
+                        topicId: @Model.Id,
+                        content: content,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Clear the textarea
+                            $('#commentContent').val('');
+
+                            // Reload first page of comments to show new comment
+                            loadComments(1);
+
+                            // Optional: Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Comment added successfully',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Failed to add comment'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to add comment'
+                        });
+                    }
+                });
+            });
         });
 
         // Load comments function
         function loadComments(page) {
             $.ajax({
-                url: '@Url.Action("GetComments", "Forum")',
+                url: '@Url.Action("AjaxGetComments", "Forum")',
                 type: 'GET',
                 data: {
                     topicId: @Model.Id,
@@ -188,11 +316,10 @@
                                     <span class="fw-bold">${comment.authorName}</span>
                                     <small class="text-muted ms-2">${comment.createdAt}</small>
                                 </div>
-                                ${comment.isAuthor ? `
+                                ${comment.isAuthor && isResolved ? `
                                     <div class="comment-actions">
-                                        <button class="btn btn-link text-danger p-0" 
-                                                onclick="deleteComment(${comment.id})">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="btn-icon delete-btn" onclick="deleteComment(${comment.id})">
+                                            <i class="fas fa-trash btn-delete"></i>
                                         </button>
                                     </div>
                                 ` : ''}
@@ -217,7 +344,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '@Url.Action("DeleteComment", "Forum")',
+                        url: '@Url.Action("AjaxDeleteComment", "Forum")',
                         type: 'POST',
                         data: {
                             commentId: commentId,
@@ -238,6 +365,109 @@
                                     'error'
                                 );
                             }
+                        }
+                    });
+                }
+            });
+        }
+
+        function toggleLike(topicId) {
+            $.ajax({
+                url: '@Url.Action("AjaxToggleLike", "Forum")',
+                type: 'POST',
+                data: {
+                    topicId: topicId,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const likeButton = $(`.like-button[data-topic-id="${topicId}"]`);
+                        const likeCount = likeButton.find('.like-count');
+                        const heartIcon = $(`.fa-heart`);
+
+                        // Toggle liked state
+                        if (response.isLiked) {
+                            likeButton.addClass('liked');
+                            heartIcon.addClass('liked');
+                            likeCount.text(parseInt(likeCount.text()) + 1);
+                        } else {
+                            likeButton.removeClass('liked');
+                            heartIcon.removeClass('liked');
+                            likeCount.text(parseInt(likeCount.text()) - 1);
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to update like status'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to update like status'
+                    });
+                }
+            });
+        }
+
+        function confirmDelete(forumId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This post will be permanently deleted!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Deleting...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Send delete request
+                    $.ajax({
+                        url: '/Forum/DeleteForum/' + forumId,
+                        type: 'POST',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message || 'Your post has been deleted.',
+                                    confirmButtonColor: '#4f46e5'
+                                }).then(() => {
+                                    window.location.href = '/Forum';
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Failed to delete the post.',
+                                    confirmButtonColor: '#4f46e5'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to delete the post. Please try again.',
+                                confirmButtonColor: '#4f46e5'
+                            });
                         }
                     });
                 }

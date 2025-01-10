@@ -19,7 +19,8 @@ namespace StudentTaskManagement.ViewModels
         public string DaytoGenerate { get; set; } //choose day // choose start from which day (Mon, Tue, etc...)
 
         public string DaytoGenerateHidden { get; set; } //choose day // choose start from which day (Mon, Tue, etc...)
-        
+        public string DaytoGenerateRadio { get; set; } //choose day // choose start from which day (Mon, Tue, etc...)
+
         public int? RecurringCount { get; set; } //week //bi-weekly //month //bi-monthly //quartely
 
         public int Status { get; set; } //active //removed

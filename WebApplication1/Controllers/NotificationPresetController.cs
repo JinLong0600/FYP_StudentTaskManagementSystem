@@ -8,11 +8,13 @@ using System;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace StudentTaskManagement.Controllers
 {
-    public class NotificationPresetController : Controller
+    [Authorize]
+    public class NotificationPresetController : _BaseController
     {
         private readonly StudentTaskManagementContext dbContext;
         private readonly ILogger<NotificationPresetController> _logger;
@@ -31,7 +33,7 @@ namespace StudentTaskManagement.Controllers
             return View();
         }
 
-        // GET: ReminderSettingController/Create
+        
         [HttpPost]
         public async Task<IActionResult> AjaxCreate(L1NotificationPresetsViewModel viewModel)
         {
@@ -55,11 +57,13 @@ namespace StudentTaskManagement.Controllers
                     Description = viewModel.Description,
                     Type = viewModel.Type,
                     IsDaily = viewModel.IsDaily,
-                    ReminderDaysBefore = viewModel.ReminderDaysBefore,
-                    ReminderMinutesBefore = viewModel.ReminderMinutesBefore,
+                    ReminderDaysBefore = viewModel.Type == (int)NotificationPresetType.Days ? viewModel.ReminderDaysBefore : null,
+                    ReminderHoursBefore = viewModel.Type == (int)NotificationPresetType.Mintues ? viewModel.ReminderHoursBefore : null,
+                    ReminderMinutesBefore = viewModel.Type == (int)NotificationPresetType.Mintues ? viewModel.ReminderMinutesBefore : null,
                     ReminderTime = viewModel.ReminderTime,
-                    CreatedByStudentId = 1, // If using authentication
-                    LastModifiedDateTime = DateTime.Now
+                    CreatedByStudentId = LoginStudentId,
+                    LastModifiedDateTime = DateTime.Now,
+                    Status = (int)PresetPatternStatus.Active,
                 };
 
                 // Save to database
@@ -85,23 +89,17 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
+        #region Read & Update
         [HttpGet]
         public async Task<IActionResult> GetPresets(int page = 1, string searchTerm = "", string type = "")
         {
             try
             {
-                // Get current user's ID
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-/*                if (string.IsNullOrEmpty(userId))
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }*/
-
                 // Initialize query
                 var query = dbContext.L1NotificationPresets
-/*                  .Include(np => np.Tasks)
-                    .Include(np => np.SubTasks)*/
-                    .Where(np => np.CreatedByStudentId == 1);
+                    .Include(np => np.L1Tasks)
+                    .Include(np => np.L1SubTasks)
+                    .Where(np => np.CreatedByStudentId == LoginStudentId && np.Status == (int)PresetPatternStatus.Active);
 
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -134,17 +132,25 @@ namespace StudentTaskManagement.Controllers
                     {
                         id = np.Id,
                         name = np.Name,
-                        description = string.IsNullOrEmpty(np.Description) ? string.Empty : np.Description,
-                        type = np.Type == 1 ? "Days-based Notification Preset" : "Minutes-based Notification Preset",
+                        description = string.IsNullOrEmpty(np.Description) ? "- No Description -" : np.Description,
+                        type = np.Type == (int)NotificationPresetType.Days ? "Days-based Notification Preset" : "Minutes-based Notification Preset",
                         reminderDaysBefore = np.ReminderDaysBefore,
                         reminderHoursBefore = np.ReminderHoursBefore,
                         reminderMinutesBefore = np.ReminderMinutesBefore,
-                        reminderTime =  np.ReminderTime.HasValue ? np.ReminderTime.Value.ToString("HH:mm tt") : "",
+                        reminderTime =  np.ReminderTime.HasValue ? np.ReminderTime.Value.ToString("hh:mm tt") : "",
                         isDaily = np.IsDaily,
-                        activeTasksCount = np.Tasks.Where(t => t.Status != 0).Count(),
-                        subItemsCount = np.SubTasks.Count,
+                        activeTasksCount = np.L1Tasks.Where(t => t.Status != 0).Count(),
+                        subItemsCount = np.L1SubTasks.Count,
                     })
                     .ToListAsync();
+
+                if (presets.Count == 0)
+                {
+                    return Json(new
+                    {
+                        success = false
+                    });
+                }
 
                 return Json(new
                 {
@@ -162,11 +168,7 @@ namespace StudentTaskManagement.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching notification presets");
-                return Json(new
-                {
-                    success = false,
-                    message = "An error occurred while fetching notification presets"
-                });
+                return StatusCode(500, new { message = "An unexpected error occurred" });
             }
         }
 
@@ -182,7 +184,7 @@ namespace StudentTaskManagement.Controllers
                                 }*/
 
                 var preset = await dbContext.L1NotificationPresets
-                                    .Where(np => np.Id == id && np.CreatedByStudentId == 1)
+                                    .Where(np => np.Id == id && np.CreatedByStudentId == LoginStudentId)
                                     .Select(np => new
                                     {
                                         id = np.Id,
@@ -223,7 +225,7 @@ namespace StudentTaskManagement.Controllers
                 }*/
 
                 var existingPreset = await dbContext.L1NotificationPresets
-                    .FirstOrDefaultAsync(np => np.Id == viewModel.Id && np.CreatedByStudentId == 1);
+                    .FirstOrDefaultAsync(np => np.Id == viewModel.Id && np.CreatedByStudentId == LoginStudentId);
 
                 if (existingPreset == null)
                 {
@@ -259,28 +261,26 @@ namespace StudentTaskManagement.Controllers
                 });
             }
         }
+        #endregion
 
         [HttpPost]
         public async Task<IActionResult> AjaxDelete(int id)
         {
             try
             {
-                // Get current user ID
-/*                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Json(new { success = false, message = "User not authenticated" });
-                }*/
                 // Find the preset and verify ownership
                 var preset = await dbContext.L1NotificationPresets
-                    .FirstOrDefaultAsync(np => np.Id == id && np.CreatedByStudentId == 1);
+                    .FirstOrDefaultAsync(np => np.Id == id && np.CreatedByStudentId == LoginStudentId);
                 if (preset == null)
                 {
                     return Json(new { success = false, message = "Preset not found or you don't have permission to delete it" });
                 }
                 // Remove the preset
-                dbContext.L1NotificationPresets.Remove(preset);
+
+                preset.Status = (int)PresetPatternStatus.Deleted;
+                preset.DeletionDateTime = DateTime.Now;
                 await dbContext.SaveChangesAsync();
+
                 return Json(new
                 {
                     success = true,

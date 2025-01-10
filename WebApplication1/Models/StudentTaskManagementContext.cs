@@ -36,9 +36,28 @@ namespace StudentTaskManagement.Models
                 .HasMany(t => t.L1SubTasks)
                 .WithOne(s => s.L1Tasks)
                 .HasForeignKey(s => s.L1TaskId);
-        }
 
-        public DbSet<L0Admins> L0Admins { get; set; }
+            modelBuilder.Entity<L1NotificationPresets>()
+                .Property(b => b.IsSystemDefault)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<L1RecurringPatterns>()
+                .Property(b => b.IsSystemDefault)
+                .HasDefaultValue(false);
+
+/*            // Configure the relationship
+            modelBuilder.Entity<L1DiscussionForumLikes>()
+                .HasOne(l => l.L1DiscussionForums)
+                .WithMany(f => f.Likes)
+                .HasForeignKey(l => l.L1DiscussionForumId);
+
+            modelBuilder.Entity<L1DiscussionForumLikes>()
+                .HasOne(l => l.CreatedByStudent)
+                .WithMany()
+                .HasForeignKey(l => l.CreatedByStudentId);*/
+        }
+        public DbSet<L1Tasks> L1Tasks { get; set; }
+        public DbSet<L1SubTasks> L1SubTasks { get; set; }
         public DbSet<L1DiscussionForumComments> L1DiscussionForumComments { get; set; }
         public DbSet<L1DiscussionForums> L1DiscussionForums { get; set; }
         public DbSet<L1RecurringTaskCounters> L1RecurringTaskCounters { get; set; }
@@ -46,8 +65,8 @@ namespace StudentTaskManagement.Models
         public DbSet<L1NotificationPresets> L1NotificationPresets { get; set; }
         public DbSet<L1Students> L1Students { get; set; }
         public DbSet<L1TaskReminders> L1TaskReminders { get; set; }
-        public DbSet<L1Tasks> L1Tasks { get; set; }
-        public DbSet<L1SubTasks> L1SubTasks { get; set; }
+        public DbSet<L1DiscussionForumLikes> L1DiscussionForumLikes { get; set; }
+
 
     }
 }

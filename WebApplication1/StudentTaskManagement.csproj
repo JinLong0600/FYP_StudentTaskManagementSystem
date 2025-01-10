@@ -15,11 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\AdministrationController.cs" />
+    <Compile Remove="Controllers\LoginController.cs" />
     <Compile Remove="Models\ApplicationUser.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="nlog.config" />
     <Content Remove="Views\Account\Register.cshtml" />
+    <Content Remove="wwwroot\css\soft-ui-dashboard.css" />
+    <Content Remove="wwwroot\css\soft-ui-dashboard.css.map" />
+    <Content Remove="wwwroot\css\soft-ui-dashboard.min.css" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,12 +40,17 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="MimeKit" Version="4.9.0" />
+    <PackageReference Include="NLog" Version="5.3.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="NewFolder\" />
     <Folder Include="wwwroot\uploads\idcards\" />
     <Folder Include="wwwroot\uploads\profiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="nlog.config" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,15 +8,15 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow">
-                <div class="card-header bg-gradient text-white" style="background-color: #4361ee;">
-                    <h2 class="mb-0">@(Model.IsEdit ? "Edit" : "Create") Task</h2>
+                <div class="card-header text-white">
+                    </><h2 class="mb-0"><i class="fas fa-tasks me-3"></i>@(Model.IsEdit ? "Edit" : "Create") Task</h2>
                 </div>
                 <div class="card-body">
                     <form id="createTaskForm" method="post" action="@(Model.IsEdit ? "/Task/Update/" + Model.TaskId : "/Task/Add")" enctype="multipart/form-data">
                         <!-- Basic Information -->
                         <div class="mb-5">
-                            <h4 class="mb-4">Basic Information</h4>
-                            <div class="row g-3">
+                            <div class="row mb-4">
+                                <h4>Basic Infomation</h4><hr />
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Title</label>
                                     <input type="text" class="form-control" name="Title" id="Title" value="@Model.Title">
@@ -24,7 +24,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Category</label>
                                     <select class="form-control" name="Category" id="Category">
-                                        <option value="">- Select type -</option>
+                                        <option value="">- Please select -</option>
                                         <option value="@((int)ItemTaskCategory.Academic)" selected=@(Model.Category == (int)ItemTaskCategory.Academic)>Academic</option>
                                         <option value="@((int)ItemTaskCategory.Extracurricular)" selected=@(Model.Category == (int)ItemTaskCategory.Extracurricular)>Extracurricular</option>
                                         <option value="@((int)ItemTaskCategory.PersonalDevelopment)" selected=@(Model.Category == (int)ItemTaskCategory.PersonalDevelopment)>Personal Development</option>
@@ -38,12 +38,12 @@
                                     <textarea class="form-control" name="Description" id="Description" rows="3">@Model.Description</textarea>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Start Date & Time</label>
-                                    <input type="datetime-local" class="form-control" name="StartDate" id="StartDate" value="@(Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy-MM-ddTHH:mm") : "")">
+                                    <label class="form-label fw-semibold lb-required">Start Date & Time</label>
+                                    <input class="form-control" name="StartDate" id="StartDate" value="@(Model.IsEdit ? Model.StartDate : "")">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Due Date & Time</label>
-                                    <input type="datetime-local" class="form-control" name="DueDate" id="DueDate" value="@(Model.IsEdit ? Model.DueDate.ToString("yyyy-MM-ddTHH:mm") : "")">
+                                    <input class="form-control" name="DueDate" id="DueDate" value="@(Model.IsEdit ? Model.DueDate : "")">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Priority</label>
@@ -62,8 +62,15 @@
                                         <option value="">- Please select -</option>
                                         <option value="@((int)ItemTaskStatus.NotStarted)" selected=@(Model.Status == (int)ItemTaskStatus.NotStarted)>Not Started</option>
                                         <option value="@((int)ItemTaskStatus.InProgress)" selected=@(Model.Status == (int)ItemTaskStatus.InProgress)>In Progress</option>
-                                        <option value="@((int)ItemTaskStatus.Completed)" selected=@(Model.Status == (int)ItemTaskStatus.Completed)>Completed</option>
                                         <option value="@((int)ItemTaskStatus.OnHold)" selected=@(Model.Status == (int)ItemTaskStatus.OnHold)>On Hold</option>
+                                        @if (Model.IsEdit)
+                                        {
+                                            <option value="@((int)ItemTaskStatus.Completed)" selected=@(Model.Status == (int)ItemTaskStatus.Completed)>Completed</option>
+                                        }
+                                        @if (Model.IsEdit && Model.Status == (int)ItemTaskStatus.Overdue)
+                                        {
+                                            <option value="@((int)ItemTaskStatus.Overdue)" selected=@(Model.Status == (int)ItemTaskStatus.Overdue)>Overdue</option>
+                                        }
                                     </select>
                                 </div>
                             </div>
@@ -71,52 +78,63 @@
 
                         <!-- Task Settings -->
                         <div class="mb-5">
-                            <h4 class="mb-4">Task Settings</h4>
-
                             <!-- Recurring Settings -->
                             <div class="row mb-4">
+                                <h4>Task Settings</h4><hr />
                                 <div class="col-12">
                                     <label class="form-label fw-semibold lb-required">Recurring Settings</label>
                                     <div class="border rounded p-3">
-                                        <div class="d-flex gap-4 mb-2">
-                                            <div>
-                                                <input type="radio" name="IsRecurring" id="noRecurring" value="0" >
-                                                <label>No Recurring</label>
+                                        @if (Model.IsParentRecurring == true || Model.IsParentRecurring == null)
+                                        {
+                                            <div class="task-setting-container mb-2">
+                                                <input type="radio" id="noRecurring" name="IsRecurring" value="0" checked>
+                                                <label for="noRecurring">No Recurring</label>
+                                                <input type="radio" id="useRecurring" name="IsRecurring" value="1">
+                                                <label for="useRecurring">Set Recurring</label>
                                             </div>
-                                            <div>
-                                                <input type="radio" name="IsRecurring" id="useRecurring" value="1">
-                                                <label>Set Recurring</label>
-                                            </div>
-                                        </div>
-                                        <div id="recurringOptions" class="mt-3" style="display: none;">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-semibold lb-required">Recurring Preset</label>
-                                                @Html.DropDownListFor(m => m.L1RecurringPresetId,
-                                                         new SelectList(ViewBag.SelectRecurringPresetList, "Value", "Text", Model.L1RecurringPresetId),
-                                                         new
-                                                         {
-                                                             id = "recurringPreset",
-                                                             @class = "form-control",
-                                                             data_placeholder = "- Please select -",
-                                                         })
-                                            </div>
-                                            <div id="customRecurringOptions" class="mt-3" style="display: none;">
-                                                <div class="d-flex gap-4">
-                                                    <div>
-                                                        <input type="radio" name="DefaultRecurringOptions" id="DefaultRecurringOptions1" value="@((int)DefaultRecurringOptions.Daily)">
-                                                        <label>Daily</label>
-                                                    </div>
-                                                    <div>
-                                                        <input type="radio" name="DefaultRecurringOptions" id="DefaultRecurringOptions2" value="@((int)DefaultRecurringOptions.Weekly)">
-                                                        <label>Weekly</label>
-                                                    </div>
-                                                    <div>
-                                                        <input type="radio" name="DefaultRecurringOptions" id="DefaultRecurringOptions3" value="@((int)DefaultRecurringOptions.Monthly)">
-                                                        <label>Monthly</label>
+                                            <div id="recurringOptions" class="mt-3" style="display: none;">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold lb-required">Recurring Preset</label>
+                                                    @Html.DropDownListFor(m => m.L1RecurringPresetId,
+                                                             new SelectList(ViewBag.SelectRecurringPresetList, "Value", "Text", Model.L1RecurringPresetId),
+                                                             new
+                                                             {
+                                                                 id = "recurringPreset",
+                                                                 @class = "form-control",
+                                                                 data_placeholder = "- Please select -",
+                                                             })
+                                                </div>
+                                                <div id="customRecurringOptions" class="mt-3" style="display: none;">
+                                                    <div class="task-setting-container mb-2">
+                                                        <input type="radio" id="DefaultRecurringOptions1" name="DefaultRecurringOptions" value="@((int)DefaultRecurringOptions.Daily)">
+                                                        <label for="DefaultRecurringOptions1">Daily</label>
+
+                                                        <input type="radio" id="DefaultRecurringOptions2" name="DefaultRecurringOptions" value="@((int)DefaultRecurringOptions.Weekly)">
+                                                        <label for="DefaultRecurringOptions2">Weekly</label>
+
+                                                        <input type="radio" id="DefaultRecurringOptions3" name="DefaultRecurringOptions" value="@((int)DefaultRecurringOptions.Monthly)">
+                                                        <label for="DefaultRecurringOptions3">Monthly</label>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <div>
+                                                            This is an automatically generated task from a recurring pattern.
+                                                            <span class="d-block small mt-1 text-muted">
+                                                                Recurring settings can only be modified in the original parent task.
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
                                     </div>
                                 </div>
                             </div>
@@ -126,21 +144,17 @@
                                 <div class="col-12">
                                     <label class="form-label fw-semibold lb-required">Notification Settings</label>
                                     <div class="border rounded p-3">
-                                        <div class="d-flex gap-4 mb-2">
-                                            <div>
-                                                <input type="radio" name="IsNotification" id="noNotification" value="0" checked>
-                                                <label>No Notifications</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="IsNotification" id="useNotification" value="1">
-                                                <label>Set Notifications</label>
-                                            </div>
+                                        <div class="task-setting-container mb-2">
+                                            <input type="radio" id="noNotification" name="IsNotification" value="0" checked>
+                                            <label for="noNotification">No Notifications</label>
+                                            <input type="radio" id="useNotification" name="IsNotification" value="1">
+                                            <label for="useNotification">Set Notifications</label>
                                         </div>
                                         <div id="notificationOptions" class="mt-3" style="display: none;">
                                             <div class="mb-3">
                                                 <label class="form-label fw-semibold lb-required">Notification Preset</label>
                                                 @Html.DropDownListFor(m => m.L1NotificationPresetId,
-                                                         new SelectList(ViewBag.SelectRecurringPresetList, "Value", "Text", Model.L1NotificationPresetId),
+                                                         new SelectList(ViewBag.SelectNotificationPresetList, "Value", "Text", Model.L1NotificationPresetId),
                                                          new
                                                          {
                                                              id = "notificationPresetSelect",
@@ -149,19 +163,15 @@
                                                          })
                                             </div>
                                             <div id="customNotificationOptions" class="mt-3" style="display: none;">
-                                                <div class="d-flex gap-4">
-                                                    <div>
-                                                        <input type="radio" name="DefaultNotificationOptions" id="DefaultNotificationOptions1" value="@((int)DefaultNotificationOptions.ThirtyMin)">
-                                                        <label>30 Minutes Before</label>
-                                                    </div>
-                                                    <div>
-                                                        <input type="radio" name="DefaultNotificationOptions" id="DefaultNotificationOptions2" value="@((int)DefaultNotificationOptions.OneWeek)">
-                                                        <label>1 Hour Before</label>
-                                                    </div>
-                                                    <div>
-                                                        <input type="radio" name="DefaultNotificationOptions" id="DefaultNotificationOptions3" value="@((int)DefaultNotificationOptions.OneMonth)">
-                                                        <label>1 Day Before</label>
-                                                    </div>
+                                                <div class="task-setting-container mb-2">
+                                                    <input type="radio" id="DefaultNotificationOptions1" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.ThirtyMin)">
+                                                    <label for="DefaultNotificationOptions1">30 Minutes Before</label>
+                                                    
+                                                    <input type="radio" id="DefaultNotificationOptions2" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneWeek)">
+                                                    <label for="DefaultNotificationOptions2">1 Hour Before</label>
+                                                    
+                                                    <input type="radio" id="DefaultNotificationOptions3" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneMonth)">
+                                                    <label for="DefaultNotificationOptions3">1 Day Before</label>
                                                 </div>
                                             </div>
                                         </div>
@@ -173,7 +183,7 @@
                         <!-- Subtasks -->
                         <div class="mb-5">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h4 class="mb-0">Subtasks</h4>
+                                <h4 class="mb-1">Subtasks</h4>
                                 <button type="button" class="btn btn-primary btn-sm" id="addSubtask">
                                     <i class="fa fa-plus me-1"></i>Add Subtask
                                 </button>
@@ -184,9 +194,9 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="d-flex justify-content-end gap-2">
+                        <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Action("Index", "Task")'">Cancel</button>
-                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">Create</button>
+                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">@(Model.IsEdit ? "Update task" : "Create new task")</button>
                         </div>
                     </form>
                 </div>
@@ -195,8 +205,165 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+        /* Calendar Container */
+        .flatpickr-calendar {
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Header Section */
+        .flatpickr-months .flatpickr-month {
+            background: #41a6c6;
+            color: white;
+            fill: white;
+            border-radius: 8px 8px 0 0;
+            height: 45px;
+        }
+
+        .flatpickr-current-month {
+            padding: 12px 0 0 0;
+            font-size: 1.1rem;
+        }
+
+        /* Month and Year Dropdowns */
+        .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .flatpickr-current-month select.yearselect {
+            text-align: center;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 500;
+            padding: 0px;
+        }
+
+        .numInput.cur-year {
+            font-weight: 500!important;
+        }
+
+/*         .flatpickr-current-month select.yearselect:hover,
+        .flatpickr-monthDropdown-months:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flatpickr-current-month select.yearselect:focus,
+        .flatpickr-monthDropdown-months:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+        } */
+
+        .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+            background-color: #7eb5c6;
+            font-size: 0.95rem;
+            font-weight: 600; 
+        }
+
+        .flatpickr-prev-month:hover, .flatpickr-next-month:hover {
+            color: black;            
+        }
+
+        .flatpickr-current-month select.yearselect {
+            /* background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); */
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 12px;
+        }
+
+        .flatpickr-current-month select.yearselect option {
+            background: #78a7b6;
+            color: #333;
+        }
+
+        /* Navigation Arrows */
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            padding: 12px;
+        }
+
+        .flatpickr-prev-month svg,
+        .flatpickr-next-month svg {
+            fill: white;
+            width: 20px !important;  /* Increased from default */
+            height: 20px !important; /* Increased from default */
+            transition: all 0.2s ease-out;
+        }
+
+        .flatpickr-prev-month:hover svg,
+        .flatpickr-next-month:hover svg {
+            fill: white !important;
+            transform: scale(2); /* Slight scale effect on hover */
+            transition: all 0.2s ease;
+
+        }
+
+        /* Weekday Headers */
+        .flatpickr-weekdays {
+            background: #41a6c6;
+            color: white;
+        }
+
+        span.flatpickr-weekday {
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Calendar Days */
+        .flatpickr-day {
+            border-radius: 6px;
+            margin: 2px;
+            height: 36px;
+            line-height: 36px;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.selected:hover {
+            background: #4e73df;
+            border-color: #4e73df;
+        }
+
+        .flatpickr-day.today {
+            border-color: #4e73df;
+            color: #4e73df;
+        }
+
+        .flatpickr-day:hover {
+            background: #f8f9fc;
+        }
+
+        /* Time Section */
+        .flatpickr-time {
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .flatpickr-time input:hover,
+        .flatpickr-time .flatpickr-am-pm:hover,
+        .flatpickr-time input:focus,
+        .flatpickr-time .flatpickr-am-pm:focus {
+            background: #f8f9fc;
+        }
+
+        .flatpickr-calendar.hasTime .flatpickr-time {
+            height: 45px;
+            line-height: 45px;
+        }
+
+        .numInputWrapper:hover {
+            background: transparent;
+        }
+    </style>
+}
+
 @section Scripts {
-<script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
 
     // Convert ViewBag data to JavaScript array
     const notificationPresets = @Html.Raw(Json.Serialize(ViewBag.SelectNotificationPresetList));
@@ -235,7 +402,7 @@
                             id="Subtasks_${index}_Title"
                             class="form-control"/>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold lb-required">Category</label>
                             <select class="form-control" name="Subtasks[${index}].Category" id="Subtasks_${index}_Category">
                                 <option value="">- Please select-</option>
@@ -247,28 +414,34 @@
                                         <option value="@((int)ItemTaskCategory.Miscellaneous)">Miscellaneous</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                            <div class="col-md-6">
+                                <label class="form-label lb-required">Start Date & Time</label>
+                                <input type="datetime-local" class="form-control picker" name="Subtasks[${index}].StartDate" id="Subtasks_${index}_StartDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold lb-required">Due Date & Time</label>
+                                <input type="datetime-local" class="form-control picker" name="Subtasks[${index}].DueDate" id="Subtasks_${index}_DueDate">
+                            </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold lb-required">Priority</label>
                             <select class="form-control" name="Subtasks[${index}].Priority" id="Subtasks_${index}_Priority">
                                 <option value="">- Please select -</option>
                                 <option value="@((int)PriorityLevel.Trivial)">Trivial</option>
-                                <option value="@((int)PriorityLevel.Low)">Project</option>
-                                <option value="@((int)PriorityLevel.Medium)">Meeting</option>
-                                <option value="@((int)PriorityLevel.High)">Leisure</option>
-                                <option value="@((int)PriorityLevel.Critical)">Others</option>
+                                <option value="@((int)PriorityLevel.Low)">Low</option>
+                                <option value="@((int)PriorityLevel.Medium)">Medium</option>
+                                <option value="@((int)PriorityLevel.High)">High</option>
+                                <option value="@((int)PriorityLevel.Critical)">Critical</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Start Date & Time</label>
-                            <input type="datetime-local" class="form-control" name="Subtasks[${index}].StartDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold lb-required">Due Date & Time</label>
-                            <input type="datetime-local" class="form-control" name="Subtasks[${index}].DueDate" id="Subtasks_${index}_DueDate">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="Subtasks[${index}].Description" rows="2"></textarea>
+                            <label class="form-label fw-semibold lb-required">Status</label>
+                            <select class="form-control" name="Subtasks[${index}].Status" id="Subtasks_${index}_Status">
+                                <option value="">- Please select -</option>
+                                <option value="@((int)ItemTaskStatus.NotStarted)">Not Started</option>
+                                <option value="@((int)ItemTaskStatus.InProgress)">In Progress</option>
+                                <option value="@((int)ItemTaskStatus.OnHold)">On hold</option>
+                                <option value="@((int)ItemTaskStatus.Completed)">Completed</option>
+                            </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold lb-required">Notification Settings</label>
@@ -315,234 +488,305 @@
         return subtaskHtml;
     }
 
-        $(document).ready(function () {
-            reinitializeValidator();
-            var isEdit = @Json.Serialize(Model.IsEdit);
-            var isRecurring = @Json.Serialize(Model.IsRecurring);
-            var l1RecurringTaskSettingId = @Json.Serialize(Model.L1RecurringPresetId);
-            var defaultRecurringOptions = @Json.Serialize(Model.DefaultRecurringOptions);
-            var isNotification = @Json.Serialize(Model.IsNotification);
-            var l1NotificationPresetId = @Json.Serialize(Model.L1NotificationPresetId);
-            var defaultNotificationOptions = @Json.Serialize(Model.DefaultNotificationOptions);
+    function initializeDateTimePickers() {
+        const currentYear = new Date().getFullYear();
+        const dateConfig = {
+            enableTime: true,
+            minDate: "today",
+            dateFormat: "d-m-Y h:i K",
+            yearRange: `${currentYear}:${currentYear + 10}`, // 10 years range from current
+        };
 
-            let subtaskCount = 0;
-            const maxSubtasks = 5;
+        const dueDate = $('#DueDate').flatpickr({
+                ...dateConfig,
+        });
 
-            // Add Subtask
-            $('#addSubtask').click(function () {
-                if (subtaskCount >= maxSubtasks) 
-                {
-                    Swal.fire({
-                        title: 'Maximum Limit Reached',
-                        text: 'You can only create up to 5 subtasks.',
-                        icon: 'warning',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                else
-                {
-                    const subtaskHtml = addSubtask(subtaskCount);
-                    $('#subtasksContainer').append(subtaskHtml);
-                    addSubtaskValidation(subtaskCount);
-                    subtaskCount++;
-                }
 
-                // Optionally, disable the "Add Subtask" button when limit is reached
-                if (subtaskCount >= maxSubtasks) {
-                        $('#addSubtask').prop('disabled', true);
-                }
-            });
+        $('#StartDate').flatpickr({
+                ...dateConfig,
+            onChange: function(selectedDates, dateStr, instance) {
+                dueDate.clear();
+                dueDate.set("minDate", dateStr);
+            }
+        });
 
-            // Remove Subtask
-            $(document).on('click', '.remove-subtask', function () {
-                $(this).closest('.subtask').remove();
-                // Reindex remaining subtasks
-                $('.subtask').each(function (index) {
-                    $(this).find('h5').text(`Subtask #${index + 1}`);
-                    // Update input names
-                    $(this).find('[name^="Subtasks["]').each(function () {
-                        const oldName = $(this).attr('name');
-                        const newName = oldName.replace(/\[\d+\]/, `[${index}]`);
-                        $(this).attr('name', newName);
-                    });
-                });
-                subtaskCount--;
-            });
 
-            // Handle Recurring Settings
-            if (isEdit && isRecurring)
+        // Initialize subtask date pickers with the same config
+        $('.picker').each(function () {
+            console.log("found");
+            $(this).flatpickr(dateConfig);
+        });
+
+    }
+
+    $(document).ready(function () {
+        if (!isEdit) {
+                initializeDateTimePickers();
+
+        }
+        reinitializeValidator();
+        var isEdit = @Json.Serialize(Model.IsEdit);
+        var isRecurring = @Json.Serialize(Model.IsRecurring);
+        var l1RecurringTaskSettingId = @Json.Serialize(Model.L1RecurringPresetId);
+        var defaultRecurringOptions = @Json.Serialize(Model.DefaultRecurringOptions);
+        var isNotification = @Json.Serialize(Model.IsNotification);
+        var l1NotificationPresetId = @Json.Serialize(Model.L1NotificationPresetId);
+        var defaultNotificationOptions = @Json.Serialize(Model.DefaultNotificationOptions);
+        var defaultNotificationId = @Json.Serialize(Model.DefaultSystemL1NotificationPresetId);
+        var defaultRecurringId = @Json.Serialize(Model.DefaultSystemL1RecurringPresetId);
+
+        let subtaskCount = 0;
+        const maxSubtasks = 5;
+
+        // Add Subtask
+        $('#addSubtask').click(function () {
+            if (subtaskCount >= maxSubtasks) 
             {
-                $('#useRecurring').prop('checked', true);
-                $('#recurringOptions').slideDown();
-
-                if (l1RecurringTaskSettingId === 0) {
-                    $('#recurringPreset').val('0');
-                    $('#customRecurringOptions').show();
-                    
-                    // Set the correct radio button for custom options
-                    if (defaultRecurringOptions) {
-                        $(`input[name="DefaultRecurringOptions"][value="${defaultRecurringOptions}"]`).prop('checked', true);
-                    }
-                }
+                Swal.fire({
+                    title: 'Maximum Limit Reached',
+                    text: 'You can only create up to 5 subtasks.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
             }
             else
             {
-                $('#noRecurring').prop('checked', true);
+                const subtaskHtml = addSubtask(subtaskCount);
+                $('#subtasksContainer').append(subtaskHtml);
+                addSubtaskValidation(subtaskCount);
+                
+                const subtaskDueDate = $(`#Subtasks_${subtaskCount}_DueDate`).flatpickr({
+                    enableTime: true,
+                    dateFormat: "d-m-Y h:i K",
+                    minDate: $(`#Subtasks_${subtaskCount}_StartDate`).val() || "today"
+                });
+
+                // Initialize date pickers for new subtask
+                $(`#Subtasks_${subtaskCount}_StartDate`).flatpickr({
+                    enableTime: true,
+                    dateFormat: "d-m-Y h:i K",
+                    minDate: "today",
+                    onChange: function(selectedDates, dateStr) {
+                            subtaskDueDate.clear();
+                            subtaskDueDate.set("minDate", dateStr);
+                    }
+                });
+
+                subtaskCount++;
+            }
+
+            // Optionally, disable the "Add Subtask" button when limit is reached
+            if (subtaskCount >= maxSubtasks) {
+                $('#addSubtask').prop('disabled', true);
+            }
+        });
+
+        // Remove Subtask
+        $(document).on('click', '.remove-subtask', function () {
+            $(this).closest('.subtask').remove();
+            // Reindex remaining subtasks
+            $('.subtask').each(function (index) {
+                $(this).find('h5').text(`Subtask #${index + 1}`);
+                // Update input names
+                $(this).find('[name^="Subtasks["]').each(function () {
+                    const oldName = $(this).attr('name');
+                    const newName = oldName.replace(/\[\d+\]/, `[${index}]`);
+                    $(this).attr('name', newName);
+                });
+            });
+            subtaskCount--;
+            
+            // Re-enable the Add Subtask button if we're below the limit
+            if (subtaskCount < maxSubtasks) {
+                $('#addSubtask').prop('disabled', false);
+            }
+            
+            // Optionally: Update the remaining subtask numbers/IDs if needed
+            updateSubtaskNumbers();
+        });
+
+        // Helper function to update subtask numbers if needed
+        function updateSubtaskNumbers() {
+            $('.subtask').each(function(index) {
+                // Update any visible numbering or IDs here if needed
+                // Example: $(this).find('.subtask-number').text(index + 1);
+            });
+        }
+
+        // Handle Recurring Settings
+        if (isEdit && isRecurring)
+        {
+            $('#useRecurring').prop('checked', true);
+            $('#recurringOptions').slideDown();
+
+            if (l1RecurringTaskSettingId == "" + defaultRecurringId + "") {
+                $('#recurringPreset').val(defaultRecurringId);
+                $('#customRecurringOptions').show();
+                
+                // Set the correct radio button for custom options
+                if (defaultRecurringOptions) {
+                    $(`input[name="DefaultRecurringOptions"][value="${defaultRecurringOptions}"]`).prop('checked', true);
+                }
+            }
+        }
+        else
+        {
+            $('#noRecurring').prop('checked', true);
+            $('#recurringOptions').slideUp();
+            $('#recurringPreset').val('');
+            $('#customRecurringOptions').slideUp();
+            $('input[name="recurring"]').prop('checked', false);
+        }
+
+
+        $('input[name="IsRecurring"]').change(function () {
+            if ($(this).val() === "1") {
+                $('#recurringOptions').slideDown();
+            } else {
                 $('#recurringOptions').slideUp();
                 $('#recurringPreset').val('');
                 $('#customRecurringOptions').slideUp();
                 $('input[name="recurring"]').prop('checked', false);
             }
+        });
 
+        // Handle Recurring Preset Selection //DefaultSetting
+        $('#recurringPreset').change(function () {
+            if ($(this).val() == "" + defaultRecurringId + "") {
+                $('#customRecurringOptions').slideDown();
+                $(`input[name="DefaultRecurringOptions"][value="1"]`).prop('checked', true);
+            } else {
+                $('#customRecurringOptions').slideUp();
+                $('input[name="recurring"]').prop('checked', false);
+            }
+        });
 
-            $('input[name="IsRecurring"]').change(function () {
-                if ($(this).val() === "1") {
-                    $('#recurringOptions').slideDown();
-                } else {
-                    $('#recurringOptions').slideUp();
-                    $('#recurringPreset').val('');
-                    $('#customRecurringOptions').slideUp();
-                    $('input[name="recurring"]').prop('checked', false);
-                }
-            });
-
-            // Handle Recurring Preset Selection
-            $('#recurringPreset').change(function () {
-                if ($(this).val() === '0') {
-                    $('#customRecurringOptions').slideDown();
-                    $(`input[name="DefaultRecurringOptions"][value="1"]`).prop('checked', true);
-                } else {
-                    $('#customRecurringOptions').slideUp();
-                    $('input[name="recurring"]').prop('checked', false);
-                }
-            });
-
-            // Handle Notification Settings
-            if (isEdit && isNotification)
-            {
-                $('#useNotification').prop('checked', true);
-                $('#notificationOptions').slideDown();
-
-                if (l1NotificationPresetId === 0) {
-                    $('#notificationPreset').val('0');
-                    $('#customNotificationOptions').show();
-                    
-                    // Set the correct radio button for custom options
-                    if (defaultNotificationOptions) {
-                        $(`input[name="DefaultNotificationOptions"][value="${defaultNotificationOptions}"]`).prop('checked', true);
-                    }
+        // Handle Notification Settings
+        if (isEdit && isNotification)
+        {
+            $('#useNotification').prop('checked', true);
+            $('#notificationOptions').slideDown();
+            if (l1NotificationPresetId == "" + defaultNotificationId + "") {
+                $('#notificationPreset').val(defaultNotificationId);
+                $('#customNotificationOptions').show();
+                
+                // Set the correct radio button for custom options
+                if (defaultNotificationOptions) {
+                    $(`input[name="DefaultNotificationOptions"][value="${defaultNotificationOptions}"]`).prop('checked', true);
                 }
             }
-            else
-            {
+        }
+        else
+        {
+            $('#notificationOptions').slideUp();
+            $('#notificationPresetSelect').val('');
+            $('#customNotificationOptions').slideUp();
+            $('input[name="notification"]').prop('checked', false);
+        }
+
+        $('input[name="IsNotification"]').change(function () {
+            if ($('#useNotification').prop('checked')) {
+                $('#notificationOptions').slideDown();
+            } else {
                 $('#notificationOptions').slideUp();
                 $('#notificationPresetSelect').val('');
                 $('#customNotificationOptions').slideUp();
                 $('input[name="notification"]').prop('checked', false);
             }
-
-            $('input[name="IsNotification"]').change(function () {
-                if ($('#useNotification').prop('checked')) {
-                    $('#notificationOptions').slideDown();
-                } else {
-                    $('#notificationOptions').slideUp();
-                    $('#notificationPresetSelect').val('');
-                    $('#customNotificationOptions').slideUp();
-                    $('input[name="notification"]').prop('checked', false);
-                }
         });
 
-            // Handle Notification Preset Selection
-            $('#notificationPresetSelect').change(function () {
-                if ($(this).val() === '0') {
-                    $('#customNotificationOptions').slideDown();
-                    $(`input[name="DefaultNotificationOptions"][value="1"]`).prop('checked', true);
-                } else {
-                    $('#customNotificationOptions').slideUp();
-                    $('input[name="notification"]').prop('checked', false);
-                }
-            });
-
-            // Add event handlers for the notification toggles
-            $(document).on('change', '.subtask-notification-toggle', function() {
-                const notificationOptions = $(this).closest('.border').find('.subtask-notification-options');
-                if ($(this).val() === '1') {
-                    notificationOptions.slideDown();
-                } else {
-                    notificationOptions.slideUp();
-                    notificationOptions.find('select').val('');
-                    notificationOptions.find('.subtask-custom-notification-options').slideUp();
-                    notificationOptions.find('input[type="radio"]').prop('checked', false);
-                }
-            });
-
-            // Handle notification preset selection for subtasks
-            $(document).on('change', '.subtask-notification-preset', function() {
-                const customOptions = $(this).closest('.subtask-notification-options').find('.subtask-custom-notification-options');
-                if ($(this).val() === '0') {
-                    customOptions.slideDown();
-                } else {
-                    customOptions.slideUp();
-                    customOptions.find('input[type="radio"]').prop('checked', false);
-                }
-            });
-
-            // Get the model data
-            const modelData = @Html.Raw(Json.Serialize(Model));
-            // Initialize existing subtasks if any
-            if (modelData && modelData.subtasksList && modelData.subtasksList.length > 0) {
-                modelData.subtasksList.forEach((subtasksList, index) => {
-                    // Create subtask HTML
-                    subtaskCount++;
-
-                    const subtaskHtml = addSubtask(index, subtasksList);
-                    $('#subtasksContainer').append(subtaskHtml);
-
-                    // Set values for the subtask
-                    const $subtaskDiv = $('#subtasksContainer').children().last();
-
-                    // Set basic fields
-                    $subtaskDiv.find(`[name="Subtasks[${index}].Title"]`).val(subtasksList.title);
-                    $subtaskDiv.find(`[name="Subtasks[${index}].Category"]`).val(subtasksList.category);
-                    $subtaskDiv.find(`[name="Subtasks[${index}].Priority"]`).val(subtasksList.priority);
-                    $subtaskDiv.find(`[name="Subtasks[${index}].Description"]`).val(subtasksList.description);
-
-                    // Set dates
-                    if (subtasksList.startDate) {
-                        $subtaskDiv.find(`[name="Subtasks[${index}].StartDate"]`)
-                            .val(subtasksList.startDate);
-                    }
-                    if (subtasksList.dueDate) {
-                        $subtaskDiv.find(`[name="Subtasks[${index}].DueDate"]`)
-                            .val(subtasksList.dueDate);
-                    }
-                    console.log(subtasksList.isNotification);
-                    // Set notification settings
-                    if (subtasksList.isNotification === true) {
-                        const $notificationToggle = $subtaskDiv.find(`[name="Subtasks[${index}].IsNotification"][value="1"]`);
-                        $notificationToggle.prop('checked', true).trigger('change');
-
-                        // Set notification preset
-                        $subtaskDiv.find(`[name="Subtasks[${index}].L1NotificationPresetId"]`)
-                            .val(subtasksList.l1NotificationPresetId);
-
-                        // Handle custom notifications if needed
-                        if (subtasksList.l1NotificationPresetId === 0) {
-                            $subtaskDiv.find('.subtask-custom-notification-options').show();
-                            $subtaskDiv.find(`[name="Subtasks[${index}].DefaultNotificationOptions"][value="${subtasksList.defaultNotificationOptions}"]`)
-                                .prop('checked', true);
-                            //$subtaskDiv.find(`[name="Subtasks[${index}].NotificationTime"]`).val(subtasksList.notificationTime);
-                        }
-                    }
-                });
-
-                // Update subtask counter
-                subtaskCount = modelData.subtasksList.length;
-            } else { 
-                console.log("can't load");
+        // Handle Notification Preset Selection //DefaultSetting
+        $('#notificationPresetSelect').change(function () {
+            if ($(this).val() == "" +defaultNotificationId+ "") {
+                $('#customNotificationOptions').slideDown();
+                $(`input[name="DefaultNotificationOptions"][value="1"]`).prop('checked', true);
+            } else {
+                $('#customNotificationOptions').slideUp();
+                $('input[name="notification"]').prop('checked', false);
             }
         });
+
+        // Add event handlers for the notification toggles
+        $(document).on('change', '.subtask-notification-toggle', function() {
+            const notificationOptions = $(this).closest('.border').find('.subtask-notification-options');
+            if ($(this).val() === '1') {
+                notificationOptions.slideDown();
+            } else {
+                notificationOptions.slideUp();
+                notificationOptions.find('select').val('');
+                notificationOptions.find('.subtask-custom-notification-options').slideUp();
+                notificationOptions.find('input[type="radio"]').prop('checked', false);
+            }
+        });
+
+        // Handle notification preset selection for subtasks
+        $(document).on('change', '.subtask-notification-preset', function() {
+            const customOptions = $(this).closest('.subtask-notification-options').find('.subtask-custom-notification-options');
+            if ($(this).val() === '0') {
+                customOptions.slideDown();
+            } else {
+                customOptions.slideUp();
+                customOptions.find('input[type="radio"]').prop('checked', false);
+            }
+        });
+
+        // Get the model data
+        const modelData = @Html.Raw(Json.Serialize(Model));
+        // Initialize existing subtasks if any
+        if (modelData && modelData.subtasksList && modelData.subtasksList.length > 0) {
+            modelData.subtasksList.forEach((subtasksList, index) => {
+                // Create subtask HTML
+                subtaskCount++;
+
+                const subtaskHtml = addSubtask(index, subtasksList);
+                $('#subtasksContainer').append(subtaskHtml);
+                    initializeDateTimePickers();
+
+                // Set values for the subtask
+                const $subtaskDiv = $('#subtasksContainer').children().last();
+
+                // Set basic fields
+                $subtaskDiv.find(`[name="Subtasks[${index}].Title"]`).val(subtasksList.title);
+                $subtaskDiv.find(`[name="Subtasks[${index}].Category"]`).val(subtasksList.category);
+                $subtaskDiv.find(`[name="Subtasks[${index}].Priority"]`).val(subtasksList.priority);
+                $subtaskDiv.find(`[name="Subtasks[${index}].Status"]`).val(subtasksList.status);
+
+                // Set dates
+                if (subtasksList.startDate) {
+                    $subtaskDiv.find(`[name="Subtasks[${index}].StartDate"]`)
+                        .val(subtasksList.startDate);
+                }
+                if (subtasksList.dueDate) {
+                    $subtaskDiv.find(`[name="Subtasks[${index}].DueDate"]`)
+                        .val(subtasksList.dueDate);
+                }
+                // Set notification settings
+                if (subtasksList.isNotification === true) {
+                    const $notificationToggle = $subtaskDiv.find(`[name="Subtasks[${index}].IsNotification"][value="1"]`);
+                    $notificationToggle.prop('checked', true).trigger('change');
+
+                    // Set notification preset
+                    $subtaskDiv.find(`[name="Subtasks[${index}].L1NotificationPresetId"]`)
+                        .val(subtasksList.l1NotificationPresetId);
+
+                    // Handle custom notifications if needed
+                    if (subtasksList.l1NotificationPresetId === 0) {
+                        $subtaskDiv.find('.subtask-custom-notification-options').show();
+                        $subtaskDiv.find(`[name="Subtasks[${index}].DefaultNotificationOptions"][value="${subtasksList.defaultNotificationOptions}"]`)
+                            .prop('checked', true);
+                        //$subtaskDiv.find(`[name="Subtasks[${index}].NotificationTime"]`).val(subtasksList.notificationTime);
+                    }
+                }
+            });
+
+            // Update subtask counter
+            subtaskCount = modelData.subtasksList.length;
+        } else { 
+            console.log("can't load");
+        }
+
+    });
 
     function reinitializeValidator() {
         $("#createTaskForm").removeData("validator");
@@ -555,6 +799,9 @@
                 Category: {
                     required: true
                 },
+                StartDate: {
+                    required: true
+                },
                 DueDate: {
                     required: true
                 },
@@ -564,7 +811,7 @@
                 Status: {
                     required: true
                 },
-                L1RecurringTaskSettingId: {
+                L1RecurringPresetId: {
                     required: true
                 },
                 L1NotificationPresetId: {
@@ -584,77 +831,7 @@
             },
             submitHandler: function (form) {
                 event.preventDefault();
-
-                var subtasks = [];
-                $('.subtask').each(function(index) {
-                    var subtask = {
-                        Title: $(this).find('[name^="Subtasks["][name$="].Title"]').val(),
-                        Category: $(this).find('[name^="Subtasks["][name$="].Category"]').val(),
-                        Description: $(this).find('[name^="Subtasks["][name$="].Description"]').val(),
-                        Priority: $(this).find('[name^="Subtasks["][name$="].Priority"]').val(),
-                        Status: $(this).find('[name^="Subtasks["][name$="].Status"]').val(),
-                        StartDate: $(this).find('[name^="Subtasks["][name$="].StartDate"]').val(),
-                        DueDate: $(this).find('[name^="Subtasks["][name$="].DueDate"]').val(),
-                        IsNotification: $(this).find('[name^="Subtasks["][name$="].IsNotification"]:checked').val() == "0" ? false : true,
-                        L1NotificationPresetId: $(this).find('[name^="Subtasks["][name$="].L1NotificationPresetId"]:checked').val(),
-                        DefaultNotificationOptions: $(this).find('[name^="Subtasks["][name$="].DefaultNotificationOptions"]:checked').val(),
-                    };
-                    subtasks.push(subtask);
-                });
-
-                var formData = {
-                    Title: $('#Title').val(),
-                    Category: $('#Category').val(),
-                    Description: $('#Description').val(),
-                    Priority: $('#Priority').val(),
-                    Status: $('#Status').val(),
-                    StartDate: $('#StartDate').val(),
-                    DueDate: $('#DueDate').val(),
-                    IsRecurring: $('input[name="IsRecurring"]:checked').val() == "0" ? false : true,
-                    L1RecurringPresetId: $('#recurringPreset').val(),
-                    DefaultRecurringOptions: $('input[name="DefaultRecurringOptions"]:checked').val(),
-                    IsNotification: $('input[name="IsNotification"]:checked').val() == "0" ? false : true,
-                    L1NotificationPresetId: $('#notificationPresetSelect').val(),
-                    DefaultNotificationOptions: $('input[name="DefaultNotificationOptions"]:checked').val(),
-                    Subtasks: JSON.stringify(subtasks),
-                };
-
-                $.ajax({
-                    url: form.action,
-                    type: "POST",
-                    data: formData,
-                    success: function (response) {
-                        if (response.success) {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: "success",
-                                confirmButtonText: "OK"
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = "/Task/Index";
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: "error",
-                                confirmButtonText: "OK"
-                            });
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Error:", error);
-                        Swal.fire({
-                            title: "Error!",
-                            text: "An unexpected error occurred. Please try again.",
-                            icon: "error",
-                            confirmButtonText: "OK"
-                        });
-                    }
-                });
-                return false;
+                return true;
             }
         });
     }
@@ -675,6 +852,10 @@
         $(`#Subtasks_${index}_Category`).rules('add', {
             required: true,
         });
+        
+        $(`#Subtasks_${index}_StartDate`).rules('add', {
+            required: true,
+        });
 
         $(`#Subtasks_${index}_DueDate`).rules('add', {
             required: true,
@@ -692,5 +873,85 @@
             required: true,
         });
     }
+
+    function submitTaskForm(form) {
+        var subtasks = [];
+        $('.subtask').each(function(index) {
+            var subtask = {
+                Title: $(this).find('[name^="Subtasks["][name$="].Title"]').val(),
+                Status: $(this).find('[name^="Subtasks["][name$="].Status"]').val(),
+                Category: $(this).find('[name^="Subtasks["][name$="].Category"]').val(),
+                Priority: $(this).find('[name^="Subtasks["][name$="].Priority"]').val(),
+                StartDate: $(this).find('[name^="Subtasks["][name$="].StartDate"]').val(),
+                DueDate: $(this).find('[name^="Subtasks["][name$="].DueDate"]').val(),
+                IsNotification: $(this).find('[name^="Subtasks["][name$="].IsNotification"]:checked').val() == "0" ? false : true,
+                L1NotificationPresetId: $(this).find('[name^="Subtasks["][name$="].L1NotificationPresetId"]').val(),
+                DefaultNotificationOptions: $(this).find('[name^="Subtasks["][name$="].DefaultNotificationOptions"]:checked').val(),
+            };
+            subtasks.push(subtask);
+        });
+        
+        var formData = {
+            Title: $('#Title').val(),
+            Category: $('#Category').val(),
+            Description: $('#Description').val(),
+            Priority: $('#Priority').val(),
+            Status: $('#Status').val(),
+            StartDate: $('#StartDate').val(),
+            DueDate: $('#DueDate').val(),
+            IsRecurring: $('input[name="IsRecurring"]:checked').val() == "0" ? false : true,
+            L1RecurringPresetId: $('#recurringPreset').val(),
+            DefaultRecurringOptions: $('input[name="DefaultRecurringOptions"]:checked').val(),
+            IsNotification: $('input[name="IsNotification"]:checked').val() == "0" ? false : true,
+            L1NotificationPresetId: $('#notificationPresetSelect').val(),
+            DefaultNotificationOptions: $('input[name="DefaultNotificationOptions"]:checked').val(),
+            Subtasks: JSON.stringify(subtasks),
+        };
+
+        $.ajax({
+            url: form.action,
+            type: "POST",
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: response.title,
+                        text: response.message,
+                        icon: "success",
+                        confirmButtonText: "OK"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "/Task/Index";
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: response.title,
+                        text: response.message,
+                        icon: "error",
+                        confirmButtonText: "OK"
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error:", error);
+                Swal.fire({
+                    title: "Error!",
+                    text: "An unexpected error occurred. Please try again.",
+                    icon: "error",
+                    confirmButtonText: "OK"
+                });
+            }
+        });
+        return false;
+    }
+
+    // Add click handler for your submit button
+    $("#btnSubmit").click(function(e) {
+        e.preventDefault();
+        if ($("#createTaskForm").valid()) {
+            submitTaskForm(document.getElementById("createTaskForm"));
+        }
+    });
 </script>
 }

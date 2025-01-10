@@ -7,9 +7,11 @@
         public string Content { get; set; }
         public string AuthorName { get; set; }
         public int Status { get; set; }
-
+        public int LikeCount { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<string> Tags { get; set; }
         public bool IsAuthor { get; set; }
+        public bool IsLiked { get; set; }
+
     }
 }

@@ -2,19 +2,15 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using StudentTaskManagement.Models;
 using StudentTaskManagement.ViewModels;
-using StudentTaskManagement.Utilities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudentTaskManagement.Controllers
 {
-    public class ForumController : Controller
+    [Authorize]
+    public class ForumController : _BaseController
     {
         private readonly StudentTaskManagementContext dbContext;
         private readonly ILogger<NotificationPresetController> _logger;
@@ -31,124 +27,20 @@ namespace StudentTaskManagement.Controllers
 
         public IActionResult Index()
         {
-            ViewData["ActiveMenu"] = "Forums";
-
-            // Hardcoded sample data
-            var categories = new List<L1DiscussionsViewModel>
-            {
-                new L1DiscussionsViewModel
-                {
-                    ForumId = 1,
-                    Title = "General Discussion",
-                    Description = "Talk about anything and everything",
-                    CommentCount = 125,
-                    Tags = new List<string> { "General", "Discussion", "Help" },
-                    CreatedByStudentId = 1,
-                    CreatedDateTime = DateTime.Now.AddHours(-12)
-                },
-                new L1DiscussionsViewModel
-                {
-                    ForumId = 2,
-                    Title = "Technical Support",
-                    Description = "Get help with technical issues",
-                    CommentCount = 125,
-                    Tags = new List<string> { "General", "Discussion", "Help" },
-                    CreatedByStudentId = 1,
-                    CreatedDateTime = DateTime.Now.AddHours(-12)
-                },
-                new L1DiscussionsViewModel
-                {
-                    ForumId = 3,
-                    Title = "Announcements",
-                    Description = "Important updates and news",
-                    Tags = new List<string> { "General", "Discussion", "Help" },
-                    CommentCount = 125,
-                    CreatedByStudentId = 1,
-                    CreatedDateTime = DateTime.Now.AddHours(-12)
-                }
-            };
-
-            return View(categories);
-        }
-        
-/*        [HttpGet]
-        public IActionResult GetForumPosts(int page = 1, int pageSize = 10, string searchTerm = "", string sortOrder = "newest")
-        {
-            // Get your data from the database
-            var query = GetForumCategories(); // Your data access method
-
-            // Apply search if term provided
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                query = query.Where(c => 
-                    c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
-                    c.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-                ).ToList();
-            }
-
-            // Apply sorting
-            query = sortOrder switch
-            {
-                "newest" => query.OrderByDescending(c => c.LatestPost?.CreatedAt).ToList(),
-                "oldest" => query.OrderBy(c => c.LatestPost?.CreatedAt).ToList(),
-                "mostActive" => query.OrderByDescending(c => c.CommentCount).ToList(),
-                _ => query.OrderByDescending(c => c.LatestPost?.CreatedAt).ToList()
-            };
-
-            // Calculate pagination
-            int totalItems = query.Count();
-            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-            var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            // Generate HTML for the posts
-            var html = RenderViewToString("_ForumPosts", items);
-
-            return Json(new { 
-                html = html, 
-                totalPages = totalPages,
-                currentPage = page
-            });
+            ViewData["ActiveMenu"] = "DiscussionForum";
+            return View();
         }
 
-        private string RenderViewToString(string viewName, object model)
+        public IActionResult MyPost()
         {
-            ViewData.Model = model;
-            using var sw = new StringWriter();
-            var viewResult = _viewEngine.FindView(ControllerContext, viewName, false);
-            var viewContext = new ViewContext(
-                ControllerContext,
-                viewResult.View,
-                ViewData,
-                TempData,
-                sw,
-                new HtmlHelperOptions()
-            );
-
-            viewResult.View.RenderAsync(viewContext).GetAwaiter().GetResult();
-            return sw.GetStringBuilder().ToString();
-        }*/
-
-
-        /*[HttpGet]
-        public IActionResult Details(int id)
-        {
-            var post = GetForumPost(id); // Your data access method
-            var viewModel = new ForumDetailsViewModel
-            {
-                Id = post.Id,
-                Title = post.Title,
-                Content = post.Content,
-                AuthorName = post.Author.Name,
-                CreatedAt = post.CreatedAt,
-                Tags = post.Tags,
-                IsAuthor = post.AuthorId == User.GetUserId() // Check if current user is author
-            };
-            return View(viewModel);
+            ViewData["ActiveMenu"] = "MyPost";
+            return View();
         }
-*/
 
+        // View Forum Details Page
         public async Task<IActionResult> Details(int id)
         {
+            ViewData["ActiveMenu"] = "MyPost";
             var currentUserId = _userManager.GetUserId(User);
 
             var forum = await dbContext.L1DiscussionForums
@@ -160,14 +52,20 @@ namespace StudentTaskManagement.Controllers
                 return NotFound();
             }
 
+            // Check if the current user has liked this post
+            var isLiked = await dbContext.L1DiscussionForumLikes
+                .AnyAsync(l => l.L1DiscussionForumId == id && l.CreatedByStudentId == currentUserId);
+
             var viewModel = new ForumDetailsViewModel
             {
                 Id = forum.Id,
                 Title = forum.Title,
                 Content = forum.Description,
                 CreatedAt = forum.CreatedDateTime,
+                LikeCount = forum.LikeCount,
                 AuthorName = await GetUserName(forum.CreatedByStudentId),
                 IsAuthor = forum.CreatedByStudentId == currentUserId,
+                IsLiked = isLiked,
                 Tags = forum.Label?.Split(',').Where(t => !string.IsNullOrEmpty(t)).ToList() ?? new List<string>(),
                 Status = forum.Status
             };
@@ -176,13 +74,13 @@ namespace StudentTaskManagement.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetComments(int topicId, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> AjaxGetComments(int topicId, int page = 1, int pageSize = 10)
         {
             try
-            {
+           {
                 // Get comments data
                 var commentsQuery = await dbContext.L1DiscussionForumComments
-                    .Where(c => c.L1DiscussionForumId == topicId && c.DeletionDateTime == null)
+                    .Where(c => c.L1DiscussionForumId == topicId && c.Status == (int)ForumStatus.Active)
                     .OrderByDescending(c => c.LastModifiedDateTime)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -232,11 +130,11 @@ namespace StudentTaskManagement.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddComment(int topicId, string content)
+        public async Task<IActionResult> AjaxAddComment(int topicId, string content)
         {
+            using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
-
                 if (string.IsNullOrEmpty(content))
                 {
                     return Json(new { success = false, message = "Comment content is required." });
@@ -254,94 +152,43 @@ namespace StudentTaskManagement.Controllers
                 {
                     L1DiscussionForumId = topicId,
                     Context = content,
-                    CreatedByStudentId = "1",//_userManager.GetUserId(User),
+                    CreatedByStudentId = LoginStudentId,
                     Status = (int)ForumStatus.Active,
+                    IsDiscussionForumDeleted = false,
                     LastModifiedDateTime = DateTime.Now
                 };
 
                 dbContext.L1DiscussionForumComments.Add(comment);
-                await dbContext.SaveChangesAsync();
+                
+                // Increment the comment count
+                forum.CommentCount++;
+                forum.LastModifiedDate = DateTime.Now; // Optional: update last modified date
 
-                return Json(new { success = true, message = "Your comment has been added to the post" });
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Your comment has been added to the post",
+                    commentCount = forum.CommentCount // Return updated count
+                });
             }
             catch (Exception ex)
             { 
-                    _logger.LogError(ex, "Error updating profile");
-                    return Json(new { success = false, message = "Failed to add your comment to the post" });
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteTopic(int id)
-        {
-            try
-            {
-                var forum = await dbContext.L1DiscussionForums
-                    .FirstOrDefaultAsync(f => f.Id == id && f.DeletionDateTime == null);
-
-                if (forum == null)
-                {
-                    return Json(new { success = false, message = "Forum topic not found." });
-                }
-
-                if (forum.CreatedByStudentId != _userManager.GetUserId(User))
-                {
-                    return Json(new { success = false, message = "Unauthorized to delete this topic." });
-                }
-
-                forum.DeletionDateTime = DateTime.Now;
-                await dbContext.SaveChangesAsync();
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
+                await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error updating profile");
                 return Json(new { success = false, message = "Failed to add your comment to the post" });
             }
         }
 
-        private async Task<string> GetUserName(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            return user?.UserName ?? "Unknown User";
-        }
-        private static async Task<string> GetUserNameStatic(string userId, UserManager<L1Students> userManager)
-        {
-            var user = await userManager.FindByIdAsync(userId);
-            return user?.UserName ?? "Unknown User";
-        }
-        [HttpPost]
-        public IActionResult DeleteForum(int id)
-        {
-            // Simply return success for UI testing
-            return Json(new { success = true });
-        }
 
-        public List<SelectListItem> GetCategory()
-        {
-            List<SelectListItem> selectListItems = new List<SelectListItem>();
-            // Add default option
-            selectListItems.Add(new SelectListItem { Text = "- Please select -", Value = "" });
-            selectListItems.Add(new SelectListItem { Text = "General Discussions", Value = ((int)ForumCategory.GeneralDiscussions).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "HomeworkHelp", Value = ((int)ForumCategory.HomeworkHelp).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Exam Prep", Value = ((int)ForumCategory.ExamsTestPrep).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Interships & Volunteering", Value = ((int)ForumCategory.InternshipsVolunteering).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Scholarships & Financial Aid", Value = ((int)ForumCategory.ScholarshipsFinancialAid).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Q & A", Value = ((int)ForumCategory.QnA).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Study Groups", Value = ((int)ForumCategory.StudyGroups).ToString() });
-            selectListItems.Add(new SelectListItem { Text = "Peer Advice", Value = ((int)ForumCategory.PeerAdvice).ToString() });
-
-
-            return selectListItems.OrderBy(x => x.Text).ToList();
-        }
-
+        // Create & Edit Forum Page
         [HttpGet]
-        [Route("Forum/CreateForum/{forumId?}")]
+        [Route("Forum/CreateForum/{forumId?}")] 
         public async Task<IActionResult> CreateForum(int? forumId)
         {
             // Get the list for dropdown and store in ViewBag
-            ViewData["ActiveMenu"] = "Forums";
+            ViewData["ActiveMenu"] = "MyPost";
 
             if (forumId != null)
             {
@@ -374,7 +221,7 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
-
+        // Create Function
         [HttpPost]
         public async Task<IActionResult> Add(L1DiscussionsViewModel viewModel)
         {
@@ -387,7 +234,9 @@ namespace StudentTaskManagement.Controllers
                     Category = viewModel.Category,
                     Label = viewModel.LabelTags,
                     Status = (int)ForumStatus.Active,
-                    CreatedByStudentId = "1",
+                    LikeCount = 0,
+                    CommentCount = 0,
+                    CreatedByStudentId = LoginStudentId,
                     CreatedDateTime = DateTime.Now,
                     LastModifiedDate = DateTime.Now,
                 };
@@ -411,6 +260,7 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
+        // Edit Function
         [HttpPost]
         [Route("Forum/Update/{forumId?}")]
         public async Task<IActionResult> Update(int forumId, L1DiscussionsViewModel viewModel)
@@ -457,5 +307,363 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("Forum/DeleteForum/{id?}")]
+        public async Task<IActionResult> DeleteForum(int id)
+        {
+            using var transaction = await dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var forum = await dbContext.L1DiscussionForums
+                    .Include(f => f.L1DiscussionForumComments)
+                    .Include(f => f.L1DiscussionForumLikes)
+                    .FirstOrDefaultAsync(f => f.Id == id && f.Status == (int)ForumStatus.Deleted);
+
+                if (forum == null)
+                {
+                    return Json(new { success = false, message = "Forum not found." });
+                }
+
+                // Check if the current user is the author
+                if (forum.CreatedByStudentId != LoginStudentId)
+                {
+                    return Json(new { success = false, message = "You are not authorized to delete this forum." });
+                }
+
+                // Soft delete the forum
+                forum.DeletionDateTime = DateTime.Now;
+                forum.Status = (int)ForumStatus.Deleted;
+                forum.CreatedByStudentId = LoginStudentId;
+
+                // Soft delete all comments
+                if (forum.L1DiscussionForumComments?.Any() == true)
+                {
+                    foreach (var comment in forum.L1DiscussionForumComments)
+                    {
+                        comment.IsDiscussionForumDeleted = true;
+                        comment.DeletionDateTime = DateTime.Now;
+                        comment.LastModifiedDateTime = DateTime.Now;
+                    }
+                }
+                
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true, message = "Forum has been deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error deleting forum");
+                return Json(new { success = false, message = "An error occurred while deleting the forum." });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AjaxToggleLike(int topicId)
+        {
+            try
+            {
+                // Get the forum topic first
+                var forumTopic = await dbContext.L1DiscussionForums
+                    .FirstOrDefaultAsync(f => f.Id == topicId);
+
+                if (forumTopic == null)
+                {
+                    return Json(new { success = false, message = "Topic not found" });
+                }
+
+                var existingLike = await dbContext.L1DiscussionForumLikes
+                    .FirstOrDefaultAsync(l => l.L1DiscussionForumId == topicId && l.CreatedByStudentId == LoginStudentId);
+
+                if (existingLike != null)
+                {
+                    // Unlike
+                    dbContext.L1DiscussionForumLikes.Remove(existingLike);
+                    // Decrease like count
+                    forumTopic.LikeCount = Math.Max(0, forumTopic.LikeCount - 1); // Ensure it doesn't go below 0
+                    await dbContext.SaveChangesAsync();
+                    return Json(new { 
+                        success = true, 
+                        isLiked = false,
+                        likeCount = forumTopic.LikeCount 
+                    });
+                }
+                else
+                {
+                    // Like
+                    var newLike = new L1DiscussionForumLikes
+                    {
+                        L1DiscussionForumId = topicId,
+                        CreatedByStudentId = LoginStudentId,
+                        CreatedDateTime = DateTime.Now
+                    };
+                    await dbContext.L1DiscussionForumLikes.AddAsync(newLike);
+                    // Increase like count
+                    forumTopic.LikeCount++;
+                    await dbContext.SaveChangesAsync();
+                    return Json(new { 
+                        success = true, 
+                        isLiked = true,
+                        likeCount = forumTopic.LikeCount 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Failed to update like status" });
+            }
+        }
+
+        public async Task<IActionResult> AjaxGetForumPosts(string titleSearch, string[] tags,
+            string status, string sortOrder, int page = 1, int pageSize = 10)
+        {
+            try 
+            {
+                var query = dbContext.L1DiscussionForums
+                    .Include(f => f.L1Students)
+                    .Where(f => f.Status != (int)ForumStatus.Deleted);
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(titleSearch))
+                    query = query.Where(f => f.Title.Contains(titleSearch));
+
+                if (tags != null && tags.Length > 0)
+                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));
+
+                if (!string.IsNullOrEmpty(status))
+                    query = query.Where(f => f.Status == Convert.ToInt32(status));
+
+                // Apply sorting
+                query = sortOrder switch
+                {
+                    "newest" => query.OrderByDescending(f => f.LastModifiedDate),
+                    "oldest" => query.OrderBy(f => f.LastModifiedDate),
+                    "mostLiked" => query.OrderByDescending(f => f.LikeCount),
+                    "mostCommented" => query.OrderByDescending(f => f.CommentCount),
+                    _ => query.OrderByDescending(f => f.LastModifiedDate) // "newest" is default
+                };
+
+                var totalPosts = await query.CountAsync();
+                var totalPages = (int)Math.Ceiling(totalPosts / (double)pageSize);
+
+                var posts = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new
+                    {
+                        forumId = p.Id,
+                        title = p.Title,
+                        description = p.Description,
+                        label = p.Label,
+                        status = p.Status,
+                        likeCount = p.LikeCount,
+                        commentCount = p.CommentCount,
+                        lastModifiedDate = GetTimeAgo(p.LastModifiedDate),
+                        createdByStudentId = p.CreatedByStudentId,
+                        authorName = p.L1Students.UserName,
+                        isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
+                        isResolved = p.Status == (int)ForumStatus.Active ? false : true
+                    })
+                    .ToListAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    data = posts,
+                    totalPages = totalPages,
+                    currentPage = page
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error on posting forum");
+                return Json(new
+                {
+                    success = false,
+                    message = "An error occurred while posting the forum. Please try again."
+                });
+            }
+            
+        }
+
+        public async Task<IActionResult> AjaxGetMyPosts(string titleSearch, string[] tags,
+            string status, string sortOrder, int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var query = dbContext.L1DiscussionForums
+                .Include(f => f.L1Students)
+                .Where(f => f.CreatedByStudentId == LoginStudentId && f.Status != (int)ForumStatus.Deleted);
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(titleSearch))
+                    query = query.Where(f => f.Title.Contains(titleSearch));
+
+                if (tags != null && tags.Length > 0)
+                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));
+
+                if (!string.IsNullOrEmpty(status))
+                    query = query.Where(f => f.Status == Convert.ToInt32(status));
+
+                // Apply sorting
+                query = sortOrder switch
+                {
+                    "newest" => query.OrderByDescending(f => f.LastModifiedDate),
+                    "oldest" => query.OrderBy(f => f.LastModifiedDate),
+                    "mostLiked" => query.OrderByDescending(f => f.LikeCount),
+                    "mostCommented" => query.OrderByDescending(f => f.CommentCount),
+                    _ => query.OrderByDescending(f => f.LastModifiedDate) // "newest" is default
+                };
+
+                var totalPosts = await query.CountAsync();
+                var totalPages = (int)Math.Ceiling(totalPosts / (double)pageSize);
+
+                var posts = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new
+                    {
+                        forumId = p.Id,
+                        title = p.Title,
+                        description = p.Description,
+                        label = p.Label,
+                        status = p.Status,
+                        likeCount = p.LikeCount,
+                        commentCount = p.CommentCount,
+                        lastModifiedDate = GetTimeAgo(p.LastModifiedDate),
+                        createdByStudentId = p.CreatedByStudentId,
+                        authorName = p.L1Students.UserName,
+                        isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
+                        isResolved = p.Status == (int)ForumStatus.Active ? false : true
+                    })
+                    .ToListAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    data = posts,
+                    totalPages = totalPages,
+                    currentPage = page
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error on posting forum");
+                return Json(new
+                {
+                    success = false,
+                    message = "An error occurred while posting the forum. Please try again."
+                });
+            }
+
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AjaxDeleteComment(int commentId)
+        {
+            using var transaction = await dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var comment = await dbContext.L1DiscussionForumComments
+                    .FirstOrDefaultAsync(c => c.Id == commentId && c.Status == (int)ForumStatus.Active);
+
+                if (comment == null)
+                {
+                    return Json(new { success = false, message = "Comment not found." });
+                }
+
+                // Check if user is authorized to delete this comment
+                if (comment.CreatedByStudentId != LoginStudentId)
+                {
+                    return Json(new { success = false, message = "You are not authorized to delete this comment." });
+                }
+
+                // Get the forum to update comment count
+                var forum = await dbContext.L1DiscussionForums
+                    .FirstOrDefaultAsync(f => f.Id == comment.L1DiscussionForumId);
+
+                if (forum == null)
+                {
+                    return Json(new { success = false, message = "Forum topic not found." });
+                }
+
+                // Soft delete the comment
+                comment.Status = (int)ForumStatus.Deleted;
+                comment.DeletionDateTime = DateTime.Now;
+                comment.CreatedByStudentId = LoginStudentId;
+                
+                // Decrease the comment count
+                forum.CommentCount = Math.Max(0, forum.CommentCount - 1); // Ensure it doesn't go below 0
+                forum.LastModifiedDate = DateTime.Now;
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Comment has been deleted",
+                    commentCount = forum.CommentCount
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error deleting comment");
+                return Json(new { success = false, message = "Failed to delete the comment" });
+            }
+        }
+
+        #region Function
+
+        public static string GetTimeAgo(DateTime dateTime)
+        {
+            var span = DateTime.Now - dateTime;
+
+            if (span.TotalMinutes < 2) return "just now";
+            if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+            if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+            if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
+            return dateTime.ToString("dd MMM yyyy");
+        }
+
+        private async Task<string> GetUserName(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return user?.UserName ?? "Unknown User";
+        }
+
+        private static async Task<string> GetUserNameStatic(string userId, UserManager<L1Students> userManager)
+        {
+            var user = await userManager.FindByIdAsync(userId);
+            return user?.UserName ?? "Unknown User";
+        }
+
+        public List<SelectListItem> GetCategory()
+        {
+            List<SelectListItem> selectListItems = new List<SelectListItem>();
+            // Add default option
+            selectListItems.Add(new SelectListItem { Text = "- Please select -", Value = "" });
+            selectListItems.Add(new SelectListItem { Text = "General Discussions", Value = ((int)ForumCategory.GeneralDiscussions).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "HomeworkHelp", Value = ((int)ForumCategory.HomeworkHelp).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Exam Prep", Value = ((int)ForumCategory.ExamsTestPrep).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Interships & Volunteering", Value = ((int)ForumCategory.InternshipsVolunteering).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Scholarships & Financial Aid", Value = ((int)ForumCategory.ScholarshipsFinancialAid).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Q & A", Value = ((int)ForumCategory.QnA).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Study Groups", Value = ((int)ForumCategory.StudyGroups).ToString() });
+            selectListItems.Add(new SelectListItem { Text = "Peer Advice", Value = ((int)ForumCategory.PeerAdvice).ToString() });
+
+
+            return selectListItems.OrderBy(x => x.Text).ToList();
+        }
+
+        #endregion
     }
+
+
+
 }

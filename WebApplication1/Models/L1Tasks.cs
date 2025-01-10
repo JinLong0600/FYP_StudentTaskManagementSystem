@@ -20,20 +20,25 @@ namespace StudentTaskManagement.Models
         [Required(AllowEmptyStrings = true)]
         public int Status { get; set; }
 
-        public DateTime? StartDate { get; set; }
+        [Required]
+        public int Priority { get; set; }
+
+        [Required]
+        public DateTime StartDate { get; set; }
 
         [Required]
         public DateTime DueDate { get; set; }
 
         [Required]
-        public int Priority { get; set; }
-
-        [Required]
         public bool IsRecurring { get; set; }
 
+        public bool? IsParentRecurring { get; set; } // false = child, else null && true = parent
         public int? L1RecurringPresetId { get; set; }
 
         public int? DefaultRecurringOptions { get; set; }
+
+        public int? GeneratedCount { get; set; }
+
 
         [Required]
         public bool IsNotification { get; set; }
@@ -51,6 +56,13 @@ namespace StudentTaskManagement.Models
         public DateTime DeletionDateTime { get; set; }
 
         public virtual ICollection<L1SubTasks> L1SubTasks { get; set; }
+
+        [ForeignKey("L1RecurringPresetId")]
+        public virtual L1RecurringPatterns L1RecurringPatterns { get; set; }  // Changed from L1RecurringPresets to L1RecurringPreset (singular)
+
+        [ForeignKey("L1NotificationPresetId")]
+        public virtual L1NotificationPresets L1NotificationPresets { get; set; }  // Changed from L1RecurringPresets to L1RecurringPreset (singular)
+
 
     }
 

@@ -1,0 +1,80 @@
+﻿@model string 
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 mt-4 user-input-col-5">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-primary text-accent-blue">Resend Confirmation Email</h2>
+                <p class="text-muted">Enter your email address to receive a new confirmation link</p>
+            </div>
+
+            <form id="resendForm">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Enter your email">
+                </div>
+
+                <button type="button" class="btn btn-primary w-100 btn-lg fw-bold" onclick="handleResend()">Resend Confirmation</button>
+
+                <div class="text-center mt-3">
+                    <a href="/Account/Login" class="btn btn-outline-secondary w-100 fw-bold text-decoration-none ">Back to Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function handleResend() {
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const form = document.getElementById('resendForm');
+            const formData = new FormData(form);
+
+            fetch('/Account/ResendEmailConfirmation', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: data.title,
+                        text: data.message,
+                        showConfirmButton: true
+                    }).then(() => {
+                        window.location.href = '/Account/Login';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: data.title,
+                        text: data.message
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong! Please try again.'
+                });
+            });
+        }
+    </script>
+}

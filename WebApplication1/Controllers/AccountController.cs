@@ -13,11 +13,13 @@ using System.Web;
 using static StudentTaskManagement.Utilities.GeneralEnum;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using System.Drawing;
+using StudentTaskManagement.Controllers;
 
 namespace WebApplication1.Controllers
 {
     [Authorize]
-    public class AccountController : Controller
+    public class AccountController : _BaseController
     {
         private readonly StudentTaskManagementContext dbContext;
 
@@ -26,13 +28,6 @@ namespace WebApplication1.Controllers
         private readonly ILogger<AccountController> _logger;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _webHostEnvironment;
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Index()
-        {
-            return View();
-        }
 
         public AccountController(UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, ILogger<AccountController> logger, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
         {
@@ -56,6 +51,52 @@ namespace WebApplication1.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel viewModel, string? returnUrl)
+        {
+            ViewData["ActiveMenu"] = "LoginRegistration";
+            viewModel.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            var user = await _userManager.FindByEmailAsync(viewModel.Email);
+
+            if (user != null && !user.EmailConfirmed && (await _userManager.CheckPasswordAsync(user, viewModel.Password)))
+            {
+                return Json(new
+                {
+                    success = false,
+                    title = "Email not confirmed yet.",
+                    message = "The email address must be confirmed before the account is activated."
+                });
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(user.UserName, viewModel.Password, viewModel.RememberMe, true);//false);
+
+            if (result.Succeeded)
+            {
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = true,
+                    });
+                }
+            }
+            else
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Incorrect Email or Password."
+                });
+            }
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Registration()
@@ -64,10 +105,9 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(L1StudentsViewModel viewModel)
+        public async Task<IActionResult> Registration(L1StudentsViewModel viewModel)
         {
             if (ModelState.IsValid)
             {
@@ -95,40 +135,41 @@ namespace WebApplication1.Controllers
                     var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var confirmationLink = Url.Action("ConfirmEmail", "Account", 
                         new { userId = user.Id, token = token }, Request.Scheme);
-
                     // Prepare email content
                     string subject = "Confirm your email";
                     string body = $@"
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <style>
-                                body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
-                                .container {{ padding: 20px; }}
-                                .button {{ 
-                                    background-color: #007bff;
-                                    color: white;
-                                    padding: 10px 20px;
-                                    text-decoration: none;
-                                    border-radius: 5px;
-                                    display: inline-block;
-                                    margin: 20px 0;
-                                }}
-                            </style>
-                        </head>
-                        <body>
-                            <div class='container'>
-                                <h2>Welcome {HttpUtility.HtmlEncode(user.UserName)}!</h2>
-                                <p>Thank you for registering with our Student Task Management System.</p>
-                                <p>Please confirm your email address by clicking the button below:</p>
-                                <a href='{confirmationLink}' class='button'>Confirm Email</a>
-                                <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-                                <p>{confirmationLink}</p>
-                                <p>Best regards,<br>Taskky Team</p>
-                            </div>
-                        </body>
-                        </html>";
+                                            <!DOCTYPE html>
+                                            <html>
+                                            <head>
+                                                <style>
+                                                    body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 0;padding: 0; background-color: #f4f4f4; }}
 
+                                                    .container {{ max-width: 600px; margin: 20px auto; padding: 30px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }}
+
+                                                    .button {{ background-color: #256D85; color: white !important; padding: 12px 25px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 15px 0; font-weight: bold; }}
+                                                    
+                                                    .button:hover {{ background-color: #2B4865; color: white; }}
+
+                                                    .link {{ word-break: break-all; color: #666; font-size: 14px; }}
+
+                                                    .header {{ color: #333; margin-bottom: 20px; }}
+
+                                                    .footer {{margin-top: 30px; color: #666; font-size: 14px; }}
+                                                </style>
+                                            </head>
+                                            <body>
+                                                <div class='container'>
+                                                    <h2 class='header'>Hello, {HttpUtility.HtmlEncode(user.UserName)}!</h2>
+                                                    <p>Thanks for joining Taskky. To start using your account, please verify your email address.</p>
+                                                    <a href='{confirmationLink}' class='button'>Verify Email</a>
+                                                    <p class='link'>If the button doesn't work, Try clicking the link <a href='{confirmationLink}' style='color: #1A4B6E; text-decoration: underline;'>right here</a></p>
+                                                    <div class='footer'>
+                                                        <p>Best regards,<br>The Taskky Team</p>
+                                                    </div>
+                                                </div>
+                                            </body>
+                                            </html>";
+                    
                     try
                     {
                         await _emailService.SendEmailAsync(
@@ -164,81 +205,127 @@ namespace WebApplication1.Controllers
             return View(viewModel);
         }
 
-        // Action to display images
-        public async Task<IActionResult> GetImage(string userId, string imageType)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) return NotFound();
-
-            string imagePath = imageType.ToLower() == "profile"
-                ? user.ProfileImage
-                : user.StudentIdentityCard;
-
-            if (string.IsNullOrEmpty(imagePath))
-                return NotFound();
-
-            string fullPath = Path.Combine(_webHostEnvironment.WebRootPath, imagePath.TrimStart('/'));
-            if (!System.IO.File.Exists(fullPath))
-                return NotFound();
-
-            return PhysicalFile(fullPath, "image/jpeg"); // or determine content type based on file extension
-        }
-
-        [HttpPost]
+        [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel viewModel, string? returnUrl)
+        public IActionResult EmailConfrimationExpired()
         {
             ViewData["ActiveMenu"] = "LoginRegistration";
-            viewModel.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-                var user = await _userManager.FindByEmailAsync(viewModel.Email);
-
-                if (user != null && !user.EmailConfirmed && (await _userManager.CheckPasswordAsync(user, viewModel.Password)))
-                {
-                    ModelState.AddModelError(string.Empty, "Email not confirmed yet");
-                    return View(viewModel);
-                }
-
-                var result = await _signInManager.PasswordSignInAsync(viewModel.Email, viewModel.Password, viewModel.RememberMe, true);//false);
-
-                if (result.Succeeded)
-                {
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    {
-                        return Redirect(returnUrl);
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
-
-                if (result.IsLockedOut)
-                {
-                    return View("AccountLocked");
-                }
-
-                ModelState.AddModelError(string.Empty, "Invalid Login Attempt");
-            
-            return View(viewModel);
+            return View();
         }
 
         [HttpGet]
         [AllowAnonymous]
+        public IActionResult ResendEmailConfirmation()
+        {
+            ViewData["ActiveMenu"] = "LoginRegistration";
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResendEmailConfirmation(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Please provide an email address.",
+                    title = "Error!"
+                });
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "User not found.",
+                    title = "Error!"
+                });
+            }
+
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Email is already confirmed.",
+                    title = "Information"
+                });
+            }
+
+            try
+            {
+                // Generate new confirmation token
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                    new { userId = user.Id, token = token }, Request.Scheme);
+
+                // Prepare email content (using the same template as registration)
+                string subject = "Confirm your email";
+                string body = $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; margin: 0;padding: 0; background-color: #f4f4f4; }}
+                            .container {{ max-width: 600px; margin: 20px auto; padding: 30px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }}
+                            .button {{ background-color: #256D85; color: white !important; padding: 12px 25px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 15px 0; font-weight: bold; }}
+                            .button:hover {{ background-color: #2B4865; color: white; }}
+                            .link {{ word-break: break-all; color: #666; font-size: 14px; }}
+                            .header {{ color: #333; margin-bottom: 20px; }}
+                            .footer {{margin-top: 30px; color: #666; font-size: 14px; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class='container'>
+                            <h2 class='header'>Hello, {HttpUtility.HtmlEncode(user.UserName)}!</h2>
+                            <p>You requested a new confirmation email. To verify your email address, please click the button below.</p>
+                            <a href='{confirmationLink}' class='button'>Verify Email</a>
+                            <p class='link'>If the button doesn't work, Try clicking the link <a href='{confirmationLink}' style='color: #1A4B6E; text-decoration: underline;'>right here</a></p>
+                            <div class='footer'>
+                                <p>Best regards,<br>The Taskky Team</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>";
+
+                await _emailService.SendEmailAsync(email, subject, body);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Confirmation email has been sent. Please check your inbox.",
+                    title = "Success!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending confirmation email");
+                return Json(new
+                {
+                    success = false,
+                    message = "Failed to send confirmation email. Please try again.",
+                    title = "Error!"
+                });
+            }
+        }
+        // Action to display images
+
+
+        [HttpGet]
         // GET: Display Edit Profile page with user data
         public async Task<IActionResult> EditProfile()
         {
+            ViewData["ActiveMenu"] = "EditProfile";
+
             try
             {
-                // Get current user ID
-                /*                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return RedirectToAction("Login", "Account");
-                }*/
-
                 // Get user from database
-                var user = await _userManager.FindByIdAsync("d57f6928-0f01-4b96-a1bf-a07fc3347e28");
+                var user = await _userManager.FindByIdAsync(LoginStudentId);
                 if (user == null)
                 {
                     return NotFound();
@@ -251,7 +338,8 @@ namespace WebApplication1.Controllers
                     EmailAddress = user.Email,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    DOB = user.DOB,
+                    DOB = user.DOB.Date,
+                    DOBDisplay = user.DOB.ToString("dd-MM-yyyy"),
                     Gender = user.Gender,
                     ExistingProfileImagePath = user.ProfileImage,
 
@@ -276,15 +364,13 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
         public async Task<IActionResult> UpdateProfile(L1StudentsViewModel viewModel, IFormFile? ProfileImage, IFormFile? StudentIdentityCard)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    var user = await _userManager.FindByIdAsync("d57f6928-0f01-4b96-a1bf-a07fc3347e28");
+                    var user = await _userManager.FindByIdAsync(LoginStudentId);
 
                     if (user != null)
                     {
@@ -295,7 +381,7 @@ namespace WebApplication1.Controllers
                             if (!Directory.Exists(profileUploadsFolder))
                                 Directory.CreateDirectory(profileUploadsFolder);
 
-                            string profileFileName = userId + "_profile_" + Guid.NewGuid().ToString() + Path.GetExtension(ProfileImage.FileName);
+                            string profileFileName = LoginStudentId + "_profile_" + Guid.NewGuid().ToString() + Path.GetExtension(ProfileImage.FileName);
                             string profileFilePath = Path.Combine(profileUploadsFolder, profileFileName);
 
                             // Delete old profile image if exists
@@ -321,7 +407,7 @@ namespace WebApplication1.Controllers
                             if (!Directory.Exists(idCardUploadsFolder))
                                 Directory.CreateDirectory(idCardUploadsFolder);
 
-                            string idCardFileName = userId + "_idcard_" + Guid.NewGuid().ToString() + Path.GetExtension(StudentIdentityCard.FileName);
+                            string idCardFileName = LoginStudentId + "_idcard_" + Guid.NewGuid().ToString() + Path.GetExtension(StudentIdentityCard.FileName);
                             string idCardFilePath = Path.Combine(idCardUploadsFolder, idCardFileName);
 
                             // Delete old ID card if exists
@@ -347,7 +433,6 @@ namespace WebApplication1.Controllers
                         user.LastName = viewModel.LastName;
                         user.DOB = viewModel.DOB;
                         user.Gender = viewModel.Gender;
-                        ProfileImage = viewModel.ProfileImage;
 
                         user.GuardianName = viewModel.GuardianName;
                         user.GuardianContactNumber = viewModel.GuardianContactNumber;
@@ -357,7 +442,6 @@ namespace WebApplication1.Controllers
                         user.EducationStage = viewModel.EducationStage;
                         user.EducationalYear = viewModel.EducationalYear;
                         user.InstitutionName = viewModel.InstitutionName;
-                        StudentIdentityCard = viewModel.StudentIdentityCard;
 
 
                         var result = await _userManager.UpdateAsync(user);
@@ -380,6 +464,40 @@ namespace WebApplication1.Controllers
         }
 
 
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            try
+            {
+                ViewData["ActiveMenu"] = "LoginRegistration";
+                if (userId == null || token == null)
+                {
+                    return RedirectToAction("Index", "Account");
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+
+                if (user == null)
+                {
+                    ViewBag.ErrorMessage = $"This User ID {userId} is invalid";
+                    return View("NotFound");
+                }
+
+                var result = await _userManager.ConfirmEmailAsync(user, token);
+                if (result.Succeeded)
+                {
+                    return View();
+                }
+
+                ViewBag.ErrorTitle = "Email cannot be confirmed";
+                return View("Error");
+            }
+            catch (Exception ex)
+            {
+                return View("Error");
+            }
+        }
 
         #region
         [AllowAnonymous]
@@ -475,34 +593,7 @@ namespace WebApplication1.Controllers
             ViewBag.ErrorMessage = "Please contact support on";
             return View("Error");
         }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string userId, string token)
-        {
-            ViewData["ActiveMenu"] = "LoginRegistration";
-            if (userId == null || token == null)
-            {
-                return RedirectToAction("Index", "Account");
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
-
-            if (user == null)
-            {
-                ViewBag.ErrorMessage = $"This User ID {userId} is invalid";
-                return View("NotFound");
-            }
-
-            var result = await _userManager.ConfirmEmailAsync(user, token);
-            if (result.Succeeded)
-            {
-                return View();
-            }
-
-            ViewBag.ErrorTitle = "Email cannot be confirmed";
-            return View("Error");
-        }
+        
 
         [HttpGet]
         [AllowAnonymous]
@@ -663,7 +754,7 @@ namespace WebApplication1.Controllers
         public async Task<IActionResult> Logout() 
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("", "");
+            return RedirectToAction("Login", "Account");
         }
 
 
@@ -706,7 +797,7 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> AjaxCheckDuplicateUsername(string username)
+        public async Task<IActionResult> AjaxCheckDuplicateUsername(string username, bool isEditProfile = false)
         {
             try
             {
@@ -721,7 +812,21 @@ namespace WebApplication1.Controllers
                 }
 
                 var user = await _userManager.FindByNameAsync(username);
-                var isDuplicate = user != null;
+                var isDuplicate = false;
+
+                if (isEditProfile && User.Identity.IsAuthenticated)
+                {
+                    // Get current user
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    
+                    // Username is duplicate only if it belongs to a different user
+                    isDuplicate = user != null && user.Id != currentUser.Id;
+                }
+                else
+                {
+                    // For new registration, any existing username is a duplicate
+                    isDuplicate = user != null;
+                }
 
                 return Json(new
                 {
@@ -745,7 +850,7 @@ namespace WebApplication1.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> AjaxCheckDuplicateEmail(string email)
+        public async Task<IActionResult> AjaxCheckDuplicateEmail(string email, bool isEditProfile = false)
         {
             try
             {
@@ -760,7 +865,21 @@ namespace WebApplication1.Controllers
                 }
 
                 var user = await _userManager.FindByEmailAsync(email);
-                var isDuplicate = user != null;
+                var isDuplicate = false;
+
+                if (isEditProfile && User.Identity.IsAuthenticated)
+                {
+                    // Get current user
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    
+                    // Email is duplicate only if it belongs to a different user
+                    isDuplicate = user != null && user.Id != currentUser.Id;
+                }
+                else
+                {
+                    // For new registration, any existing email is a duplicate
+                    isDuplicate = user != null;
+                }
 
                 return Json(new
                 {
@@ -779,6 +898,25 @@ namespace WebApplication1.Controllers
                     message = "Error checking email availability"
                 });
             }
+        }
+
+        public async Task<IActionResult> GetImage(string userId, string imageType)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound();
+
+            string imagePath = imageType.ToLower() == "profile"
+                ? user.ProfileImage
+                : user.StudentIdentityCard;
+
+            if (string.IsNullOrEmpty(imagePath))
+                return NotFound();
+
+            string fullPath = Path.Combine(_webHostEnvironment.WebRootPath, imagePath.TrimStart('/'));
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound();
+
+            return PhysicalFile(fullPath, "image/jpeg"); // or determine content type based on file extension
         }
     }
 }

@@ -47,9 +47,9 @@
                         <option value="">All Types</option>
                         <option value="@((int)RecurringType.Day)">Recurring Pattern by Day(s)</option>
                         <option value="@((int)RecurringType.Week)">Recurring Pattern by Week(s)</option>
-                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by Bi-Weeks</option>
+                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by BI-Week</option>
                         <option value="@((int)RecurringType.Month)">Recurring Pattern by Month(s)</option>
-                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by Bi-Months</option>
+                        <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by BiMonth</option>
                     </select>
                 </div>
             </div>
@@ -100,7 +100,7 @@
                                     </div>
                                     <div class="col-md-12">
                                         <label class="form-label">Recurring Type</label>
-                                        <div class="recurring-type-container">
+                                        <div class="notification-type-container">
                                             <input type="radio" id="type1" name="Type" value="@((int)RecurringType.Day)">
                                             <label for="type1">Day</label>
                                             <input type="radio" id="type2" name="Type" value="@((int)RecurringType.Week)">
@@ -124,7 +124,7 @@
                                     <div class="col-md-12 day-selection-section" style="display: none;">
                                         <div class="mb-4">
                                             <label class="form-label lb-required">Quick Selection</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <input type="checkbox" id="allDays" name="DaytoGenerate" value="0">
                                                 <label for="allDays">
                                                     <i class="fas fa-calendar-alt me-2"></i>All Days
@@ -134,13 +134,13 @@
 
                                         <div>
                                             <label class="form-label" style="font-style: italic;">Or Select Specific Days</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <div class="row">
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-3">
                                                         <input type="checkbox" id="day_monday" name="DaytoGenerate" value="1" class="day-checkbox">
                                                         <label for="day_monday">Monday</label>
                                                     </div>
-                                                    <div class="col-md-2">
+                                                    <div class="col-md-3">
                                                         <input type="checkbox" id="day_tuesday" name="DaytoGenerate" value="2" class="day-checkbox">
                                                         <label for="day_tuesday">Tuesday</label>
                                                     </div>
@@ -173,17 +173,17 @@
                                     <div class="col-md-12 week-selection-section" style="display: none;">
                                         <div class="mb-4">
                                             <label class="form-label">Current Day Pattern</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <input type="radio" id="sameAsCreated" name="DaytoGenerateRadio" value="0">
                                                 <label for="sameAsCreated">
-                                                    <i class="fas fa-calendar-check me-2"></i>Same as task' Start <span style="font-weight: 500; font-style:italic">Day</span>
+                                                    <i class="fas fa-calendar-check me-2"></i>Same as Created Day
                                                 </label>
                                             </div>
                                         </div>
 
                                         <div>
                                             <label class="form-label">Or Select Specific Day</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <input type="radio" id="week_monday" name="DaytoGenerateRadio" value="1">
                                                 <label for="week_monday">Monday</label>
                                                 <input type="radio" id="week_tuesday" name="DaytoGenerateRadio" value="2">
@@ -206,7 +206,7 @@
                                     <div class="col-md-12 month-selection-section" style="display: none;">
                                         <div class="mb-4">
                                             <label class="form-label">Quick Selection</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <input type="checkbox" id="allMonths" name="DaytoGenerate" value="0">
                                                 <label for="allMonths">
                                                     <i class="fas fa-calendar me-2"></i>All Months
@@ -216,78 +216,78 @@
 
                                         <div>
                                             <label class="form-label">Or Select Specific Month</label>
-                                            <div class="recurring-type-container">
+                                            <div class="notification-type-container">
                                                 <div class="row">
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input type="checkbox" id="month_january" name="DaytoGenerate" value="1" class="month-checkbox">
-                                                            <label for="month_january">January</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_january" name="DaytoGenerate" value="1">
+                                                            <label class="form-check-label" for="month_january">January</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_february" name="DaytoGenerate" value="2">
-                                                            <label for="month_february">February</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_february" name="DaytoGenerate" value="2">
+                                                            <label class="form-check-label" for="month_february">February</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_march" name="DaytoGenerate" value="3">
-                                                            <label for="month_march">March</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_march" name="DaytoGenerate" value="3">
+                                                            <label class="form-check-label" for="month_march">March</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_april" name="DaytoGenerate" value="4">
-                                                            <label for="month_april">April</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_april" name="DaytoGenerate" value="4">
+                                                            <label class="form-check-label" for="month_april">April</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_may" name="DaytoGenerate" value="5">
-                                                            <label for="month_may">May</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_may" name="DaytoGenerate" value="5">
+                                                            <label class="form-check-label" for="month_may">May</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_june" name="DaytoGenerate" value="6">
-                                                            <label for="month_june">June</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_june" name="DaytoGenerate" value="6">
+                                                            <label class="form-check-label" for="month_june">June</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_july" name="DaytoGenerate" value="7">
-                                                            <label for="month_july">July</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_july" name="DaytoGenerate" value="7">
+                                                            <label class="form-check-label" for="month_july">July</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_august" name="DaytoGenerate" value="8">
-                                                            <label for="month_august">August</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_august" name="DaytoGenerate" value="8">
+                                                            <label class="form-check-label" for="month_august">August</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_september" name="DaytoGenerate" value="9">
-                                                            <label for="month_september">September</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_september" name="DaytoGenerate" value="9">
+                                                            <label class="form-check-label" for="month_september">September</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_october" name="DaytoGenerate" value="10">
-                                                            <label for="month_october">October</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_october" name="DaytoGenerate" value="10">
+                                                            <label class="form-check-label" for="month_october">October</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_november" name="DaytoGenerate" value="11">
-                                                            <label for="month_november">November</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_november" name="DaytoGenerate" value="11">
+                                                            <label class="form-check-label" for="month_november">November</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-3">
                                                         <div class="form-check form-check-inline">
-                                                            <input class="month-checkbox" type="checkbox" id="month_december" name="DaytoGenerate" value="12">
-                                                            <label for="month_december">December</label>
+                                                            <input class="form-check-input month-checkbox" type="checkbox" id="month_december" name="DaytoGenerate" value="12">
+                                                            <label class="form-check-label" for="month_december">December</label>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -305,11 +305,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer d-flex justify-content-between p-4">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="modal-footer p-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
-                    <input type="hidden" id="patternDaytoGenerateHidden" name="DaytoGenerateHidden" />
+                    <input id="patternDaytoGenerateHidden" name="DaytoGenerateHidden" />
 
                 </form>
 
@@ -699,6 +699,7 @@
     }
 
     .form-check-input {
+        width: 3rem !important;
         height: 1.5rem;
         margin-right: 0.5rem;
     }
@@ -712,13 +713,13 @@
     /* Radio button container */
 
     /* Hide the default radio button */
-    .recurring-type-container input[type="radio"] {
+    .notification-type-container input[type="radio"] {
         position: absolute;
         opacity: 0;
     }
 
         /* Custom radio button style */
-        .recurring-type-container input[type="radio"] + label {
+        .notification-type-container input[type="radio"] + label {
             position: relative;
             padding-left: 28px;
             cursor: pointer;
@@ -729,7 +730,7 @@
         }
 
             /* The custom radio circle */
-            .recurring-type-container input[type="radio"] + label:before {
+            .notification-type-container input[type="radio"] + label:before {
                 content: '';
                 position: absolute;
                 left: 0;
@@ -742,7 +743,7 @@
             }
 
         /* The dot inside when selected */
-        .recurring-type-container input[type="radio"]:checked + label:after {
+        .notification-type-container input[type="radio"]:checked + label:after {
             content: '';
             position: absolute;
             left: 5px;
@@ -754,70 +755,13 @@
         }
 
         /* Hover state */
-        .recurring-type-container input[type="radio"] + label:hover:before {
+        .notification-type-container input[type="radio"] + label:hover:before {
             border-color: #0078D4;
         }
 
         /* Focus state for accessibility */
-        .recurring-type-container input[type="radio"]:focus + label:before {
+        .notification-type-container input[type="radio"]:focus + label:before {
             box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
-        }
-    /* Simplified checkbox styling with centered text */
-    .recurring-type-container input[type="checkbox"] {
-        width: 1.5rem;
-        height: 1.5rem;
-        accent-color: var(--primary-blue);
-        cursor: pointer;
-        vertical-align: middle; /* Align checkbox vertically */
-    }
-
-        .recurring-type-container input[type="checkbox"] + label {
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center; /* Center items vertically */
-            color: #666;
-            margin-bottom: 0; /* Remove default margin */
-            line-height: 1.5rem; /* Match checkbox height */
-        }
-
-        /* Hover state */
-        .recurring-type-container input[type="checkbox"]:hover {
-            transform: scale(1.1);
-            transition: transform 0.2s ease;
-        }
-
-        /* Disabled state */
-        .recurring-type-container input[type="checkbox"]:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-            .recurring-type-container input[type="checkbox"]:disabled + label {
-                opacity: 0.6;
-                cursor: not-allowed;
-            }
-
-    /* Container alignment */
-    .recurring-type-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: center; /* Center items vertically */
-    }
-
-    .recurring-type-container {
-        display: flex;
-        align-items: center;
-        white-space: nowrap; /* Prevents month names from wrapping */
-    }
-
-        /* Ensure consistent width for each month container */
-        .recurring-type-container input[type="checkbox"] {
-            flex-shrink: 0; /* Prevents checkbox from shrinking */
-        }
-
-        .recurring-type-container label {
-            margin: 0; /* Removes any default margins */
         }
 
     /* Remove the validation icons */
@@ -873,7 +817,64 @@
         font-weight: 500;
     }
 
+    /* Simplified checkbox styling with centered text */
+    .notification-type-container input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-right: 0.5rem;
+        accent-color: #6c63ff;
+        cursor: pointer;
+        vertical-align: middle; /* Align checkbox vertically */
+    }
 
+        .notification-type-container input[type="checkbox"] + label {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center; /* Center items vertically */
+            color: #666;
+            margin-bottom: 0; /* Remove default margin */
+            line-height: 1.5rem; /* Match checkbox height */
+        }
+
+        /* Hover state */
+        .notification-type-container input[type="checkbox"]:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
+
+        /* Disabled state */
+        .notification-type-container input[type="checkbox"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+            .notification-type-container input[type="checkbox"]:disabled + label {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+    /* Container alignment */
+    .notification-type-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center; /* Center items vertically */
+    }
+
+    .notification-type-container {
+        display: flex;
+        align-items: center;
+        white-space: nowrap; /* Prevents month names from wrapping */
+    }
+
+        /* Ensure consistent width for each month container */
+        .notification-type-container input[type="checkbox"] {
+            flex-shrink: 0; /* Prevents checkbox from shrinking */
+        }
+
+        .notification-type-container label {
+            margin: 0; /* Removes any default margins */
+        }
 </style>
 
 @section Scripts {
@@ -1166,66 +1167,68 @@
                         updatePagination(response.data.currentPage, response.data.totalPages);
                     } else {
                         parentPresetGrid.innerHTML = `
-                                            <div class="alert alert-info text-center">
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                No recurring pattern found
-                                            </div>`;
+                                    <div class="alert alert-info text-center">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No recurring pattern found
+                                    </div>`;
                     }
                 },
                 error: function () {
                     parentPresetGrid.innerHTML = `
-                                        <div class="alert alert-danger text-center">
-                                            <i class="fas fa-exclamation-circle me-2"></i>
-                                            Failed to load pattern. Please try again.
-                                        </div>`;
+                                <div class="alert alert-danger text-center">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    Failed to load pattern. Please try again.
+                                </div>`;
                 }
             });
         }
 
         function createPresetCard(preset) {
             return `
-                                <div class="preset-card recurring-pattern-card">
-                                    <div class="preset-header">
-                                        <span class="preset-type">${preset.type}</span>
-                                        <div class="preset-actions">
-                                            <button class="btn-icon edit-btn"
-                                                            onclick="editSetting(${preset.id})"
-                                                            data-tooltip="Edit pattern">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn-icon delete-btn"
-                                                onclick="deleteSetting(${preset.id})"
-                                                data-tooltip="Delete pattern">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <h4 class="preset-title">${preset.name}</h4>
-                                    <div class="notification-description mb-4">
-                                        <p class="preset-description">${preset.description}</p>
-                                    </div>
-                                    <div class="preset-details">
-                                        <div class="timing-pills-display">
-                                             <span class="timing-pill">
-                                                <i class="fas fa-calendar-day"></i> ${preset.dayToGenerate}
-                                            </span>
-                                            ${createTimingPills(preset.recurringCount)}
-                                        </div>
-                                    </div>
-                                    <div class="preset-footer">
-                                        ${createTaskSubTaskPills(preset.recurringCount)}
-                                    </div>
+                        <div class="preset-card recurring-pattern-card">
+                            <div class="preset-header">
+                                <span class="preset-type">${preset.type}</span>
+                                <div class="preset-actions">
+                                    <button class="btn-icon edit-btn"
+                                                    onclick="editSetting(${preset.id})"
+                                                    data-tooltip="Edit pattern">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-icon delete-btn"
+                                        onclick="deleteSetting(${preset.id})"
+                                        data-tooltip="Delete pattern">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            `;
+                            </div>
+                            <h4 class="preset-title">${preset.name}</h4>
+                            <div class="notification-description mb-4">
+                                <p class="preset-description">${preset.description}</p>
+                            </div>
+                            <div class="preset-details">
+                                <div class="timing-pills-display">
+                                     <span class="timing-pill">
+                                        <i class="fas fa-calendar-day"></i> ${preset.dayToGenerate}
+                                    </span>
+                                </div>
+                                <div class="timing-pills-display">
+                                    ${createTimingPills(preset.recurringCount)}
+                                </div>
+                            </div>
+                            <div class="preset-footer">
+                                ${createTaskSubTaskPills(preset.recurringCount)}
+                            </div>
+                        </div>
+                    `;
         }
 
         function createTimingPills(preset) {
             if (preset) {
                 return `
-                                        <span class="timing-pill">
-                                            <i class="fas fa-redo-day"></i>Recurs ${preset} times(s)
-                                        </span>
-                                `
+                                <span class="timing-pill">
+                                    <i class="fas fa-calendar-day"></i>Recurs ${preset} times(s)
+                                </span>
+                        `
             }
 
             return "";
@@ -1236,26 +1239,26 @@
             if (preset.activeTasksCount == 0 && preset.subItemsCount == 0) {
                 pills.push(
                     `<div class="preset-usage">
-                                        <span class="usage-label">Currently in use by:</span>
-                                        <div class="usage-pills">
-                                            <span class="usage-pill empty-usage-pill">
-                                                <span>No task or subtask is applying this preset.</span>
-                                            </span>
-                                        </div>
-                                    </div>`);
+                                <span class="usage-label">Currently in use by:</span>
+                                <div class="usage-pills">
+                                    <span class="usage-pill empty-usage-pill">
+                                        <span>No task or subtask is applying this preset.</span>
+                                    </span>
+                                </div>
+                            </div>`);
             }
             else {
                 pills.push(
                     `<div class="preset-usage">
-                                        <span class="usage-label">Currently in use by:</span>
-                                        <div class="usage-pills">
-                                            <span class="usage-pill clickable" onclick="showActiveTasks(${preset.id})">
-                                                <i class="fas fa-tasks"></i>
-                                                <span>${preset.activeTasksCount} active tasks</span>
-                                                <i class="fas fa-chevron-right pill-arrow"></i>
-                                            </span>
-                                        </div>
-                                    </div>`);
+                                <span class="usage-label">Currently in use by:</span>
+                                <div class="usage-pills">
+                                    <span class="usage-pill clickable" onclick="showActiveTasks(${preset.id})">
+                                        <i class="fas fa-tasks"></i>
+                                        <span>${preset.activeTasksCount} active tasks</span>
+                                        <i class="fas fa-chevron-right pill-arrow"></i>
+                                    </span>
+                                </div>
+                            </div>`);
             }
 
             return pills.join('');
@@ -1267,30 +1270,30 @@
             if (totalPages >= 1) {
                 // Previous button
                 paginationHtml += `
-                                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="loadPresets(${currentPage - 1})" tabindex="-1">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                `;
+                            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                                <a class="page-link" href="#" onclick="loadPresets(${currentPage - 1})" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        `;
 
                 // Page numbers
                 for (let i = 1; i <= totalPages; i++) {
                     paginationHtml += `
-                                        <li class="page-item ${i === currentPage ? 'active' : ''}">
-                                            <a class="page-link" href="#" onclick="loadPresets(${i})">${i}</a>
-                                        </li>
-                                    `;
+                                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                                    <a class="page-link" href="#" onclick="loadPresets(${i})">${i}</a>
+                                </li>
+                            `;
                 }
 
                 // Next button
                 paginationHtml += `
-                                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="loadPresets(${currentPage + 1})">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                `;
+                            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                                <a class="page-link" href="#" onclick="loadPresets(${currentPage + 1})">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        `;
             }
             pagination.innerHTML = paginationHtml;
         }
@@ -1357,33 +1360,16 @@
                 errorElement: 'span',
                 errorClass: 'text-danger',
                 errorPlacement: function (error, element) {
-                    // Special handling for checkbox inputs
-                    if (element.attr('type') === 'checkbox') {
-                        // For the "All Days" checkbox
-                        if (element.attr('id') === 'allDays') {
-                            error.insertAfter(element.closest('.recurring-type-container'));
-                        }
-                        else if (element.attr('id') === 'allMonths') {
-                            error.insertAfter(element.closest('.recurring-type-container'));
-                        }
-                        // For individual day checkboxes
-                        else if (element.hasClass('day-checkbox')) {
-                            error.insertAfter(element.closest('.row'));
-                        }
-                        // For all other checkboxes
-                        else {
-                            error.insertAfter(element.next('label'));
-                        }
-                    }
-                    // For input groups
-                    else if (element.closest('.input-group').length > 0) {
+                    //error.insertAfter(element);
+                    if (element.closest('.input-group').length > 0) {
                         error.insertAfter(element.parent('.input-group'));
+                        error.fadeIn('fast');
                     }
-                    // Default placement for other elements
                     else {
+                        error.hide();
                         error.insertAfter(element);
+                        error.fadeIn('fast');
                     }
-                    error.fadeIn('fast');
                 },
                 highlight: function (element) {
                     $(element).addClass('is-invalid').removeClass('is-valid');
@@ -1488,7 +1474,6 @@
 
                         // Setup radio button controls
                         setupRadioButtonControls();
-                        setupCheckboxControls();
                         // Populate form fields
                         $('#patternId').val(preset.id);
                         $('#patternName').val(preset.name);
@@ -1500,10 +1485,6 @@
                         typeRadio.checked = true;
                         typeRadio.dispatchEvent(new Event('change'));
 
-                        const dayGenerateRadioDefault = document.querySelector(`input[name="DaytoGenerateRadio"][value="0"]`);
-                        dayGenerateRadioDefault.checked = true;
-                        dayGenerateRadioDefault.dispatchEvent(new Event('change'));
-
                         // Set reminder values based on type
                         if (preset.type == '@((int)RecurringType.Day)') {
                             // Reset all checkboxes first
@@ -1511,21 +1492,24 @@
                                 checkbox.checked = false;
                                 checkbox.disabled = false;
                             });
+                            console.log(preset.dayToGenerate);
                             // Check if "All" is selected
                             if (preset.dayToGenerate == "0") {
+                                console.log("ss");
                                 // If type is Day (1)
                                 const allDaysCheckbox = document.getElementById('allDays');
                                 if (allDaysCheckbox) {
                                     allDaysCheckbox.checked = true;
                                     // Disable individual day checkboxes
                                     document.querySelectorAll('.day-checkbox').forEach(cb => {
+                                        console.log("aaaa");
                                         cb.checked = true;
                                         cb.disabled = true;
                                     });
                                 }
                             } else {
                                 // Check individual checkboxes based on values
-                                const selectedDays = preset.daytoGenerateHidden.split(',').map(day => day.trim());
+                                const selectedDays = preset.dayToGenerate.split(',').map(day => day.trim());
                                 selectedDays.forEach(day => {
                                     const checkbox = document.querySelector(`input[name="DaytoGenerate"][value="${day}"]`);
                                     if (checkbox) {
@@ -1535,9 +1519,9 @@
                             }
                         }
                         else if (preset.type == '@((int)RecurringType.Week)') {
-                            const dayGenerateRadio = document.querySelector(`input[name="DaytoGenerateRadio"][value="${preset.daytoGenerateHidden}"]`);
-                            dayGenerateRadio.checked = true;
-                            dayGenerateRadio.dispatchEvent(new Event('change'));
+                            const dayGenerateRadio = document.querySelector(`input[name="DaytoGenerateRadio"][value="${preset.DaytoGenerate}"]`);
+                            typeRadio.checked = true;
+                            typeRadio.dispatchEvent(new Event('change'));
                         }
                         else if (preset.type == '@((int)RecurringType.Month)') {
                             // Check if "All" is selected
@@ -1553,13 +1537,11 @@
                                     });
                                 }
                             } else {
+                                const selectedDays = preset.dayToGenerate.split(',').map(day => day.trim());
                                 // Check individual checkboxes based on values
-                                const selectedDays = preset.daytoGenerateHidden.split(',').map(day => day.trim());
                                 selectedDays.forEach(day => {
-                                    const checkbox = document.querySelector(`input[class="month-checkbox"][name="DaytoGenerate"][value="${day}"]`);
-                                    console.log(day);
+                                    const checkbox = document.querySelector(`input[name="DaytoGenerate"][value="${day}"]`);
                                     if (checkbox) {
-                                        console.log("tick");
                                         checkbox.checked = true;
                                     }
                                 });

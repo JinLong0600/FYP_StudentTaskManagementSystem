@@ -187,6 +187,10 @@ body {
     color: #B2BEB5;
 }
 
+.flatpickr-input[readonly] {
+    background: white;
+}
+
 .form-control-lg {
     padding: 12px;
 }
@@ -223,7 +227,11 @@ body {
     .btn-primary:hover {
         background: var(--primary-blue);
     }
-
+    .btn-primary:focus{
+        /*outline: none !important;
+        box-shadow: none !important;*/
+        background: var(--secondary-blue);
+    }
 
 .btn-secondary {
     background-color: #f1f5f9;
@@ -248,6 +256,11 @@ body {
         border-color: var(--primary-blue);
         color: white;
     }
+
+
+.btn-outline-secondary {
+    padding: 8px 16px;
+}
 
 .btn-dark {
     background: var(--primary-blue);
@@ -648,7 +661,7 @@ input[type="file"].form-control {
     line-height: 1.25;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Show only 3 lines */
+    -webkit-line-clamp: 4; /* Show only 3 lines */
     -webkit-box-orient: vertical;
     flex: 1;
 }
@@ -701,7 +714,6 @@ input[type="file"].form-control {
     justify-content: space-between;
     align-items: center;
     margin-top: 2.5rem; /* Space for priority badge */
-    margin-bottom: 1rem;
 }
 
 
@@ -714,8 +726,8 @@ input[type="file"].form-control {
 }
 /* Add this CSS for task description container */
 .task-description {
-    min-height: 65px; /* Fixed height for description area */
-    margin: 0.8rem 0 1rem 0; /* Add margin top and bottom */
+    min-height: 80px; /* Fixed height for description area */
+    margin: 0.5rem 0 0.5rem 0; /* Add margin top and bottom */
     padding: 0 0.5rem; /* Add some padding on sides */
 }
 
@@ -904,6 +916,23 @@ input[type="file"].form-control {
     border-bottom: 2px solid #e2e8f0;
 }
 
+.section-title-subtask {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+    padding-bottom: 0.25rem;
+    margin-left: -0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+.section-title-subtask-notification {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+    padding-bottom: 0.25rem;
+    margin-left: -0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
 /* ==========================================================================
    7. Pagination Styles
    ========================================================================== */
@@ -977,54 +1006,39 @@ input[type="file"].form-control {
     font-size: 0.85rem;
     font-weight: 500;
 }
+.priority-badge-modal-subtask {
+    background-color: #212529;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
 
-.priority-badge.priority-critical {
+.priority-badge.priority-critical, .priority-badge-modal.priority-critical, .priority-badge-modal-subtask.priority-critical {
     color: white;
     background-color: black;
 }
 
-.priority-badge.priority-high {
+.priority-badge.priority-high, .priority-badge-modal.priority-high, .priority-badge-modal-subtask.priority-high {
     color: white;
     background-color: #DC3545;
 }
 
-.priority-badge.priority-medium {
+.priority-badge.priority-medium, .priority-badge-modal.priority-medium, .priority-badge-modal-subtask.priority-medium {
     color: white;
     background-color: #FFA33B;
 }
 
-.priority-badge.priority-low {
+.priority-badge.priority-low, .priority-badge-modal.priority-low, .priority-badge-modal-subtask.priority-low {
     color: white;
     background-color: #43A047;
 }
-.priority-badge.priority-trivial {
+.priority-badge.priority-trivial, .priority-badge-modal.priority-low, .priority-badge-modal-subtask.priority-low {
     color: white;
     background-color: #78909C;
 }
 
-/* Add new modal-specific priority badge styles */
-.priority-badge-modal.priority-critical {
-    color: #fa5252;
-}
-
-.priority-badge-modal.priority-high {
-    color: #ff6b6b;
-}
-
-.priority-badge-modal.priority-medium {
-    color: #fab005;
-}
-
-.priority-badge-modal.priority-low {
-    color: #40c057;
-}
-
-/* Priority Colors */
-.priority-badge-modal.priority-high {
-    background-color: #fff0f0;
-    color: #ff6b6b;
-    border-color: transparent;
-}
 
 /* Status Badge */
 .status-badge {
@@ -1051,39 +1065,76 @@ input[type="file"].form-control {
 
     /* Status Colors */
 
-    .status-badge.status-notstarted {
+    .status-badge.status-notstarted, .status-badge-modal.status-notstarted, .status-badge-modal-subtask.status-notstarted {
         background-color: #e6e6e6;
         color: #495057;
         font-weight: 700;
         border-color: transparent;
     }
 
-    .status-badge.status-inprogress {
+    .status-badge.status-inprogress, .status-badge-modal.status-inprogress, .status-badge-modal-subtask.status-inprogress {
         background-color: #c4e5fd;
         color: #00549d;
         font-weight: 700;
         border-color: transparent;
     }
 
-    .status-badge.status-completed {
+    .status-badge.status-completed, .status-badge-modal.status-completed, .status-badge-modal-subtask.status-completed {
         background-color: #b9ffc6;
         color: #18892d;
         font-weight: 700;
         border-color: transparent;
     }
 
-    .status-badge.status-onhold {
+    .status-badge.status-onhold, .status-badge-modal.status-onhold, .status-badge-modal-subtask.status-onhold {
         background-color: #fbeca1;
         color: #d96f00;
         font-weight: 700;
         border-color: transparent;
     }
-    .status-badge.status-overdue {
+    .status-badge.status-overdue, .status-badge-modal.status-overdue, .status-badge-modal-subtask.status-overdue {
         background-color: #d01f1f;
         color: #ffeeee;
         font-weight: 700;
         border-color: transparent;
     }
+
+.status-badge-modal-subtask {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    color: #495057;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+}
+
+
+.due-date-badge {
+    background-color: #40c057;
+    color: white;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+}
+
+.due-date-badge-subtask {
+    background-color: #e7f5ff;
+    color: #4c6ef5;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+}
+
+    .due-date-badge.overdue, .due-date-badge-subtask.overdue {
+        background-color: #fff5f5;
+        color: #fa5252;
+    }
+
+    .due-date-badge.due-soon, .due-date-badge-subtask.soon {
+        background-color: #fff9db;
+        color: #fab005;
+    }
+
 
 /* Notification Badge */
 .notification-badge {
@@ -1150,7 +1201,7 @@ input[type="file"].form-control {
     border-top: 1px solid #000000;
 }
 
-.separator {
+.    {
     margin: 0 12px;
     color: #adb5bd;
 }
@@ -1357,3 +1408,175 @@ input::-webkit-inner-spin-button {
     .btn-icon i {
         font-size: 1rem;
     }
+
+    /* Optional: Add tooltip styles */
+    .btn-icon[data-tooltip] {
+        position: relative;
+    }
+
+        .btn-icon[data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #1e293b;
+            color: white;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon[data-tooltip]:hover:before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-8px);
+        }
+
+
+/* Container styles */
+.task-setting-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    white-space: nowrap;
+}
+
+    .task-setting-container label {
+        margin: 0;
+    }
+
+    /* Radio button styles */
+    .task-setting-container input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+        .task-setting-container input[type="radio"] + label {
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            line-height: 20px;
+            display: inline-block;
+            margin-right: 20px;
+            color: #666;
+        }
+
+            .task-setting-container input[type="radio"] + label:before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 20px;
+                height: 20px;
+                border: 2px solid #ccc;
+                border-radius: 100%;
+                background: white;
+            }
+
+        .task-setting-container input[type="radio"]:checked + label:after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 100%;
+            background: #0078D4;
+        }
+
+        .task-setting-container input[type="radio"] + label:hover:before {
+            border-color: #0078D4;
+        }
+
+        .task-setting-container input[type="radio"]:focus + label:before {
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.2);
+        }
+
+    /* Checkbox styles */
+    .task-setting-container input[type="checkbox"] {
+        width: 1.5rem;
+        height: 1.5rem;
+        accent-color: var(--primary-blue);
+        cursor: pointer;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+        .task-setting-container input[type="checkbox"] + label {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            color: #666;
+            margin-bottom: 0;
+            line-height: 1.5rem;
+        }
+
+        .task-setting-container input[type="checkbox"]:hover {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
+        }
+
+        .task-setting-container input[type="checkbox"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+            .task-setting-container input[type="checkbox"]:disabled + label {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+
+.alert-info {
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+    color: #b30;
+    margin: 0 !important;
+}
+
+.status-label-subtask, .priority-label-subtask, .due-date-label-subtask {
+    font-size: 0.9rem;
+}
+
+
+.card-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    border-top-left-radius: calc(0.3rem - 1px);
+    border-top-right-radius: calc(0.3rem - 1px);
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #4FAECE, #1A4B6E);
+    border-radius: 20px 20px 0 0;
+}
+
+.ml-minus-1 {
+    margin-left: -1.25rem;
+}
+
+/* Remove the validation icons */
+.form-control.is-invalid,
+.form-control.is-valid {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-control:valid {
+    background-image: none !important;
+    padding-right: 0.75rem !important;
+}
+
+/* If you're using input groups */
+.input-group .form-control.is-invalid,
+.input-group .form-control.is-valid {
+    padding-right: 0.75rem !important;
+}

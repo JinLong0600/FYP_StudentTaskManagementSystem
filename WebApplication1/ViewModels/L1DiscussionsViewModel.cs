@@ -9,6 +9,7 @@ namespace StudentTaskManagement.ViewModels
         public string Title { get; set; }
         public string Description { get; set; }
         public int CommentCount { get; set; }
+        public int LikeCount { get; set; }
         public int Category { get; set; }
         public List<string> Tags { get; set; }
         public string LabelTags { get; set; }

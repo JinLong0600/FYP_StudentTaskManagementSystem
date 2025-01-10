@@ -155,71 +155,6 @@ namespace StudentTaskManagement.Migrations
                     b.ToTable("L1UserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("StudentTaskManagement.Models.L0Admins", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Address")
-                        .HasMaxLength(255)
-                        .HasColumnType("int");
-
-                    b.Property<int>("CityCode")
-                        .HasMaxLength(3)
-                        .HasColumnType("int");
-
-                    b.Property<int>("CountryAccess")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("int");
-
-                    b.Property<int>("CreatedByAdminId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DOB")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DeletedDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmailAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("int");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("LastModifiedByAdminId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastModifiedDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProfileImage")
-                        .HasMaxLength(500)
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("L0Admins");
-                });
-
             modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForumComments", b =>
                 {
                     b.Property<int>("Id")
@@ -234,13 +169,13 @@ namespace StudentTaskManagement.Migrations
 
                     b.Property<string>("CreatedByStudentId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime?>("DeletionDateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DiscussionForumId")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsDiscussionForumDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("L1DiscussionForumId")
                         .HasColumnType("int");
@@ -253,9 +188,38 @@ namespace StudentTaskManagement.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByStudentId");
+
                     b.HasIndex("L1DiscussionForumId");
 
                     b.ToTable("L1DiscussionForumComments");
+                });
+
+            modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForumLikes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedByStudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("L1DiscussionForumId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByStudentId");
+
+                    b.HasIndex("L1DiscussionForumId");
+
+                    b.ToTable("L1DiscussionForumLikes");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForums", b =>
@@ -269,9 +233,12 @@ namespace StudentTaskManagement.Migrations
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
+                    b.Property<int>("CommentCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("CreatedByStudentId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDateTime")
                         .HasColumnType("datetime2");
@@ -290,6 +257,9 @@ namespace StudentTaskManagement.Migrations
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("LikeCount")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -298,6 +268,8 @@ namespace StudentTaskManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByStudentId");
 
                     b.ToTable("L1DiscussionForums");
                 });
@@ -310,8 +282,9 @@ namespace StudentTaskManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CreatedByStudentId")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedByStudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DeletionDateTime")
                         .HasColumnType("datetime2");
@@ -322,6 +295,11 @@ namespace StudentTaskManagement.Migrations
 
                     b.Property<bool>("IsDaily")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("LastModifiedDateTime")
                         .HasColumnType("datetime2");
@@ -366,11 +344,11 @@ namespace StudentTaskManagement.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CreatedByStudentId")
-                        .HasColumnType("int");
+                    b.Property<string>("CreatedByStudentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DaytoGenerate")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DeletionDateTime")
@@ -378,6 +356,11 @@ namespace StudentTaskManagement.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsSystemDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("LastModifiedDateTime")
                         .HasColumnType("datetime2");
@@ -470,8 +453,8 @@ namespace StudentTaskManagement.Migrations
                     b.Property<string>("GuardianName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("GuardianRelationship")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("GuardianRelationship")
+                        .HasColumnType("int");
 
                     b.Property<string>("InstitutionName")
                         .IsRequired()
@@ -576,6 +559,9 @@ namespace StudentTaskManagement.Migrations
                     b.Property<int?>("L1NotificationPresetsId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("L1RecurringPatternsId")
+                        .HasColumnType("int");
+
                     b.Property<int>("L1TaskId")
                         .HasColumnType("int");
 
@@ -585,7 +571,7 @@ namespace StudentTaskManagement.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
@@ -598,6 +584,8 @@ namespace StudentTaskManagement.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("L1NotificationPresetsId");
+
+                    b.HasIndex("L1RecurringPatternsId");
 
                     b.HasIndex("L1TaskId");
 
@@ -656,16 +644,19 @@ namespace StudentTaskManagement.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("GeneratedCount")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsNotification")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsParentRecurring")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRecurring")
                         .HasColumnType("bit");
 
                     b.Property<int?>("L1NotificationPresetId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("L1NotificationPresetsId")
                         .HasColumnType("int");
 
                     b.Property<int?>("L1RecurringPresetId")
@@ -677,7 +668,7 @@ namespace StudentTaskManagement.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
@@ -689,7 +680,9 @@ namespace StudentTaskManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("L1NotificationPresetsId");
+                    b.HasIndex("L1NotificationPresetId");
+
+                    b.HasIndex("L1RecurringPresetId");
 
                     b.ToTable("L1Tasks");
                 });
@@ -747,6 +740,12 @@ namespace StudentTaskManagement.Migrations
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForumComments", b =>
                 {
+                    b.HasOne("StudentTaskManagement.Models.L1Students", "L1Students")
+                        .WithMany()
+                        .HasForeignKey("CreatedByStudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("StudentTaskManagement.Models.L1DiscussionForums", "L1DiscussionForums")
                         .WithMany("L1DiscussionForumComments")
                         .HasForeignKey("L1DiscussionForumId")
@@ -754,6 +753,38 @@ namespace StudentTaskManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("L1DiscussionForums");
+
+                    b.Navigation("L1Students");
+                });
+
+            modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForumLikes", b =>
+                {
+                    b.HasOne("StudentTaskManagement.Models.L1Students", "L1Students")
+                        .WithMany()
+                        .HasForeignKey("CreatedByStudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StudentTaskManagement.Models.L1DiscussionForums", "L1DiscussionForums")
+                        .WithMany("L1DiscussionForumLikes")
+                        .HasForeignKey("L1DiscussionForumId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("L1DiscussionForums");
+
+                    b.Navigation("L1Students");
+                });
+
+            modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForums", b =>
+                {
+                    b.HasOne("StudentTaskManagement.Models.L1Students", "L1Students")
+                        .WithMany()
+                        .HasForeignKey("CreatedByStudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("L1Students");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1NotificationPresets", b =>
@@ -769,8 +800,13 @@ namespace StudentTaskManagement.Migrations
             modelBuilder.Entity("StudentTaskManagement.Models.L1SubTasks", b =>
                 {
                     b.HasOne("StudentTaskManagement.Models.L1NotificationPresets", null)
-                        .WithMany("SubTasks")
+                        .WithMany("L1SubTasks")
                         .HasForeignKey("L1NotificationPresetsId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StudentTaskManagement.Models.L1RecurringPatterns", null)
+                        .WithMany("L1SubTasks")
+                        .HasForeignKey("L1RecurringPatternsId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("StudentTaskManagement.Models.L1Tasks", "L1Tasks")
@@ -784,22 +820,40 @@ namespace StudentTaskManagement.Migrations
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1Tasks", b =>
                 {
-                    b.HasOne("StudentTaskManagement.Models.L1NotificationPresets", null)
-                        .WithMany("Tasks")
-                        .HasForeignKey("L1NotificationPresetsId")
+                    b.HasOne("StudentTaskManagement.Models.L1NotificationPresets", "L1NotificationPresets")
+                        .WithMany("L1Tasks")
+                        .HasForeignKey("L1NotificationPresetId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("StudentTaskManagement.Models.L1RecurringPatterns", "L1RecurringPatterns")
+                        .WithMany("L1Tasks")
+                        .HasForeignKey("L1RecurringPresetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("L1NotificationPresets");
+
+                    b.Navigation("L1RecurringPatterns");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForums", b =>
                 {
                     b.Navigation("L1DiscussionForumComments");
+
+                    b.Navigation("L1DiscussionForumLikes");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1NotificationPresets", b =>
                 {
-                    b.Navigation("SubTasks");
+                    b.Navigation("L1SubTasks");
 
-                    b.Navigation("Tasks");
+                    b.Navigation("L1Tasks");
+                });
+
+            modelBuilder.Entity("StudentTaskManagement.Models.L1RecurringPatterns", b =>
+                {
+                    b.Navigation("L1SubTasks");
+
+                    b.Navigation("L1Tasks");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1Tasks", b =>
