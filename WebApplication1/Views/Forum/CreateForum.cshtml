@@ -67,12 +67,14 @@
                                 <i class="fas fa-arrow-left"></i> Back to Forum
                             </a>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.ForumId)">
-                                    <i class="fas fa-trash"></i> Delete post
-                                </button>
-                                <button type="submit" class="btn btn-primary" 
-                                        style="@(Model.Status == (int)ForumStatus.Resolved ? "display: none;" : "")">
-                                    <i class="fas fa-paper-plane"></i> @(Model.IsEdit ? "Edit post" : "Post now")
+                                @if(Model.IsEdit)
+                                {
+                                    <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.ForumId)">
+                                        <i class="fas fa-trash"></i> Delete post
+                                    </button>
+                                }
+                                <button type="submit" class="btn btn-primary" style="@(Model.Status == (int)ForumStatus.Resolved ? "display: none;" : "")">
+                                    @(Model.IsEdit ? "Edit post" : "Post now")
                                 </button>
                             </div>
                         </div>
@@ -192,28 +194,14 @@
                     }
                 },
                 submitHandler: function(form) {
-                    // Check word count and tags before submission
-                    const wordCountTitle = $('#Title').val().trim().split(/\s+/).filter(word => word.length > 0).length;
-                    const wordCount = $('#Description').val().trim().split(/\s+/).filter(word => word.length > 0).length;
-                    if (wordCountTitle < 3) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            text: 'Title must be at least 3 words.',
-                            confirmButtonColor: '#4f46e5'
-                        });
-                        return false;
-                    }
-                    if (wordCount < 15) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Validation Error',
-                            text: 'Content must be at least 15 words.',
-                            confirmButtonColor: '#4f46e5'
-                        });
-                        return false;
-                    }
-
+                    // This will handle the AJAX submission
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                    submitBtn.disabled = true;
                     if (tags.length === 0) {
                         Swal.fire({
                             icon: 'error',
@@ -222,16 +210,7 @@
                             confirmButtonColor: '#4f46e5'
                         });
                         return false;
-                    }
-
-                    // Show loading state
-                    Swal.fire({
-                        title: 'Please wait a moment...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
+                }
 
                     // Submit form via AJAX
                     $.ajax({
@@ -264,6 +243,10 @@
                                 text: 'Something went wrong! Please try again.',
                                 confirmButtonColor: '#4f46e5'
                             });
+                        },
+                        complete: function() {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
                         }
                     });
 

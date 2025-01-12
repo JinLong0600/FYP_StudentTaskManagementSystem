@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace StudentTaskManagement.Controllers
@@ -16,14 +17,22 @@ namespace StudentTaskManagement.Controllers
     [Authorize]
     public class NotificationPresetController : _BaseController
     {
-        private readonly StudentTaskManagementContext dbContext;
-        private readonly ILogger<NotificationPresetController> _logger;
+        protected readonly StudentTaskManagementContext dbContext;
+        protected readonly ILogger _logger;
+        private readonly UserManager<L1Students> _userManager;
+        private readonly SignInManager<L1Students> _signInManager;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public NotificationPresetController(StudentTaskManagementContext dbContext,
-            ILogger<NotificationPresetController> logger)
-        { 
+        public NotificationPresetController(StudentTaskManagementContext dbContext, ILogger<NotificationPresetController> logger, UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        : base(dbContext, logger, userManager, signInManager, emailService, webHostEnvironment)
+        {
             this.dbContext = dbContext;
             this._logger = logger;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
+            this._emailService = emailService;
+            this._webHostEnvironment = webHostEnvironment;
         }
 
         // GET: ReminderSettingController
@@ -132,7 +141,7 @@ namespace StudentTaskManagement.Controllers
                     {
                         id = np.Id,
                         name = np.Name,
-                        description = string.IsNullOrEmpty(np.Description) ? "- No Description -" : np.Description,
+                        description = string.IsNullOrEmpty(np.Description) ? null : np.Description,
                         type = np.Type == (int)NotificationPresetType.Days ? "Days-based Notification Preset" : "Minutes-based Notification Preset",
                         reminderDaysBefore = np.ReminderDaysBefore,
                         reminderHoursBefore = np.ReminderHoursBefore,

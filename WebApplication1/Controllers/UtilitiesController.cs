@@ -9,28 +9,37 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 using System.Globalization;
+using WebPush;
+using Microsoft.Extensions.Options;
 
 namespace StudentTaskManagement.Controllers
 {
     public class UtilitiesController : Controller
     {
         private readonly StudentTaskManagementContext dbContext;
-        private readonly ILogger<NotificationPresetController> _logger;
+        private readonly ILogger<UtilitiesController> _logger;
         private readonly UserManager<L1Students> _userManager;
+        private readonly INotificationManager _notificationManager;
+        private readonly IConfiguration _configuration;  // Add this
+        private readonly VapidConfiguration _vapidConfig;
 
         public UtilitiesController(StudentTaskManagementContext dbContext,
-            ILogger<NotificationPresetController> logger,
-            UserManager<L1Students> userManager)
+            ILogger<UtilitiesController> logger,
+            UserManager<L1Students> userManager, INotificationManager notificationManager, IConfiguration configuration,
+            IOptions<VapidConfiguration> vapidConfig)
         {
             this.dbContext = dbContext;
             this._logger = logger;
             _userManager = userManager;
+            _notificationManager = notificationManager;
+            _vapidConfig = vapidConfig.Value;
         }
 
+        #region Recurs
         //[HttpPost]
         [HttpGet]
         [Route("api/utilities/check-overdue-tasks")]
@@ -284,6 +293,296 @@ namespace StudentTaskManagement.Controllers
                 }
             }
         }
+        #endregion
+
+        [HttpGet]
+        [Route("api/utilities/test-notification")]
+        public IActionResult TestChromeNotification()
+        {
+            try
+            {
+                // Return a script that will first request permission and then trigger the notification
+                var script = @"
+                    function requestAndShowNotification() {
+                        if ('Notification' in window) {
+                            Notification.requestPermission().then(function(permission) {
+                                if (permission === 'granted') {
+                                    // First show the welcome notification
+                                    new Notification('Notifications Enabled!', {
+                                        body: 'You will now receive notifications for your tasks.',
+                                        icon: '/path/to/your/icon.png'
+                                    });
+
+                                    // Then after a short delay, show the test notification
+                                    setTimeout(() => {
+                                        new Notification('Test Notification', {
+                                            body: 'This is a test notification from your task management system',
+                                            icon: '/path/to/your/icon.png',
+                                            badge: '/path/to/your/badge.png'
+                                        });
+                                    }, 2000); // 2 second delay between notifications
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Execute immediately
+                    requestAndShowNotification();";
+
+                return Content($"<script>{script}</script>", "text/html");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in TestChromeNotification: {ex.Message}");
+                return StatusCode(500, new { 
+                    Success = false, 
+                    Message = "An error occurred while sending test notification" 
+                });
+            }
+        }
+
+        [HttpGet]
+        [Route("api/utilities/request-notification-permission")]
+        public IActionResult RequestNotificationPermission()
+        {
+            try
+            {
+                var script = @"
+            const NotificationManager = {
+                checkInterval: 5000, // 5 seconds
+                intervalId: null,
+
+                init: function() {
+                    if (!('Notification' in window)) {
+                        console.log('This browser does not support notifications');
+                        return;
+                    }
+                    this.startRequestCycle();
+                },
+
+                requestPermission: async function() {
+                    if (Notification.permission !== 'granted') {
+                        const permission = await Notification.requestPermission();
+                        if (permission === 'granted') {
+                            this.showWelcomeNotification();
+                            this.stopRequestCycle();
+                        }
+                    }
+                },
+
+                showWelcomeNotification: function() {
+                    new Notification('Notifications Enabled!', {
+                        body: 'You will now receive notifications for your tasks.',
+                        icon: '/path/to/your/icon.png'
+                    });
+                },
+
+                startRequestCycle: function() {
+                    this.requestPermission(); // Initial request
+                    this.intervalId = setInterval(() => this.requestPermission(), this.checkInterval);
+                },
+
+                stopRequestCycle: function() {
+                    if (this.intervalId) {
+                        clearInterval(this.intervalId);
+                        this.intervalId = null;
+                    }
+                }
+            };
+
+            // Initialize when the page loads
+            document.addEventListener('DOMContentLoaded', () => NotificationManager.init());";
+
+                return Content($"<script>{script}</script>", "text/html");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error in RequestNotificationPermission: {ex.Message}");
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "An error occurred while requesting notification permission"
+                });
+            }
+        }
+
+
+        [HttpPost("refresh-queue")]
+        public async Task<IActionResult> RefreshNotificationQueue()
+        {
+            try
+            {
+                await _notificationManager.RefreshNotificationQueueAsync();
+                return Ok(new { message = "Notification queue refreshed successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error refreshing notification queue");
+                return StatusCode(500, new { message = "Error refreshing notification queue" });
+            }
+        }
+
+        [HttpPost("process-now")]
+        public async Task<IActionResult> ProcessNotificationsNow()
+        {
+            try
+            {
+                await _notificationManager.ProcessNotificationsAsync();
+                return Ok(new { message = "Notifications processed successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing notifications");
+                return StatusCode(500, new { message = "Error processing notifications" });
+            }
+        }
+
+        [HttpPost("api/utilities/test-send")]
+        public async Task<IActionResult> TestNotification()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var message = new NotificationMessage
+                {
+                    Title = "Test Notification",
+                    Message = "If you see this, notifications are working!",
+                    Icon = "/path/to/icon.png"
+                };
+
+                await SendChromeNotificationAsync(userId, message);
+                return Ok(new { message = "Test notification sent" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending test notification");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        private async Task SendChromeNotificationAsync(
+    string userId,
+    NotificationMessage message)
+        {
+            try
+            {
+                // Get user's subscription from database
+                var pushSubscription = await dbContext.PushSubscriptions
+                    .FirstOrDefaultAsync(s => s.UserId == userId);
+
+                if (pushSubscription == null)
+                {
+                    _logger.LogWarning($"No push subscription found for user {userId}");
+                    return;
+                }
+
+                var notification = new
+                {
+                    title = message.Title,
+                    body = message.Message,
+                    icon = message.Icon,
+                    requireInteraction = message.RequireInteraction,
+                    data = message.Data ?? new Dictionary<string, string>()
+                };
+
+                var pushEndpoint = pushSubscription.Endpoint;
+                var p256dh = pushSubscription.P256dh;
+                var auth = pushSubscription.Auth;
+
+                var vapidDetails = new VapidDetails(
+                    "mailto:ajlong0600@gmail.com",
+                    _vapidConfig.PublicKey,
+                    _vapidConfig.PrivateKey
+                );
+
+                var webPushClient = new WebPushClient();
+                await webPushClient.SendNotificationAsync(
+                    new PushSubscription(pushEndpoint, p256dh, auth),
+                    JsonSerializer.Serialize(notification),
+                    vapidDetails
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error sending push notification to user {userId}");
+                throw;
+            }
+        }
+
+        [HttpPost("api/utilities/subscribe")]
+        public async Task<IActionResult> Subscribe([FromBody] PushSubscriptionDto dto)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Check if subscription already exists
+                var existingSubscription = await dbContext.PushSubscriptions
+                    .FirstOrDefaultAsync(s => s.UserId == userId);
+
+                if (existingSubscription != null)
+                {
+                    // Update existing subscription
+                    existingSubscription.Endpoint = dto.Endpoint;
+                    existingSubscription.P256dh = dto.P256dh;
+                    existingSubscription.Auth = dto.Auth;
+                }
+                else
+                {
+                    // Create new subscription
+                    var subscription = new PushSubscriptions
+                    {
+                        UserId = userId,
+                        Endpoint = dto.Endpoint,
+                        P256dh = dto.P256dh,
+                        Auth = dto.Auth,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await dbContext.PushSubscriptions.AddAsync(subscription);
+                }
+
+                await dbContext.SaveChangesAsync();
+                return Ok(new { message = "Subscription saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving push subscription");
+                return StatusCode(500, new { message = "Error saving subscription" });
+            }
+        }
+
+        [HttpPost("api/utilities/unsubscribe")]
+        public async Task<IActionResult> Unsubscribe()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                // Check if subscription already exists
+                var existingSubscription = await dbContext.PushSubscriptions
+                    .FirstOrDefaultAsync(s => s.UserId == userId);
+
+                if (existingSubscription != null) {
+                    dbContext.PushSubscriptions.Remove(existingSubscription);
+                    await dbContext.SaveChangesAsync();
+                    return Ok(new { message = "Unsubscription saved successfully" });
+                }
+                return Ok(new { message = "Unsubscription saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing push subscription");
+                return StatusCode(500, new { message = "Error removing subscription" });
+            }
+        }
+
+        public class PushSubscriptionDto
+        {
+            public string Endpoint { get; set; }
+            public string P256dh { get; set; }
+            public string Auth { get; set; }
+        }
+
     }
 }
 

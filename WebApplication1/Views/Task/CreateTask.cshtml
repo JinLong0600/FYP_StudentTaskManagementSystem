@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Priority</label>
-                                    <select class="form-control" name="Priority" id="Priority">
+                                    <select class="form-control priority-filter" name="Priority" id="Priority">
                                         <option value="">- Please select -</option>
                                         <option value="@((int)PriorityLevel.Trivial)" selected=@(Model.Priority == (int)PriorityLevel.Trivial)>Trivial</option>
                                         <option value="@((int)PriorityLevel.Low)" selected=@(Model.Priority == (int)PriorityLevel.Low)>Low</option>
@@ -58,7 +58,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold lb-required">Status</label>
-                                    <select class="form-control" name="Status" id="Status">
+                                    <select class="form-control status-filter" name="Status" id="Status">
                                         <option value="">- Please select -</option>
                                         <option value="@((int)ItemTaskStatus.NotStarted)" selected=@(Model.Status == (int)ItemTaskStatus.NotStarted)>Not Started</option>
                                         <option value="@((int)ItemTaskStatus.InProgress)" selected=@(Model.Status == (int)ItemTaskStatus.InProgress)>In Progress</option>
@@ -195,7 +195,7 @@
 
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Action("Index", "Task")'">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Action("Index", "Task")'"><i class="fas fa-arrow-left"></i> Back to Task</button>
                             <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">@(Model.IsEdit ? "Update task" : "Create new task")</button>
                         </div>
                     </form>
@@ -205,164 +205,7 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-        /* Calendar Container */
-        .flatpickr-calendar {
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* Header Section */
-        .flatpickr-months .flatpickr-month {
-            background: #41a6c6;
-            color: white;
-            fill: white;
-            border-radius: 8px 8px 0 0;
-            height: 45px;
-        }
-
-        .flatpickr-current-month {
-            padding: 12px 0 0 0;
-            font-size: 1.1rem;
-        }
-
-        /* Month and Year Dropdowns */
-        .flatpickr-current-month .flatpickr-monthDropdown-months,
-        .flatpickr-current-month select.yearselect {
-            text-align: center;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background: transparent;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 500;
-            padding: 0px;
-        }
-
-        .numInput.cur-year {
-            font-weight: 500!important;
-        }
-
-/*         .flatpickr-current-month select.yearselect:hover,
-        .flatpickr-monthDropdown-months:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .flatpickr-current-month select.yearselect:focus,
-        .flatpickr-monthDropdown-months:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.2);
-        } */
-
-        .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
-            background-color: #7eb5c6;
-            font-size: 0.95rem;
-            font-weight: 600; 
-        }
-
-        .flatpickr-prev-month:hover, .flatpickr-next-month:hover {
-            color: black;            
-        }
-
-        .flatpickr-current-month select.yearselect {
-            /* background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); */
-            background-repeat: no-repeat;
-            background-position: right 4px center;
-            background-size: 12px;
-        }
-
-        .flatpickr-current-month select.yearselect option {
-            background: #78a7b6;
-            color: #333;
-        }
-
-        /* Navigation Arrows */
-        .flatpickr-prev-month,
-        .flatpickr-next-month {
-            padding: 12px;
-        }
-
-        .flatpickr-prev-month svg,
-        .flatpickr-next-month svg {
-            fill: white;
-            width: 20px !important;  /* Increased from default */
-            height: 20px !important; /* Increased from default */
-            transition: all 0.2s ease-out;
-        }
-
-        .flatpickr-prev-month:hover svg,
-        .flatpickr-next-month:hover svg {
-            fill: white !important;
-            transform: scale(2); /* Slight scale effect on hover */
-            transition: all 0.2s ease;
-
-        }
-
-        /* Weekday Headers */
-        .flatpickr-weekdays {
-            background: #41a6c6;
-            color: white;
-        }
-
-        span.flatpickr-weekday {
-            color: white;
-            font-weight: 500;
-        }
-
-        /* Calendar Days */
-        .flatpickr-day {
-            border-radius: 6px;
-            margin: 2px;
-            height: 36px;
-            line-height: 36px;
-        }
-
-        .flatpickr-day.selected,
-        .flatpickr-day.selected:hover {
-            background: #4e73df;
-            border-color: #4e73df;
-        }
-
-        .flatpickr-day.today {
-            border-color: #4e73df;
-            color: #4e73df;
-        }
-
-        .flatpickr-day:hover {
-            background: #f8f9fc;
-        }
-
-        /* Time Section */
-        .flatpickr-time {
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .flatpickr-time input:hover,
-        .flatpickr-time .flatpickr-am-pm:hover,
-        .flatpickr-time input:focus,
-        .flatpickr-time .flatpickr-am-pm:focus {
-            background: #f8f9fc;
-        }
-
-        .flatpickr-calendar.hasTime .flatpickr-time {
-            height: 45px;
-            line-height: 45px;
-        }
-
-        .numInputWrapper:hover {
-            background: transparent;
-        }
-    </style>
-}
-
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
 
     // Convert ViewBag data to JavaScript array
@@ -371,7 +214,7 @@
     function addSubtask(index, subtask = null) 
     {
         let presetOptions = '';
-
+        
         if (Array.isArray(notificationPresets)) {
             notificationPresets.forEach(preset => {
                 const selected = subtask && subtask.l1NotificationPresetId === preset.value ? 'selected' : '';
@@ -424,7 +267,7 @@
                             </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold lb-required">Priority</label>
-                            <select class="form-control" name="Subtasks[${index}].Priority" id="Subtasks_${index}_Priority">
+                            <select class="form-control priority-filter" name="Subtasks[${index}].Priority" id="Subtasks_${index}_Priority">
                                 <option value="">- Please select -</option>
                                 <option value="@((int)PriorityLevel.Trivial)">Trivial</option>
                                 <option value="@((int)PriorityLevel.Low)">Low</option>
@@ -435,27 +278,29 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold lb-required">Status</label>
-                            <select class="form-control" name="Subtasks[${index}].Status" id="Subtasks_${index}_Status">
+                            <select class="form-control status-filter" name="Subtasks[${index}].Status" id="Subtasks_${index}_Status">
                                 <option value="">- Please select -</option>
                                 <option value="@((int)ItemTaskStatus.NotStarted)">Not Started</option>
                                 <option value="@((int)ItemTaskStatus.InProgress)">In Progress</option>
                                 <option value="@((int)ItemTaskStatus.OnHold)">On hold</option>
-                                <option value="@((int)ItemTaskStatus.Completed)">Completed</option>
+                                ${appendOption(subtask)}
                             </select>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold lb-required">Notification Settings</label>
                             <div class="border rounded p-3">
-                                <div class="d-flex gap-4 mb-2">
+                                <div class="d-flex gap-4 task-setting-container mb-2">
                                     <div>
                                         <input type="radio" name="Subtasks[${index}].IsNotification" id="noNotification_${index}" value="0" class="subtask-notification-toggle" checked>
-                                        <label>No Notifications</label>
+                                                <label for="noNotification_${index}">No Notifications</label>
                                     </div>
                                     <div>
                                         <input type="radio" name="Subtasks[${index}].IsNotification" id="useNotification_${index}" value="1"  class="subtask-notification-toggle">
-                                        <label>Set Notifications</label>
+                                                <label for="useNotification_${index}">Set Notifications</label>
                                     </div>
                                 </div>
+
+
                                 <div class="subtask-notification-options mt-3" style="display: none;">
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold lb-required">Notification Preset</label>
@@ -463,29 +308,36 @@
                                             ${presetOptions}
                                         </select>
                                     </div>
+                                    
                                     <div class="subtask-custom-notification-options mt-3" style="display: none;">
-                                        <div class="d-flex gap-4">
-                                            <div>
-                                                <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions1_Subtasks${index}" value="@((int)DefaultNotificationOptions.ThirtyMin)">
-                                                <label>30 Minutes Before</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions2_Subtasks${index}" value="@((int)DefaultNotificationOptions.OneWeek)">
-                                                <label>1 Hour Before</label>
-                                            </div>
-                                            <div>
-                                                <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions3_Subtasks${index}" value="@((int)DefaultNotificationOptions.OneMonth)">
-                                                <label>1 Day Before</label>
-                                            </div>
+                                        <div class="d-flex gap-4 task-setting-container">
+                                            <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions1_Subtasks${index}" value="@((int)DefaultNotificationOptions.ThirtyMin)">
+                                            <label for="DefaultNotificationOptions1_Subtasks${index}">30 Minutes Before</label>
+                                            <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions2_Subtasks${index}" value="@((int)DefaultNotificationOptions.OneWeek)">
+                                            <label for="DefaultNotificationOptions2_Subtasks${index}">1 Hour Before</label>
+                                            <input type="radio" name="Subtasks[${index}].DefaultNotificationOptions" id="DefaultNotificationOptions3_Subtasks${index}" value="@((int)DefaultNotificationOptions.OneMonth)">
+                                            <label for="DefaultNotificationOptions3_Subtasks${index}">1 Day Before</label>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+
         return subtaskHtml;
+    }
+
+        function appendOption(subtask = null) {
+        // Your existing append code
+        let newSubtask = `${subtask ? `<option value="@((int)ItemTaskStatus.Completed)">Completed</option>` : ''}`;
+            if (subtask) {
+                newSubtask += `${subtask.status == 5 ? `<option value="@((int)ItemTaskStatus.Overdue)">Overdue</option>` : ''}`;
+            }
+        // Rest of your append code
+            return newSubtask;
     }
 
     function initializeDateTimePickers() {
@@ -511,18 +363,12 @@
         });
 
 
-        // Initialize subtask date pickers with the same config
-        $('.picker').each(function () {
-            console.log("found");
-            $(this).flatpickr(dateConfig);
-        });
-
     }
 
     $(document).ready(function () {
         if (!isEdit) {
                 initializeDateTimePickers();
-
+                reinitializeValidator();
         }
         reinitializeValidator();
         var isEdit = @Json.Serialize(Model.IsEdit);
@@ -554,24 +400,30 @@
             {
                 const subtaskHtml = addSubtask(subtaskCount);
                 $('#subtasksContainer').append(subtaskHtml);
-                addSubtaskValidation(subtaskCount);
                 
-                const subtaskDueDate = $(`#Subtasks_${subtaskCount}_DueDate`).flatpickr({
-                    enableTime: true,
-                    dateFormat: "d-m-Y h:i K",
-                    minDate: $(`#Subtasks_${subtaskCount}_StartDate`).val() || "today"
-                });
+                for(let i = 0; i <= subtaskCount; i++){
+                    if(i >= subtaskCount)
+                    {
+                        addSubtaskValidation(i);
+                        const subtaskDueDate = $(`#Subtasks_${i}_DueDate`).flatpickr({
+                            enableTime: true,
+                            dateFormat: "d-m-Y h:i K",
+                            minDate: $(`#Subtasks_${i}_StartDate`).val() || "today"
+                        });
 
-                // Initialize date pickers for new subtask
-                $(`#Subtasks_${subtaskCount}_StartDate`).flatpickr({
-                    enableTime: true,
-                    dateFormat: "d-m-Y h:i K",
-                    minDate: "today",
-                    onChange: function(selectedDates, dateStr) {
-                            subtaskDueDate.clear();
-                            subtaskDueDate.set("minDate", dateStr);
+                        // Initialize date pickers for new subtask
+                        $(`#Subtasks_${i}_StartDate`).flatpickr({
+                            enableTime: true,
+                            dateFormat: "d-m-Y h:i K",
+                            minDate: "today",
+                            onChange: function(selectedDates, dateStr) {
+                                    subtaskDueDate.clear();
+                                    subtaskDueDate.set("minDate", dateStr);
+                            }
+                        });
                     }
-                });
+                }
+
 
                 subtaskCount++;
             }
@@ -609,8 +461,6 @@
         // Helper function to update subtask numbers if needed
         function updateSubtaskNumbers() {
             $('.subtask').each(function(index) {
-                // Update any visible numbering or IDs here if needed
-                // Example: $(this).find('.subtask-number').text(index + 1);
             });
         }
 
@@ -723,8 +573,10 @@
         // Handle notification preset selection for subtasks
         $(document).on('change', '.subtask-notification-preset', function() {
             const customOptions = $(this).closest('.subtask-notification-options').find('.subtask-custom-notification-options');
-            if ($(this).val() === '0') {
+            if ($(this).val() == "" + defaultNotificationId + "")
+            {
                 customOptions.slideDown();
+                customOptions.find(`input[value="1"]`).prop('checked', true);
             } else {
                 customOptions.slideUp();
                 customOptions.find('input[type="radio"]').prop('checked', false);
@@ -736,9 +588,8 @@
         // Initialize existing subtasks if any
         if (modelData && modelData.subtasksList && modelData.subtasksList.length > 0) {
             modelData.subtasksList.forEach((subtasksList, index) => {
-                // Create subtask HTML
+                // Create subtask HTML ?????
                 subtaskCount++;
-
                 const subtaskHtml = addSubtask(index, subtasksList);
                 $('#subtasksContainer').append(subtaskHtml);
                     initializeDateTimePickers();
@@ -753,14 +604,32 @@
                 $subtaskDiv.find(`[name="Subtasks[${index}].Status"]`).val(subtasksList.status);
 
                 // Set dates
-                if (subtasksList.startDate) {
+                if (subtasksList.startDate && subtasksList.dueDate) {
+                    addSubtaskValidation(index);
+
+                    const subtaskDueDate = $(`#Subtasks_${index}_DueDate`).flatpickr({
+                        enableTime: true,
+                        dateFormat: "d-m-Y h:i K",
+                        minDate: $(`#Subtasks_${index}_StartDate`).val() || "today"
+                    });
+
+                    // Initialize date pickers for new subtask
+                    $(`#Subtasks_${index}_StartDate`).flatpickr({
+                        enableTime: true,
+                        dateFormat: "d-m-Y h:i K",
+                        minDate: "today",
+                        onChange: function(selectedDates, dateStr) {
+                                subtaskDueDate.clear();
+                                subtaskDueDate.set("minDate", dateStr);
+                        }
+                    });
+
                     $subtaskDiv.find(`[name="Subtasks[${index}].StartDate"]`)
                         .val(subtasksList.startDate);
-                }
-                if (subtasksList.dueDate) {
                     $subtaskDiv.find(`[name="Subtasks[${index}].DueDate"]`)
                         .val(subtasksList.dueDate);
                 }
+
                 // Set notification settings
                 if (subtasksList.isNotification === true) {
                     const $notificationToggle = $subtaskDiv.find(`[name="Subtasks[${index}].IsNotification"][value="1"]`);
@@ -771,7 +640,8 @@
                         .val(subtasksList.l1NotificationPresetId);
 
                     // Handle custom notifications if needed
-                    if (subtasksList.l1NotificationPresetId === 0) {
+                    if (subtasksList.l1NotificationPresetId == "" + defaultNotificationId + "")
+                    {
                         $subtaskDiv.find('.subtask-custom-notification-options').show();
                         $subtaskDiv.find(`[name="Subtasks[${index}].DefaultNotificationOptions"][value="${subtasksList.defaultNotificationOptions}"]`)
                             .prop('checked', true);
@@ -779,10 +649,12 @@
                     }
                 }
             });
-
+            
             // Update subtask counter
             subtaskCount = modelData.subtasksList.length;
-        } else { 
+        } 
+        else 
+        { 
             console.log("can't load");
         }
 
@@ -830,6 +702,9 @@
                 error.insertAfter(element);
             },
             submitHandler: function (form) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitBtn.disabled = true;
                 event.preventDefault();
                 return true;
             }
@@ -838,12 +713,12 @@
 
     function addSubtaskValidation(index) {
         // Destroy existing validation
-        $("#createTaskForm").removeData("validator");
-        $("#createTaskForm").removeData("unobtrusiveValidation");
+        //$("#createTaskForm").removeData("validator");
+        //$("#createTaskForm").removeData("unobtrusiveValidation");
 
         // Re-add validation
-        reinitializeValidator();
-        $.validator.unobtrusive.parse("#createTaskForm");
+        //reinitializeValidator();
+        //$.validator.unobtrusive.parse("#createTaskForm");
         $(`#Subtasks_${index}_Title`).rules('add', {
             required: true,
             maxlength: 50
@@ -907,6 +782,11 @@
             DefaultNotificationOptions: $('input[name="DefaultNotificationOptions"]:checked').val(),
             Subtasks: JSON.stringify(subtasks),
         };
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
 
         $.ajax({
             url: form.action,
@@ -921,10 +801,12 @@
                         confirmButtonText: "OK"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            window.location.href = "/Task/Index";
+                            window.location.href = "/Task/CreateTask/" + response.taskId;
                         }
                     });
                 } else {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
                     Swal.fire({
                         title: response.title,
                         text: response.message,
@@ -941,6 +823,10 @@
                     icon: "error",
                     confirmButtonText: "OK"
                 });
+            },
+            complete: function() {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
         return false;

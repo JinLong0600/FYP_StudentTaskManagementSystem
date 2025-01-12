@@ -47,6 +47,9 @@ namespace StudentTaskManagement.Models
         [ForeignKey("L1TaskId")]
         public virtual L1Tasks L1Tasks { get; set; }
 
+        [ForeignKey("L1NotificationPresetId")]
+        public virtual L1NotificationPresets L1NotificationPresets { get; set; }  // Changed from L1RecurringPresets to L1RecurringPreset (singular)
+
     }
 
 }

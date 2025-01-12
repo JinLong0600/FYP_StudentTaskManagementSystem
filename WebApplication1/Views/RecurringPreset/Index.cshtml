@@ -20,7 +20,7 @@
 <div class="main-content child-content p-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="mb-2">🔁 My Recurring Pattern</h2>
+            <h2 class="mb-2"><i class="fas fa-redo me-2"></i> My Recurring Pattern</h2>
             <p class="text-muted">Create and manage your recurring pattern to cultivate a new habiat</p>
         </div>
         <button class="btn btn-create" id="createPresetBtn">
@@ -41,10 +41,10 @@
             </div>
 
             <div class="col-md-4">
-                <label for="Type" class="form-label fw-semibold">Type</label>
+                <label for="Type" class="form-label fw-semibold">Recuring Pattern Type</label>
                 <div class="custom-dropdown">
                     <select class="form-select" id="Type" name="Type">
-                        <option value="">All Types</option>
+                        <option value="">- All Types -</option>
                         <option value="@((int)RecurringType.Day)">Recurring Pattern by Day(s)</option>
                         <option value="@((int)RecurringType.Week)">Recurring Pattern by Week(s)</option>
                         <option value="@((int)RecurringType.BiWeek)">Recurring Pattern by Bi-Weeks</option>
@@ -53,6 +53,22 @@
                     </select>
                 </div>
             </div>
+            <div class="col-md-2">
+                <div class="d-flex flex-column justify-content-end h-100" style="padding-bottom: 0.3rem;">
+                    <button class="btn btn-outline-secondary w-100" style="padding: 8px 16px;" id="clearButton">
+                        <i class="fas fa-times me-1"></i>Clear Filter
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-2">
+                <div class="d-flex flex-column justify-content-end h-100" style="padding-bottom: 0.3rem;">
+                    <button class="btn btn-primary w-100" id="searchButton">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -127,7 +143,7 @@
                                             <div class="recurring-type-container">
                                                 <input type="checkbox" id="allDays" name="DaytoGenerate" value="0">
                                                 <label for="allDays">
-                                                    <i class="fas fa-calendar-alt me-2"></i>All Days
+                                                    <i class="fas fa-calendar-alt me-3"></i>All Days
                                                 </label>
                                             </div>
                                         </div>
@@ -136,33 +152,47 @@
                                             <label class="form-label" style="font-style: italic;">Or Select Specific Days</label>
                                             <div class="recurring-type-container">
                                                 <div class="row">
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_monday" name="DaytoGenerate" value="1" class="day-checkbox">
-                                                        <label for="day_monday">Monday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_monday" name="DaytoGenerate" value="1" class="day-checkbox">
+                                                            <label for="day_monday">Monday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_tuesday" name="DaytoGenerate" value="2" class="day-checkbox">
-                                                        <label for="day_tuesday">Tuesday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_tuesday" name="DaytoGenerate" value="2" class="day-checkbox">
+                                                            <label for="day_tuesday">Tuesday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_wednesday" name="DaytoGenerate" value="3" class="day-checkbox">
-                                                        <label for="day_wednesday">Wednesday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_wednesday" name="DaytoGenerate" value="3" class="day-checkbox">
+                                                            <label for="day_wednesday">Wednesday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_thursday" name="DaytoGenerate" value="4" class="day-checkbox">
-                                                        <label for="day_thursday">Thursday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_thursday" name="DaytoGenerate" value="4" class="day-checkbox">
+                                                            <label for="day_thursday">Thursday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_friday" name="DaytoGenerate" value="5" class="day-checkbox">
-                                                        <label for="day_friday">Friday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_friday" name="DaytoGenerate" value="5" class="day-checkbox">
+                                                            <label for="day_friday">Friday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_saturday" name="DaytoGenerate" value="6" class="day-checkbox">
-                                                        <label for="day_saturday">Saturday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_saturday" name="DaytoGenerate" value="6" class="day-checkbox">
+                                                            <label for="day_saturday">Saturday</label>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <input type="checkbox" id="day_sunday" name="DaytoGenerate" value="7" class="day-checkbox">
-                                                        <label for="day_sunday">Sunday</label>
+                                                    <div class="col-3">
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="checkbox" id="day_sunday" name="DaytoGenerate" value="7" class="day-checkbox">
+                                                            <label for="day_sunday">Sunday</label>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -205,7 +235,7 @@
                                     <!-- Month Selection -->
                                     <div class="col-md-12 month-selection-section" style="display: none;">
                                         <div class="mb-4">
-                                            <label class="form-label">Quick Selection</label>
+                                            <label class="form-label lb-required">Quick Selection</label>
                                             <div class="recurring-type-container">
                                                 <input type="checkbox" id="allMonths" name="DaytoGenerate" value="0">
                                                 <label for="allMonths">
@@ -382,7 +412,7 @@
         .timing-pill i {
             margin-right: 0.5rem;
             font-size: 0.8rem;
-            color: var(--primary-color);
+            color: var(--accent-blue);
         }
 
     .usage-pills {
@@ -1170,6 +1200,7 @@
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 No recurring pattern found
                                             </div>`;
+                        updatePagination(0, 0);
                     }
                 },
                 error: function () {
@@ -1202,7 +1233,7 @@
                                     </div>
                                     <h4 class="preset-title">${preset.name}</h4>
                                     <div class="notification-description mb-4">
-                                        <p class="preset-description">${preset.description}</p>
+                                        <p class="preset-description">${renderDescription(preset.description)}</p>
                                     </div>
                                     <div class="preset-details">
                                         <div class="timing-pills-display">
@@ -1212,18 +1243,20 @@
                                             ${createTimingPills(preset.recurringCount)}
                                         </div>
                                     </div>
-                                    <div class="preset-footer">
-                                        ${createTaskSubTaskPills(preset.recurringCount)}
-                                    </div>
                                 </div>
                             `;
+
+            /*        <div class="preset-footer">
+                        ${createTaskSubTaskPills(preset.recurringCount)}
+                    </div>
+            */
         }
 
         function createTimingPills(preset) {
             if (preset) {
                 return `
                                         <span class="timing-pill">
-                                            <i class="fas fa-redo-day"></i>Recurs ${preset} times(s)
+                                            <i class="fas fa-redo"></i> Recurs ${preset} times(s) only
                                         </span>
                                 `
             }
@@ -1324,17 +1357,18 @@
 
             // Search input handler
             const searchInput = document.getElementById('customSearch');
-            let searchTimeout;
-            searchInput.addEventListener('input', function () {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    loadPresets(1, this.value, document.getElementById('Type').value);
-                }, 300);
+            const typeSelect = document.getElementById('Type');
+
+            // Search button handler
+            document.getElementById('searchButton').addEventListener('click', function () {
+                loadPresets(1, searchInput.value, typeSelect.value);
             });
 
-            // Type filter handler
-            document.getElementById('Type').addEventListener('change', function () {
-                loadPresets(1, searchInput.value, this.value);
+            // Clear filter handler
+            document.getElementById('clearButton').addEventListener('click', function () {
+                searchInput.value = '';
+                typeSelect.value = ''; // or your default value, e.g., 'All'
+                loadPresets(1, '', ''); // Reset to initial state
             });
 
             setupCheckboxControls();
@@ -1751,5 +1785,12 @@
             resetForm();
         });
 
+        function renderDescription(description) {
+            if (description == null || description == "") {
+                return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- No description provided -</span>`;
+            } else {
+                return description;
+            }
+        }
     </script>
 }

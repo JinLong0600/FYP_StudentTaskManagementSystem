@@ -6,6 +6,8 @@ using Microsoft.CodeAnalysis.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using StudentTaskManagement.Security;
+using StudentTaskManagement.Utilities;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,10 +55,9 @@ builder.Services.AddAuthentication().AddGoogle
     });
 
 builder.Services.AddDbContext<StudentTaskManagementContext>(options =>
-{
-    options.UseSqlServer("Server=LAPTOP-G1DCCDQT; Database=StudentTaskManagementDB; Trusted_Connection=True; TrustServerCertificate=True;");
-});
-
+    options.UseSqlServer("Server=LAPTOP-G1DCCDQT; Database=StudentTaskManagementDB; Trusted_Connection=True; TrustServerCertificate=True;"),
+    ServiceLifetime.Transient  // Specify the lifetime as a parameter to AddDbContext
+);
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.AccessDeniedPath = new PathString("/Administration/AccessDenied");
@@ -92,6 +93,13 @@ builder.Services.Configure<CustomEmailConfirmationTokenProviderOptions>(o => o.T
 // Add this to your service configuration
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+// Add this with your other service configurations
+builder.Services.Configure<VapidConfiguration>(
+    builder.Configuration.GetSection("VAPID")
+);
+builder.Services.AddScoped<INotificationManager, NotificationManager>();
+/*builder.Services.AddScoped<INotificationManager, NotificationManager>();
+builder.Services.AddHostedService<NotificationSchedulerService>();*/
 /*builder.Services.Configure<IdentityOptions>(option => {
     option.Password.RequiredLength = 12;
     option.Password.RequiredUniqueChars = 1;
@@ -121,7 +129,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+//app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/javascript"
+});
 
 app.UseRouting();
 

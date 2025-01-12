@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using WebPush;
 
 namespace StudentTaskManagement.Models
 {
@@ -60,13 +61,13 @@ namespace StudentTaskManagement.Models
         public DbSet<L1SubTasks> L1SubTasks { get; set; }
         public DbSet<L1DiscussionForumComments> L1DiscussionForumComments { get; set; }
         public DbSet<L1DiscussionForums> L1DiscussionForums { get; set; }
-        public DbSet<L1RecurringTaskCounters> L1RecurringTaskCounters { get; set; }
         public DbSet<L1RecurringPatterns> L1RecurringPresets { get; set; }
         public DbSet<L1NotificationPresets> L1NotificationPresets { get; set; }
         public DbSet<L1Students> L1Students { get; set; }
         public DbSet<L1TaskReminders> L1TaskReminders { get; set; }
         public DbSet<L1DiscussionForumLikes> L1DiscussionForumLikes { get; set; }
-
+        public DbSet<NotificationQueues> NotificationQueues { get; set; }
+        public DbSet<PushSubscriptions> PushSubscriptions { get; set; }
 
     }
 }

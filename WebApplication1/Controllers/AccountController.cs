@@ -21,19 +21,20 @@ namespace WebApplication1.Controllers
     [Authorize]
     public class AccountController : _BaseController
     {
-        private readonly StudentTaskManagementContext dbContext;
-
+        protected readonly StudentTaskManagementContext dbContext;
+        protected readonly ILogger _logger;
         private readonly UserManager<L1Students> _userManager;
         private readonly SignInManager<L1Students> _signInManager;
-        private readonly ILogger<AccountController> _logger;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AccountController(UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, ILogger<AccountController> logger, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        public AccountController(StudentTaskManagementContext dbContext, ILogger<NotificationPresetController> logger, UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        : base(dbContext, logger, userManager, signInManager, emailService, webHostEnvironment)
         {
+            this.dbContext = dbContext;
+            this._logger = logger;
             this._userManager = userManager;
             this._signInManager = signInManager;
-            this._logger = logger;
             this._emailService = emailService;
             this._webHostEnvironment = webHostEnvironment;
         }

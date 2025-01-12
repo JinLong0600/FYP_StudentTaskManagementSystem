@@ -1,0 +1,60 @@
+﻿<!-- Views/Home/TestNotifications.cshtml -->
+@{
+    ViewData["Title"] = "Test Notifications";
+}
+
+<div class="container mt-4">
+    <h2>Notification Test Panel</h2>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Step 1: Enable Notifications</h5>
+            <button id="enableNotifications" class="btn btn-primary">
+                Enable Notifications
+            </button>
+            <div id="subscriptionStatus" class="mt-2"></div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Step 2: Test Notification</h5>
+            <button id="testNotification" class="btn btn-success">
+                Send Test Notification
+            </button>
+            <div id="notificationStatus" class="mt-2"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/notification-client.js"></script>
+    <script>
+        document.getElementById('enableNotifications').addEventListener('click', async () => {
+            try {
+                await registerForPushNotifications();
+                document.getElementById('subscriptionStatus').innerHTML =
+                    '<div class="alert alert-success">Successfully registered!</div>';
+            } catch (error) {
+                document.getElementById('subscriptionStatus').innerHTML =
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        });
+
+        document.getElementById('testNotification').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/utilities/test-send', {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Failed to send notification');
+
+                document.getElementById('notificationStatus').innerHTML =
+                    '<div class="alert alert-success">Test notification sent!</div>';
+            } catch (error) {
+                document.getElementById('notificationStatus').innerHTML =
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+}

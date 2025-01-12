@@ -11,13 +11,13 @@
             <div class="card mb-4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-3">
-                        <h1 class="card-title h2">
+                        <div class="card-title" style="font-size: 1.4rem; color: #256D85;">
                             @Model.Title
                             @if (Model.Status == (int)ForumStatus.Resolved)
                             {
                                 <span class="badge rounded-pill status-resolved ms-2">RESOLVED</span>
                             }
-                        </h1>
+                        </div>
                         <div class="action-buttons">
                             @if (Model.IsAuthor)
                             {
@@ -33,12 +33,24 @@
 
                     <div class="post-meta mb-4">
                         <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=@Model.AuthorName&background=random" 
+                            @if (!string.IsNullOrEmpty(Model.AuthorProfileImage))
+                            {
+                                <img src="@Model.AuthorProfileImage" 
+                                 class="rounded-circle me-2" 
+                                 alt="@Model.AuthorName" 
+                                 width="32"
+                                 height="32">
+                            }
+                            else
+                            {
+                                <img src="https://ui-avatars.com/api/?name=@Model.AuthorName&background=random" 
                                  class="rounded-circle me-2" 
                                  alt="@Model.AuthorName" 
                                  width="32" 
                                  height="32">
-                            <span class="text-primary fw-bold">@Model.AuthorName</span>
+                            }
+                            
+                            <span class="fw-bold">@Model.AuthorName</span>
                             <span class="text-muted mx-2">•</span>
                             <span class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
                         </div>
@@ -305,11 +317,7 @@
             return `
                 <div class="comment">
                     <div class="d-flex align-items-start">
-                        <img src="https://ui-avatars.com/api/?name=${comment.authorName}&background=random" 
-                             class="rounded-circle me-2" 
-                             alt="${comment.authorName}" 
-                             width="32" 
-                             height="32">
+                        ${renderImage(comment)}
                         <div class="flex-grow-1">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
@@ -329,6 +337,27 @@
                     </div>
                 </div>
             `;
+        }
+
+        function renderImage(comment) {
+            if (comment.authorProfileImage) {
+                return `
+                        <img src="${comment.authorProfileImage}"
+                            class="rounded-circle me-2"
+                            alt="${comment.authorName}"
+                            width="45"
+                            height="45">
+                        `;
+            } else {
+                return `
+                        <img src="https://ui-avatars.com/api/?name=${comment.authorName}&background=random"
+                            class="rounded-circle me-2"
+                            alt="${comment.authorName}"
+                            width="32"
+                            height="32">
+                        `;
+            }
+
         }
 
         // Optional: Delete comment function

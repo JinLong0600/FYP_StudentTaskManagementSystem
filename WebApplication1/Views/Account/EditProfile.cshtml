@@ -164,7 +164,7 @@
     </style>
 }
 
-<div class="container min-vh-100 d-flex align-items-center justify-content-center py-5">
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
     <div class="row justify-content-center w-100">
         <div class="col-md-8">
             <div class="card shadow-lg">
@@ -306,7 +306,12 @@
 
                         <!-- Submit Button -->
                         <div class="d-grid gap-2">
-                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">Update Profile</button>
+                            
+                        </div>
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Action("Index", "Home")'"><i class="fas fa-arrow-left"></i> Back to Home</button>
+                            <button type="submit" id="btnSubmit" class="btn btn-primary">Update Profile</button>
                         </div>
                     </form>
                 </div>
@@ -496,15 +501,25 @@
                 e.preventDefault();
                 validateForm();
                 if ($(this).valid()) {
-                    var formData = new FormData(this);  // Use FormData instead of serialize
+                    var formData = new FormData(this);
+                    const submitBtn = document.getElementById('btnSubmit');
+                    const originalContent = submitBtn.innerHTML;
+                    
+                    // Change button state while processing
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
                     
                     $.ajax({
                         url: "/Account/UpdateProfile",
                         type: "POST",
                         data: formData,
-                        processData: false,  // Important for FormData
-                        contentType: false,  // Important for FormData
+                        processData: false,
+                        contentType: false,
                         success: function(response) {
+                            // Reset button state
+                            submitBtn.innerHTML = originalContent;
+                            submitBtn.disabled = false;
+                            
                             if (response.success) {
                                 Swal.fire({
                                     title: response.title,
@@ -513,7 +528,7 @@
                                     confirmButtonText: "OK"
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        window.location.href = "/Account/EditProfile";  // Redirect to login page
+                                        window.location.href = "/Account/EditProfile";
                                     }
                                 });
                             } else {
@@ -526,6 +541,10 @@
                             }
                         },
                         error: function() {
+                            // Reset button state
+                            submitBtn.innerHTML = originalContent;
+                            submitBtn.disabled = false;
+                            
                             Swal.fire({
                                 title: "Error!",
                                 text: "An unexpected error occurred. Please try again.",
@@ -697,7 +716,6 @@
             });
         }
 
-        
         // Run on page load in case of form validation failure
         document.addEventListener('DOMContentLoaded', function () {
             if (document.getElementById('EducationStage').value) {
@@ -722,12 +740,19 @@
                         if (typeof checkAge === 'function') {
                             checkAge();
                         }
+                    },
+                    beforeShow: function (input, inst) {
+                        // Add custom class for styling
+                        setTimeout(function () {
+                            inst.dpDiv.find('.ui-datepicker-year').addClass('year-dropdown');
+                        }, 0);
                     }
                 });
             } else {
                 console.error('jQuery is not loaded!');
             }
         });
+        
     </script>
 }
 

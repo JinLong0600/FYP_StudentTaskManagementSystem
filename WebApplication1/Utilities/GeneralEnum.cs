@@ -38,6 +38,15 @@ namespace StudentTaskManagement.Utilities
             OnHold = 4,         //Yellow
             Overdue = 5,     //Orange
         }
+
+        public enum updateTasksOverview
+        {
+            CurrWeek = 1,
+            UpcomingWeek = 2,
+            PreviousWeek = 3,
+            ThisMonth = 4,
+        }
+
         public enum ItemTaskCategory
         {
             Academic = 1,

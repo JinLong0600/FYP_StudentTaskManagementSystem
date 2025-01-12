@@ -20,7 +20,7 @@
 <div class="main-content child-content p-4">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="mb-2">📬 My Notification Presets</h2>
+            <h2 class="mb-2"><i class="fa-solid fa-bell me-2"></i> My Notification Presets</h2>
             <p class="text-muted">Create and manage your notification templates to save time</p>
         </div>
         <button class="btn btn-create" id="createPresetBtn">
@@ -44,12 +44,28 @@
                 <label for="Type" class="form-label fw-semibold">Notification Preset Type</label>
                 <div class="custom-dropdown">
                     <select class="form-select" id="Type" name="Type">
-                        <option value="">All Types</option>
+                        <option value="">- All Types -</option>
                         <option value="@((int)NotificationPresetType.Days)">Days-Based</option>
                         <option value="@((int)NotificationPresetType.Mintues)">Minutes-Based</option>
                     </select>
                 </div>
             </div>
+            <div class="col-md-2">
+                <div class="d-flex flex-column justify-content-end h-100" style="padding-bottom: 0.3rem;">
+                    <button class="btn btn-outline-secondary w-100" style="padding: 8px 16px;" id="clearButton">
+                        <i class="fas fa-times me-1"></i>Clear Filter
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-2">
+                <div class="d-flex flex-column justify-content-end h-100" style="padding-bottom: 0.3rem;">
+                    <button class="btn btn-primary w-100" id="searchButton">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -232,6 +248,7 @@
     }
 
     .timing-pill i {
+        color: var(--accent-blue);
         margin-right: 0.5rem;
     }
 
@@ -839,11 +856,13 @@
                         // Update pagination
                         updatePagination(response.data.currentPage, response.data.totalPages);
                     } else {
+                        // Update pagination
                         parentPresetGrid.innerHTML = `
                             <div class="alert alert-info text-center">
                                 <i class="fas fa-info-circle me-2"></i>
                                 No notification presets found
                             </div>`;
+                        updatePagination(0, 0);
                     }
                 },
                 error: function() {
@@ -876,18 +895,21 @@
                     </div>
                     <h4 class="preset-title">${preset.name}</h4>
                     <div class="notification-description mb-4">
-                        <p class="preset-description">${preset.description}</p>
+                        <p class="preset-description">${renderDescription(preset.description)}</p>
                     </div>
                     <div class="preset-details">
                         <div class="timing-pills-display">
                             ${createTimingPills(preset)}
                         </div>
                     </div>
-                    <div class="preset-footer">
-                        ${createTaskSubTaskPills(preset)}
-                    </div>
+
+
                 </div>
             `;
+            /*        <div class="preset-footer">
+                        ${createTaskSubTaskPills(preset)}
+                    </div>
+            */          
         }
 
         function createTimingPills(preset) {
@@ -1004,6 +1026,13 @@
             pagination.innerHTML = paginationHtml;
         }
 
+        function renderDescription(description) {
+            if (description == null || description == "") {
+                return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- No description provided -</span>`;
+            } else {
+                return description;
+            }
+        }
 
         // ===============================================
         // Initialize Everything
@@ -1033,19 +1062,19 @@
             // Initial load of presets
             loadPresets();
 
-            // Search input handler
             const searchInput = document.getElementById('customSearch');
-            let searchTimeout;
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    loadPresets(1, this.value, document.getElementById('Type').value);
-                }, 300);
+            const typeSelect = document.getElementById('Type');
+            
+            // Search button handler
+            document.getElementById('searchButton').addEventListener('click', function() {
+                loadPresets(1, searchInput.value, typeSelect.value);
             });
 
-            // Type filter handler
-            document.getElementById('Type').addEventListener('change', function() {
-                loadPresets(1, searchInput.value, this.value);
+            // Clear filter handler
+            document.getElementById('clearButton').addEventListener('click', function() {
+                searchInput.value = '';
+                typeSelect.value = ''; // or your default value, e.g., 'All'
+                loadPresets(1, '', ''); // Reset to initial state
             });
 
         });

@@ -373,12 +373,22 @@
                 validateForm();
                 if ($(this).valid()) {
                     var formData = $(this).serialize();
+                    const submitBtn = document.getElementById('btnSubmit');
+                    const originalContent = submitBtn.innerHTML;
+                    
+                    // Change button state while processing
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
                     
                     $.ajax({
                         url: this.action,
                         type: "POST",
                         data: formData,
                         success: function(response) {
+                            // Reset button state
+                            submitBtn.innerHTML = originalContent;
+                            submitBtn.disabled = false;
+                            
                             if (response.success) {
                                 Swal.fire({
                                     title: response.title,
@@ -400,6 +410,10 @@
                             }
                         },
                         error: function() {
+                            // Reset button state
+                            submitBtn.innerHTML = originalContent;
+                            submitBtn.disabled = false;
+                            
                             Swal.fire({
                                 title: "Error!",
                                 text: "An unexpected error occurred. Please try again.",

@@ -1,4 +1,5 @@
 ﻿@model StudentTaskManagement.ViewModels.L1TasksViewModel;
+@using static StudentTaskManagement.Utilities.GeneralEnum;
 @{
     ViewData["Title"] = "Task";
 }
@@ -23,25 +24,27 @@ document.querySelector('.sidebar').addEventListener('click', function() {
 
 
 <!-- Main Content Container -->
-<div class="main-content child-content p-4">
+<div class="main-content child-content">
     <!-- Single Tab Navigation with counts -->
     <div class="simple-tabs mb-4">
         <div class="d-flex justify-content-between align-items-center">
+            <input type="hidden" id="selectedTab" name="selectedTab" value="thisWeek" />
+
             <div class="tab-links">
-                <a href="#" class="tab-link active" data-tab="thisWeek" onclick="loadTasks('thisWeek');">
+                <a href="#" class="tab-link active" data-tab="thisWeek" onclick="updateTabAndLoad('thisWeek');">
                     This week's Tasks
                     <span class="task-count" id="thisWeekTasks"></span>
                 </a>
-                <a href="#" class="tab-link" data-tab="upcoming"  onclick="loadTasks('upcoming');">
+                <a href="#" class="tab-link" data-tab="upcoming" onclick="updateTabAndLoad('upcoming');">
                     Upcoming's Task
                     <span class="task-count" id="upcomingTask"></span>
                 </a>
-                <a href="#" class="tab-link" data-tab="completed"  onclick="loadTasks('completed');">
+                <a href="#" class="tab-link" data-tab="completed" onclick="updateTabAndLoad('completed');">
                     Completed
                     <span class="task-count" id="completedTask"></span>
                 </a>
             </div>
-            
+
             <!-- Add New Task Button -->
             <button class="btn btn-primary" onclick="window.location.href='@Url.Action("CreateTask", "Task")'">
                 <i class="fas fa-plus me-2"></i>Add New Task
@@ -53,33 +56,77 @@ document.querySelector('.sidebar').addEventListener('click', function() {
     <div id="taskContent">
         <!-- Search and Filter Bar -->
         <div class="filter-section mb-4">
-            <div class="row g-3 align-items-center">
-                <div class="col-lg-4">
-                    <input type="text" class="form-control" placeholder="Search tasks...">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Search</label>
+                    <input type="text" class="form-control" placeholder="Search tasks..." id="customSearch">
                 </div>
-                <div class="col-lg-2">
-                    <select class="form-select" id="statusFilter">
-                        <option value="">Status: All</option>
-                        <option value="notstarted">Not Started</option>
-                        <option value="inprogress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="onhold">On Hold</option>
-                    </select>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Category</label>
+                    <div class="custom-dropdown">
+                        <select class="form-select category-filter" id="categoryFilter">
+                            <option value="">- All Category -</option>
+                            <option value="@((int)ItemTaskCategory.Academic)">Academic</option>
+                            <option value="@((int)ItemTaskCategory.Extracurricular)">Extracurricular</option>
+                            <option value="@((int)ItemTaskCategory.PersonalDevelopment)">Personal Development</option>
+                            <option value="@((int)ItemTaskCategory.Social)">Social</option>
+                            <option value="@((int)ItemTaskCategory.HealthWellness)">Health & Wellness</option>
+                            <option value="@((int)ItemTaskCategory.Miscellaneous)">Miscellaneous</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-lg-2">
-                    <select class="form-select" id="priorityFilter">
-                        <option value="">Priority: All</option>
-                        <option value="critical">Critical</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                    </select>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Priortiy</label>
+                    <div class="custom-dropdown">
+                        <select class="form-select priority-filter" id="priorityFilter">
+                            <option value="">- All Priority -</option>
+                            <option value="@((int)PriorityLevel.Trivial)">Trivial</option>
+                            <option value="@((int)PriorityLevel.Low)">Low</option>
+                            <option value="@((int)PriorityLevel.Medium)">Medium</option>
+                            <option value="@((int)PriorityLevel.High)">High</option>
+                            <option value="@((int)PriorityLevel.Critical)">Critical</option>
+
+                        </select>
+                    </div>
                 </div>
-                <div class="col-lg-2">
-                    <input type="date" class="form-control" placeholder="Due Date">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Status</label>
+                    <div class="custom-dropdown">
+                        <select class="form-select status-filter" id="statusFilter">
+                            <option value="">- All Status -</option>
+                            <option value="@((int)ItemTaskStatus.NotStarted)">Not Started</option>
+                            <option value="@((int)ItemTaskStatus.InProgress)">In Progress</option>
+                            <option value="@((int)ItemTaskStatus.OnHold)">On Hold</option>
+                            <option value="@((int)ItemTaskStatus.Completed)">Completed</option>
+                            <option value="@((int)ItemTaskStatus.Overdue)">Overdue</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-lg-2">
-                    <button class="btn btn-primary w-100">Filter</button>
+                
+
+                <div class="col-md-8" style="padding-left: 1rem;">
+                    <label class="form-label fw-semibold">Date</label>
+                    <div class="input-group" >
+                        <span class="input-group-text">From</span>
+                        <input type="date" class="form-control" placeholder="Start Date" id="StartDate">
+                        <span class="input-group-text">to</span>
+                        <input type="date" class="form-control" placeholder="End Date" id="EndDate">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-flex flex-column justify-content-center h-100" style="padding-top: 1rem;">
+                        <button class="btn btn-outline-secondary w-100" style="padding: 8px 16px;" id="clearButton">
+                            <i class="fas fa-times me-1"></i>Clear Filter
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="d-flex flex-column justify-content-center h-100" style="padding-top: 1rem;">
+                        <button class="btn btn-primary w-100" id="searchButton">
+                            <i class="fas fa-filter me-2"></i>Apply Filters
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -212,8 +259,8 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                     <div class="setting-card">
                                         <h6 class="section-title">
                                             <i class="fas fa-bell me-2"></i>Notification Preset
-                                            ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' : ''}
-                                            ${response.data.notificationPreset ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.notificationPreset.type + '</span>' : ""}
+                                                ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>'+ response.data.notificationPreset.type + '</span>' : ''}
+                                                ${response.data.notificationPreset && response.data.notificationPreset.isSystemDefault == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.notificationPreset.type + '</span>' : ""}
                                         </h6>
                                         ${response.data.notificationPreset ? `
                                             <div class="preset-details">
@@ -222,12 +269,12 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                                     ${generationNullDescription(response.data.notificationPreset.description)}
                                                 </p>
                                                 <div class="preset-type">
-                                                    ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' : createNotificationSettingPills(response.data.notificationPreset) }
+                                                        ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.notificationPreset.defaultSettingMessagePills +'</span>' :createNotificationSettingPills(response.data.notificationPreset) }
                                                 </div>
                                             </div>
                                         ` : `
                                             <p class="setting-value text-muted">
-                                                <i class="fas fa-times-circle me-1"></i>No notification preset
+                                                <i class="fas fa-times-circle me-2"></i>No notification preset
                                             </p>
                                         `}
                                     </div>
@@ -237,8 +284,8 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                     <div class="setting-card">
                                         <h6 class="section-title">
                                                 <i class="fas fa-redo me-2"></i>Recurring Pattern
-                                                ${response.data.recurringPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' : ''}
-                                                ${response.data.recurringPreset ? '<span class="badge recurring-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.recurringPreset.type + '</span>' : ""}
+                                                ${response.data.recurringPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.recurringPreset.defaultSettingType + '</span>' : ''}
+                                                ${response.data.recurringPreset && response.data.recurringPreset.isSystemDefault == false ? '<span class="badge recurring-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.recurringPreset.type + '</span>' : ""}
                                         </h6>
                                             ${response.data.recurringPreset ? `
                                             <div class="preset-details">
@@ -249,14 +296,14 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                                 <div class="preset-type">
                                                     ${
                                                         response.data.recurringPreset?.isSystemDefault ? 
-                                                        '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' :
+                                                        '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>'+ response.data.recurringPreset.defaultSettingMessagePills +'</span>' :
                                                         createRecurringSettingPills(response.data.recurringPreset)
                                                     }
                                                 </div>
                                             </div>
                                         ` : `
                                             <p class="setting-value text-muted">
-                                                <i class="fas fa-times-circle me-1"></i>No recurring preset
+                                                <i class="fas fa-times-circle me-2"></i>No recurring preset
                                             </p>
                                         `}
                                 </div>
@@ -314,14 +361,14 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                         </div>
 
                                         ${subtask.notificationPreset ? `
-                                                        <div class="row">
+                                        <div class="row">
                                         <!-- Notification Preset -->
                                         <div class="col-md-12">
                                             <div class="setting-card">
                                                 <h6 class="section-title-subtask">
                                                     <i class="fas fa-bell me-2"></i>Notification Preset
-                                                    ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' : ''}
-                                                    ${subtask.notificationPreset ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + subtask.notificationPreset.type + '</span>' : ""}
+                                                    ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i>'+ subtask.notificationPreset.type + '</span>' : ''}
+                                                    ${subtask.notificationPreset && subtask.notificationPreset.isSystemDefault == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + subtask.notificationPreset.type + '</span>' : ""}
                                                 </h6>
                                                 ${subtask.notificationPreset ? `
                                                     <div class="preset-details">
@@ -330,7 +377,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                                             ${generationNullDescription(subtask.notificationPreset.description)}
                                                         </p>
                                                         <div class="preset-type">
-                                                            ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i></span>' : createNotificationSettingPills(subtask.notificationPreset)}
+                                                            ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + subtask.notificationPreset.defaultSettingMessagePills +'</span>' :createNotificationSettingPills(response.data.notificationPreset) }
                                                         </div>
                                                     </div>
                                                 ` : `
@@ -340,8 +387,21 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                                 `}
                                             </div>
                                         </div>
-                                                </div>
-                                                    ` : ''}
+                                        </div>` :
+                                        `
+                                        <div class="row">
+                                        <!-- Notification Preset -->
+                                        <div class="col-md-12">
+                                            <div class="setting-card">
+                                                <h6 class="section-title-subtask">
+                                                    <i class="fas fa-bell me-2"></i>Notification Preset
+                                                </h6>
+                                                <p class="setting-value text-muted">
+                                                    <i class="fas fa-times-circle me-2"></i>No notification preset
+                                                </p>
+                                            </div>
+                                        </div>
+                                        </div>`}
 
                                                 </div>
 
@@ -378,11 +438,31 @@ document.querySelector('.sidebar').addEventListener('click', function() {
             });
         }
 
+    function initializeDateTimePickers() {
+        const currentYear = new Date().getFullYear();
+        const dateConfig = {
+            enableTime: false,
+            dateFormat: "d-m-Y",
+            yearRange: `${currentYear}:${currentYear + 10}`, // 10 years range from current
+        };
 
-    function loadTasks(type = 'thisweek', page = 1, searchTerm = '', status = '', priority = '') {
+        const endDate = $('#EndDate').flatpickr({
+            ...dateConfig,
+        });
+
+
+        $('#StartDate').flatpickr({
+            ...dateConfig,
+            onChange: function (selectedDates, dateStr, instance) {
+                endDate.clear();
+                endDate.set("minDate", dateStr);
+            }
+        });
+    }
+
+    function loadTasks(type = 'thisweek', page = 1, searchTerm = '', category = '', status = '', priority = '', startDate = '', endDate = '') {
         const taskGrid = document.getElementById('taskGrid');
         taskGrid.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
-        
         const urlMap = {
             'thisWeek': '/Task/GetThisWeekTasks',
             'upcoming': '/Task/GetUpcomingTasks',
@@ -395,8 +475,11 @@ document.querySelector('.sidebar').addEventListener('click', function() {
             data: {
                 page: page,
                 searchTerm: searchTerm,
+                category: category,
                 status: status,
-                priority: priority
+                priority: priority,
+                startDate: startDate,
+                endDate: endDate,
             },
             success: function (response) {
                 if (response.success) {
@@ -419,6 +502,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                     <i class="fas fa-info-circle me-2"></i>
                                     No tasks found
                                 </div>`;
+                    updatePagination(type, 0, 0, '', '', '', '', '', '');
                 }
             },
             error: function () {
@@ -439,7 +523,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
             // Previous button
             paginationHtml += `
                                 <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                                    <a class="page-link" href="#" onclick="loadTasks(${type}, ${currentPage - 1})" tabindex="-1">
+                                    <a class="page-link" href="#" onclick="loadTasks('${type}', ${currentPage - 1})" tabindex="-1">
                                         <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
@@ -449,7 +533,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
             for (let i = 1; i <= totalPages; i++) {
                 paginationHtml += `
                                     <li class="page-item ${i === currentPage ? 'active' : ''}">
-                                        <a class="page-link" href="#" onclick="loadTasks(${type}, ${i})">${i}</a>
+                                        <a class="page-link" href="#" onclick="loadTasks('${type}', ${i})">${i}</a>
                                     </li>
                                 `;
             }
@@ -457,7 +541,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
             // Next button
             paginationHtml += `
                                 <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                                    <a class="page-link" href="#" onclick="loadTasks(${type}, ${currentPage + 1})">
+                                    <a class="page-link" href="#" onclick="loadTasks('${type}', ${currentPage + 1})">
                                         <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </li>
@@ -532,9 +616,15 @@ document.querySelector('.sidebar').addEventListener('click', function() {
     }
     
     function generationNullDescription(description) {
-        if (description == null || description == "") {
+        if (description == null || description == "") 
+        {
             return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- No description provided -</span>`;
-        } else {
+        }
+        else if (description == "Default recurring settings" || description == "Default notification settings")
+        {
+            return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- No description for default seettings -</span>`;
+        }
+        else {
             return description;
         }
 
@@ -677,6 +767,28 @@ document.querySelector('.sidebar').addEventListener('click', function() {
         return "";
     }
 
+    function updateTabAndLoad(tabValue) {
+        document.getElementById('selectedTab').value = tabValue;
+        clearAllFilter();
+        loadTasks(tabValue);
+    }
+
+    function clearAllFilter() {
+        const searchInput = document.getElementById('customSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const priorityFilter = document.getElementById('priorityFilter');
+        const startDateFilter = document.getElementById('StartDate');
+        const endDateFilter = document.getElementById('EndDate');
+
+        searchInput.value = '';
+        categoryFilter.value = '';
+        statusFilter.value = '';
+        priorityFilter.value = '';
+        startDateFilter.value = '';
+        endDateFilter.value = '';
+    }
+
     document.querySelectorAll('.page-link').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -706,25 +818,31 @@ document.querySelector('.sidebar').addEventListener('click', function() {
 
     // Add filter functionality
     document.addEventListener('DOMContentLoaded', function () {
+        let typeValue = "";
         // Initial load of presets
+        initializeDateTimePickers();
         getTaskCounts();
-        // Search input handler
-
-
-        // Type filter handler
+        
+        const searchInput = document.getElementById('customSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
         const statusFilter = document.getElementById('statusFilter');
         const priorityFilter = document.getElementById('priorityFilter');
+        const startDateFilter = document.getElementById('StartDate');
+        const endDateFilter = document.getElementById('EndDate');
 
-        function filterTasks() {
-            const selectedStatus = statusFilter.value;
-            const selectedPriority = priorityFilter.value;
-        }
+        // Search input handler
+        document.getElementById('searchButton').addEventListener('click', function () {
+            loadTasks(document.getElementById('selectedTab').value, 1, searchInput.value, categoryFilter.value, statusFilter.value, priorityFilter.value, startDateFilter.value, endDateFilter.value);
+        });
 
-        statusFilter.addEventListener('change', filterTasks);
-        priorityFilter.addEventListener('change', filterTasks);
+        // Clear filter handler
+        document.getElementById('clearButton').addEventListener('click', function() {
+            clearAllFilter();
+            loadTasks(document.getElementById('selectedTab').value, 1); // Reset to initial state
+        });
 
-            // Initial load (default tab - This Week's Tasks)
-            loadTasks('thisWeek');
+        // Initial load (default tab - This Week's Tasks)
+        loadTasks('thisWeek');
 
     });
 
@@ -760,7 +878,24 @@ document.querySelector('.sidebar').addEventListener('click', function() {
 </script>
 
     <style>
+    .input-group {
+        margin-bottom: 1rem;
+    }
 
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+    }
+
+    .input-group input[type="date"] {
+        border: 1px solid #ced4da;
+    }
+
+    /* Optional: Add some hover effects */
+    .input-group:hover .input-group-text,
+    .input-group:hover input[type="date"] {
+        border-color: #80bdff;
+    }
 /* ==========================================================================
    8. Modal Styles
    ========================================================================== */

@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using static StudentTaskManagement.Utilities.GeneralEnum;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace StudentTaskManagement.Controllers
@@ -16,14 +17,22 @@ namespace StudentTaskManagement.Controllers
     [Authorize]
     public class RecurringPresetController : _BaseController
     {
-        private readonly StudentTaskManagementContext dbContext;
-        private readonly ILogger<RecurringPresetController> _logger;
+        protected readonly StudentTaskManagementContext dbContext;
+        protected readonly ILogger _logger;
+        private readonly UserManager<L1Students> _userManager;
+        private readonly SignInManager<L1Students> _signInManager;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public RecurringPresetController(StudentTaskManagementContext dbContext,
-            ILogger<RecurringPresetController> logger)
-        { 
+        public RecurringPresetController(StudentTaskManagementContext dbContext, ILogger<NotificationPresetController> logger, UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        : base(dbContext, logger, userManager, signInManager, emailService, webHostEnvironment)
+        {
             this.dbContext = dbContext;
             this._logger = logger;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
+            this._emailService = emailService;
+            this._webHostEnvironment = webHostEnvironment;
         }
 
         // GET: ReminderSettingController
@@ -121,7 +130,7 @@ namespace StudentTaskManagement.Controllers
                     {
                         id = np.Id,
                         name = np.Name,
-                        description = string.IsNullOrEmpty(np.Description) ? "- No Description -" : np.Description,
+                        description = string.IsNullOrEmpty(np.Description) ? null : np.Description,
                         type = np.Type == (int)RecurringType.Day ? "Recurring Pattern by Day(s)" :
                         np.Type == (int)RecurringType.Week ? "Recurring Pattern by Week(s)" :
                         np.Type == (int)RecurringType.BiWeek ? "Recurring Pattern by Bi-Weeks" :

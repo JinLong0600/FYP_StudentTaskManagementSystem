@@ -10,6 +10,9 @@ using static StudentTaskManagement.Utilities.GeneralEnum;
 using Microsoft.AspNetCore.Authorization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.VisualBasic;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
 
 
 namespace WebApplication1.Controllers
@@ -17,14 +20,22 @@ namespace WebApplication1.Controllers
     [Authorize]
     public class TaskController : _BaseController
     {
-        private readonly StudentTaskManagementContext dbContext;
-        private readonly ILogger<NotificationPresetController> _logger;
+        protected readonly StudentTaskManagementContext dbContext;
+        protected readonly ILogger _logger;
+        private readonly UserManager<L1Students> _userManager;
+        private readonly SignInManager<L1Students> _signInManager;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public TaskController(StudentTaskManagementContext dbContext,
-            ILogger<NotificationPresetController> logger)
+        public TaskController(StudentTaskManagementContext dbContext, ILogger<NotificationPresetController> logger, UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        : base(dbContext, logger, userManager, signInManager, emailService, webHostEnvironment)
         {
             this.dbContext = dbContext;
             this._logger = logger;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
+            this._emailService = emailService;
+            this._webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult Index()
@@ -170,7 +181,8 @@ namespace WebApplication1.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "Task and subtasks created successfully"
+                    message = "Task and subtasks created successfully",
+                    taskId = task.Id
                 });
             }
             catch (Exception ex)
@@ -295,7 +307,9 @@ namespace WebApplication1.Controllers
                 return Json(new
                 {
                     success = true,
-                    message = "Task and subtasks updated successfully"
+                    message = "Task and subtasks updated successfully",
+                    taskId = existingTask.Id
+
                 });
             }
             catch (Exception ex)
@@ -386,9 +400,6 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                // Get current user's ID
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 // Get the start and end dates of the current week (Monday to Sunday)
                 var today = DateTime.Today;
                 var currentDayOfWeek = (int)today.DayOfWeek;
@@ -437,7 +448,8 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTasks(string type, int page = 1, string searchTerm = "", string status = "", string priority = "")
+        public async Task<IActionResult> GetTasks(string type, int page = 1, 
+            string searchTerm = "", string category = "", string status = "", string priority = "", string startDate = "", string endDate = "")
         {
             try
             {
@@ -478,6 +490,13 @@ namespace WebApplication1.Controllers
                         t.Title.Contains(searchTerm));
                 }
 
+                // Apply category filter
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    int categoryValue = int.Parse(category);
+                    query = query.Where(t => t.Category == categoryValue);
+                }
+
                 // Apply status filter
                 if (!string.IsNullOrWhiteSpace(status))
                 {
@@ -490,6 +509,20 @@ namespace WebApplication1.Controllers
                 {
                     int priorityValue = int.Parse(priority);
                     query = query.Where(t => t.Priority == priorityValue);
+                }
+
+                // Apply startDate filter
+                if (!string.IsNullOrWhiteSpace(startDate))
+                {
+                    DateTime value = DateTime.Parse(startDate);
+                    query = query.Where(t => t.DueDate.Date >= value);
+                }
+
+                // Apply endDate filter
+                if (!string.IsNullOrWhiteSpace(endDate))
+                {
+                    DateTime value = DateTime.Parse(endDate);
+                    query = query.Where(t => t.DueDate.Date <= value);
                 }
 
                 // Set items per page
@@ -600,22 +633,26 @@ namespace WebApplication1.Controllers
         {
             try
             {
+                // Load everything in a single query with includes
                 var existingTask = await dbContext.L1Tasks
-                    .Include(t => t.L1SubTasks)  // Include subtasks
+                    .Include(t => t.L1SubTasks)
+                    .Include(t => t.L1NotificationPresets)
+                    .Include(t => t.L1NotificationPresets)
                     .FirstOrDefaultAsync(t => t.Id == taskId);
 
                 if (existingTask == null)
                     return NotFound();
 
-                // Get notification preset for main task
-                var taskNotificationPreset = existingTask.L1NotificationPresetId.HasValue 
-                    ? await dbContext.L1NotificationPresets.FirstOrDefaultAsync(n => n.Id == existingTask.L1NotificationPresetId)
-                    : null;
+                // No need for separate queries since we included everything
+                var taskNotificationPreset = existingTask.L1NotificationPresets;
+                var taskRecurringPreset = existingTask.L1RecurringPatterns;
 
-                // Get recurring preset for main task
-                var taskRecurringPreset = existingTask.L1RecurringPresetId.HasValue
-                    ? await dbContext.L1RecurringPresets.FirstOrDefaultAsync(r => r.Id == existingTask.L1RecurringPresetId)
-                    : null;
+                // Load subtask notification presets in a single query
+                var subtaskIds = existingTask.L1SubTasks.Select(s => s.Id).ToList();
+                var subtaskNotificationPresets = await dbContext.L1SubTasks
+                    .Where(s => subtaskIds.Contains(s.Id))
+                    .Include(s => s.L1NotificationPresets)
+                    .ToDictionaryAsync(s => s.Id, s => s.L1NotificationPresets);
 
                 var result = new
                 {
@@ -670,6 +707,8 @@ namespace WebApplication1.Controllers
                          taskNotificationPreset.Type == (int)NotificationPresetType.Mintues ? "Minutes-based Preset" :
                          existingTask.DefaultNotificationOptions == 1 ? "Minutes-based Preset" :
                          existingTask.DefaultNotificationOptions == 2 ? "Minutes-based Preset" : "Days-based Preset",
+                        defaultSettingMessagePills = existingTask.DefaultNotificationOptions == 1 ? "30 minutes before" :
+                             existingTask.DefaultNotificationOptions == 2 ? "1 hour before" : "1 day before",
                         reminderDaysBefore = taskNotificationPreset.ReminderDaysBefore,
                         reminderHoursBefore = taskNotificationPreset.ReminderHoursBefore,
                         reminderMinutesBefore = taskNotificationPreset.ReminderMinutesBefore,
@@ -686,71 +725,72 @@ namespace WebApplication1.Controllers
                         taskRecurringPreset.Type == (int)RecurringType.Week ? "Recurs by Week(s)" :
                         taskRecurringPreset.Type == (int)RecurringType.BiWeek ? "Recurs by Bi-Weeks" :
                         taskRecurringPreset.Type == (int)RecurringType.Month ? "Recurs by Month(s)" : "Recurs by Bi-Months",
+
+                        defaultSettingType = existingTask.DefaultRecurringOptions == 1 ? "Recurs by Day(s)" :
+                        existingTask.DefaultRecurringOptions == 2 ? "Recurs by Week(s)" : "Recurs by Month(s)",
+
+                        defaultSettingMessagePills = existingTask.DefaultRecurringOptions == 1 ? "Daily" :
+                             existingTask.DefaultRecurringOptions == 2 ? "Weekly" : "Monthly",
                         daytoGenerate = getDisplayContext(taskRecurringPreset.Type, taskRecurringPreset.DaytoGenerate),
                         recurringCount = taskRecurringPreset.RecurringCount,
-                        isSystemDefault = taskNotificationPreset.IsSystemDefault,
+                        isSystemDefault = taskRecurringPreset.IsSystemDefault,
                     } : null,
-                    subtasks = (await Task.WhenAll(existingTask.L1SubTasks.Select(async st => 
+                    subtasks = existingTask.L1SubTasks.Select(st => new
                     {
-                        var subtaskNotificationPreset = st.L1NotificationPresetId.HasValue
-                            ? await dbContext.L1NotificationPresets.FirstOrDefaultAsync(n => n.Id == st.L1NotificationPresetId)
-                            : null;
+                        id = st.Id,
+                        title = st.Title,
+                        category = st.Category == (int)ItemTaskCategory.Academic ? "Academic" :
+                        st.Category == (int)ItemTaskCategory.Extracurricular ? "Extracurricular" :
+                        st.Category == (int)ItemTaskCategory.PersonalDevelopment ? "Personal Development" :
+                        st.Category == (int)ItemTaskCategory.Social ? "Social" :
+                        st.Category == (int)ItemTaskCategory.HealthWellness ? "Health & Wellness" : "Miscellaneous",
 
-                        return new
+                        priorityDisplay = st.Priority == (int)PriorityLevel.Trivial ? "Trivial" :
+                        st.Priority == (int)PriorityLevel.Low ? "Low" :
+                        st.Priority == (int)PriorityLevel.Medium ? "Medium" :
+                        st.Priority == (int)PriorityLevel.High ? "High" : "Critical",
+                        prioritycss = st.Priority == (int)PriorityLevel.Trivial ? "trivial" :
+                        st.Priority == (int)PriorityLevel.Low ? "low" :
+                        st.Priority == (int)PriorityLevel.Medium ? "medium" :
+                        st.Priority == (int)PriorityLevel.High ? "high" : "critical",
+                        statusDisplay = st.Status == (int)ItemTaskStatus.NotStarted ? "Not started" :
+                        st.Status == (int)ItemTaskStatus.InProgress ? "In-progress" :
+                        st.Status == (int)ItemTaskStatus.Completed ? "Completed" :
+                        st.Status == (int)ItemTaskStatus.OnHold ? "On-hold" : "Overdue",
+                        statuscss = st.Status == (int)ItemTaskStatus.NotStarted ? "notstarted" :
+                        st.Status == (int)ItemTaskStatus.InProgress ? "inprogress" :
+                        st.Status == (int)ItemTaskStatus.Completed ? "completed" :
+                        st.Status == (int)ItemTaskStatus.OnHold ? "onhold" : "overdue",
+                        startDate = st.StartDate,
+                        dueDate = st.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
+                        dueDatecss = (st.DueDate - DateTime.Now).TotalDays <= 1 ? "overdue" :
+                        (st.DueDate - DateTime.Now).TotalDays <= 3 ? "soon" : "deadline-safe",
+                        isNotification = st.IsNotification,
+                        notificationPresetId = st.L1NotificationPresetId,
+                        defaultNotificationOptions = st.DefaultNotificationOptions,
+                        notificationPreset = subtaskNotificationPresets.ContainsKey(st.Id) && st.IsNotification ? new
                         {
-                            id = st.Id,
-                            title = st.Title,
-                            category = st.Category == (int)ItemTaskCategory.Academic ? "Academic" :
-                            st.Category == (int)ItemTaskCategory.Extracurricular ? "Extracurricular" :
-                            st.Category == (int)ItemTaskCategory.PersonalDevelopment ? "Personal Development" :
-                            st.Category == (int)ItemTaskCategory.Social ? "Social" :
-                            st.Category == (int)ItemTaskCategory.HealthWellness ? "Health & Wellness" : "Miscellaneous",
+                            id = subtaskNotificationPresets[st.Id].Id,
+                            name = subtaskNotificationPresets[st.Id].Name,
+                            description = subtaskNotificationPresets[st.Id].Description,
+                            //type = subtaskNotificationPresets[st.Id].Type == (int)NotificationPresetType.Days ? "Days-based Preset" : "Minutes-based Preset",
+                            type = subtaskNotificationPresets[st.Id].Type == (int)NotificationPresetType.Days ? "Days-based Preset" :
+                                 subtaskNotificationPresets[st.Id].Type == (int)NotificationPresetType.Mintues ? "Minutes-based Preset" :
+                                 st.DefaultNotificationOptions == 1 ? "Minutes-based Preset" :
+                                 st.DefaultNotificationOptions == 2 ? "Minutes-based Preset" : "Days-based Preset",
 
-                            priorityDisplay = st.Priority == (int)PriorityLevel.Trivial ? "Trivial" :
-                            st.Priority == (int)PriorityLevel.Low ? "Low" :
-                            st.Priority == (int)PriorityLevel.Medium ? "Medium" :
-                            st.Priority == (int)PriorityLevel.High ? "High" : "Critical",
-                            prioritycss = st.Priority == (int)PriorityLevel.Trivial ? "trivial" :
-                            st.Priority == (int)PriorityLevel.Low ? "low" :
-                            st.Priority == (int)PriorityLevel.Medium ? "medium" :
-                            st.Priority == (int)PriorityLevel.High ? "high" : "critical",
-                            statusDisplay = st.Status == (int)ItemTaskStatus.NotStarted ? "Not started" :
-                            st.Status == (int)ItemTaskStatus.InProgress ? "In-progress" :
-                            st.Status == (int)ItemTaskStatus.Completed ? "Completed" :
-                            st.Status == (int)ItemTaskStatus.OnHold ? "On-hold" : "Overdue",
-                            statuscss = st.Status == (int)ItemTaskStatus.NotStarted ? "notstarted" :
-                            st.Status == (int)ItemTaskStatus.InProgress ? "inprogress" :
-                            st.Status == (int)ItemTaskStatus.Completed ? "completed" :
-                            st.Status == (int)ItemTaskStatus.OnHold ? "onhold" : "overdue",
-                            startDate = st.StartDate,
-                            dueDate = st.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
-                            dueDatecss = (st.DueDate - DateTime.Now).TotalDays <= 1 ? "overdue" :
-                            (st.DueDate - DateTime.Now).TotalDays <= 3 ? "soon" : "deadline-safe",
-                            isNotification = st.IsNotification,
-                            notificationPresetId = st.L1NotificationPresetId,
-                            defaultNotificationOptions = st.DefaultNotificationOptions,
-                            notificationPreset = subtaskNotificationPreset != null ? new
-                            {
-                                id = subtaskNotificationPreset.Id,
-                                name = subtaskNotificationPreset.Name,
-                                description = subtaskNotificationPreset.Description,
-                                type = subtaskNotificationPreset.Type == (int)NotificationPresetType.Days ? "Days-based Preset" : "Minutes-based Preset",
-                                reminderDaysBefore = subtaskNotificationPreset.ReminderDaysBefore,
-                                reminderHoursBefore = subtaskNotificationPreset.ReminderHoursBefore,
-                                reminderMinutesBefore = subtaskNotificationPreset.ReminderMinutesBefore,
-                                reminderTime = subtaskNotificationPreset.ReminderTime.HasValue ? subtaskNotificationPreset.ReminderTime.Value.ToString("hh:mm tt") : "",
-                                isDaily = subtaskNotificationPreset.IsDaily,
-                                isSystemDefault = subtaskNotificationPreset.IsSystemDefault,
-                            } : null
-                        };
-                    })
-                    )).ToList()
+                            defaultSettingMessagePills = st.DefaultNotificationOptions == 1 ? "30 minutes before" :
+                             st.DefaultNotificationOptions == 2 ? "1 hour before" : "1 day before",
+
+                            reminderDaysBefore = subtaskNotificationPresets[st.Id].ReminderDaysBefore,
+                            reminderHoursBefore = subtaskNotificationPresets[st.Id].ReminderHoursBefore,
+                            reminderMinutesBefore = subtaskNotificationPresets[st.Id].ReminderMinutesBefore,
+                            reminderTime = subtaskNotificationPresets[st.Id].ReminderTime.HasValue ? subtaskNotificationPresets[st.Id].ReminderTime.Value.ToString("hh:mm tt") : "",
+                            isDaily = subtaskNotificationPresets[st.Id].IsDaily,
+                            isSystemDefault = subtaskNotificationPresets[st.Id].IsSystemDefault,
+                        } : null
+                    }).ToList()
                 };
-
-                if (result == null)
-                {
-                    return Json(new { success = false, message = "Task not found" });
-                }
 
                 return Json(new { success = true, data = result });
             }

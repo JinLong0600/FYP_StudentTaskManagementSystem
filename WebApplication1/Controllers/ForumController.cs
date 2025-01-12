@@ -12,17 +12,22 @@ namespace StudentTaskManagement.Controllers
     [Authorize]
     public class ForumController : _BaseController
     {
-        private readonly StudentTaskManagementContext dbContext;
-        private readonly ILogger<NotificationPresetController> _logger;
+        protected readonly StudentTaskManagementContext dbContext;
+        protected readonly ILogger _logger;
         private readonly UserManager<L1Students> _userManager;
+        private readonly SignInManager<L1Students> _signInManager;
+        private readonly IEmailService _emailService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ForumController(StudentTaskManagementContext dbContext,
-            ILogger<NotificationPresetController> logger,
-            UserManager<L1Students> userManager)
+        public ForumController(StudentTaskManagementContext dbContext, ILogger<NotificationPresetController> logger, UserManager<L1Students> userManager, SignInManager<L1Students> signInManager, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        : base(dbContext, logger, userManager, signInManager, emailService, webHostEnvironment)
         {
             this.dbContext = dbContext;
             this._logger = logger;
-            _userManager = userManager;
+            this._userManager = userManager;
+            this._signInManager = signInManager;
+            this._emailService = emailService;
+            this._webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult Index()
@@ -45,6 +50,7 @@ namespace StudentTaskManagement.Controllers
 
             var forum = await dbContext.L1DiscussionForums
                 .Include(f => f.L1DiscussionForumComments)
+                .Include(f => f.L1Students)
                 .FirstOrDefaultAsync(f => f.Id == id && f.DeletionDateTime == null);
 
             if (forum == null)
@@ -64,6 +70,7 @@ namespace StudentTaskManagement.Controllers
                 CreatedAt = forum.CreatedDateTime,
                 LikeCount = forum.LikeCount,
                 AuthorName = await GetUserName(forum.CreatedByStudentId),
+                AuthorProfileImage = forum.L1Students.ProfileImage,
                 IsAuthor = forum.CreatedByStudentId == currentUserId,
                 IsLiked = isLiked,
                 Tags = forum.Label?.Split(',').Where(t => !string.IsNullOrEmpty(t)).ToList() ?? new List<string>(),
@@ -80,6 +87,7 @@ namespace StudentTaskManagement.Controllers
            {
                 // Get comments data
                 var commentsQuery = await dbContext.L1DiscussionForumComments
+                    .Include(c => c.L1Students)
                     .Where(c => c.L1DiscussionForumId == topicId && c.Status == (int)ForumStatus.Active)
                     .OrderByDescending(c => c.LastModifiedDateTime)
                     .Skip((page - 1) * pageSize)
@@ -89,7 +97,9 @@ namespace StudentTaskManagement.Controllers
                         Id = c.Id,
                         Content = c.Context,
                         CreatedById = c.CreatedByStudentId,
-                        CreatedAt = c.LastModifiedDateTime
+                        CreatedByUsername = c.L1Students.UserName,
+                        StudentIdProfileImage = c.L1Students.ProfileImage,
+                        CreatedAt = c.LastModifiedDateTime,
                     })
                     .ToListAsync();
 
@@ -98,23 +108,22 @@ namespace StudentTaskManagement.Controllers
                     .CountAsync();
 
                 // Get all unique user IDs
-                var userIds = commentsQuery.Select(c => c.CreatedById).Distinct().ToList();
+                /*var userIds = commentsQuery.Select(c => c.CreatedById).Distinct().ToList();*/
                 
                 // Get all users in one batch
-                var users = await _userManager.Users
+/*                var users = await _userManager.Users
                     .Where(u => userIds.Contains(u.Id))
-                    .ToDictionaryAsync(u => u.Id, u => u.UserName);
-
-                var currentUserId = _userManager.GetUserId(User);
+                    .ToDictionaryAsync(u => u.Id, u => u.UserName);*/
 
                 // Map the data using the users dictionary
                 var comments = commentsQuery.Select(c => new
                 {
                     id = c.Id,
                     content = c.Content,
-                    authorName = users.ContainsKey(c.CreatedById) ? users[c.CreatedById] : "Unknown User",
+                    authorName = c.CreatedByUsername, //users.ContainsKey(c.CreatedById) ? users[c.CreatedById] : "Unknown User",
+                    authorProfileImage = c.StudentIdProfileImage,
                     createdAt = c.CreatedAt.ToString("MMM dd, yyyy HH:mm"),
-                    isAuthor = c.CreatedById == currentUserId
+                    isAuthor = c.CreatedById == LoginStudentId
                 }).ToList();
 
                 var hasMore = (page * pageSize) < totalComments;
@@ -461,9 +470,10 @@ namespace StudentTaskManagement.Controllers
                         status = p.Status,
                         likeCount = p.LikeCount,
                         commentCount = p.CommentCount,
-                        lastModifiedDate = GetTimeAgo(p.LastModifiedDate),
+                        lastModifiedDate = GetTimeAgo(p.CreatedDateTime),
                         createdByStudentId = p.CreatedByStudentId,
                         authorName = p.L1Students.UserName,
+                        authorProfileImage = p.L1Students.ProfileImage,
                         isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
                         isResolved = p.Status == (int)ForumStatus.Active ? false : true
                     })
@@ -533,7 +543,7 @@ namespace StudentTaskManagement.Controllers
                         status = p.Status,
                         likeCount = p.LikeCount,
                         commentCount = p.CommentCount,
-                        lastModifiedDate = GetTimeAgo(p.LastModifiedDate),
+                        lastModifiedDate = p.CreatedDateTime.ToString("dd-MM-yyyy, hh:mm tt"),
                         createdByStudentId = p.CreatedByStudentId,
                         authorName = p.L1Students.UserName,
                         isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
@@ -628,7 +638,7 @@ namespace StudentTaskManagement.Controllers
             if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
             if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
             if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
-            return dateTime.ToString("dd MMM yyyy");
+            return dateTime.ToString("dd-MM-yyyy, hh:mm tt");
         }
 
         private async Task<string> GetUserName(string userId)
