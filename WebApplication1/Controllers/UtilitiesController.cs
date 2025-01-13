@@ -442,7 +442,7 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 var message = new NotificationMessage
                 {
                     Title = "Test Notification",
@@ -450,7 +450,7 @@ namespace StudentTaskManagement.Controllers
                     Icon = "/path/to/icon.png"
                 };
 
-                await SendChromeNotificationAsync(userId, message);
+                await SendChromeNotificationAsync(studentId, message);
                 return Ok(new { message = "Test notification sent" });
             }
             catch (Exception ex)
@@ -461,18 +461,18 @@ namespace StudentTaskManagement.Controllers
         }
 
         private async Task SendChromeNotificationAsync(
-    string userId,
+    string studentId,
     NotificationMessage message)
         {
             try
             {
                 // Get user's subscription from database
                 var pushSubscription = await dbContext.PushSubscriptions
-                    .FirstOrDefaultAsync(s => s.UserId == userId);
+                    .FirstOrDefaultAsync(s => s.StudentId == studentId);
 
                 if (pushSubscription == null)
                 {
-                    _logger.LogWarning($"No push subscription found for user {userId}");
+                    _logger.LogWarning($"No push subscription found for user {studentId}");
                     return;
                 }
 
@@ -504,7 +504,7 @@ namespace StudentTaskManagement.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error sending push notification to user {userId}");
+                _logger.LogError(ex, $"Error sending push notification to user {studentId}");
                 throw;
             }
         }
@@ -514,11 +514,11 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 
                 // Check if subscription already exists
                 var existingSubscription = await dbContext.PushSubscriptions
-                    .FirstOrDefaultAsync(s => s.UserId == userId);
+                    .FirstOrDefaultAsync(s => s.StudentId == studentId);
 
                 if (existingSubscription != null)
                 {
@@ -532,7 +532,7 @@ namespace StudentTaskManagement.Controllers
                     // Create new subscription
                     var subscription = new PushSubscriptions
                     {
-                        UserId = userId,
+                        StudentId = studentId,
                         Endpoint = dto.Endpoint,
                         P256dh = dto.P256dh,
                         Auth = dto.Auth,
@@ -556,11 +556,11 @@ namespace StudentTaskManagement.Controllers
         {
             try
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 
                 // Check if subscription already exists
                 var existingSubscription = await dbContext.PushSubscriptions
-                    .FirstOrDefaultAsync(s => s.UserId == userId);
+                    .FirstOrDefaultAsync(s => s.StudentId == studentId);
 
                 if (existingSubscription != null) {
                     dbContext.PushSubscriptions.Remove(existingSubscription);

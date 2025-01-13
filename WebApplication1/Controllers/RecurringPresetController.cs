@@ -133,8 +133,8 @@ namespace StudentTaskManagement.Controllers
                         description = string.IsNullOrEmpty(np.Description) ? null : np.Description,
                         type = np.Type == (int)RecurringType.Day ? "Recurring Pattern by Day(s)" :
                         np.Type == (int)RecurringType.Week ? "Recurring Pattern by Week(s)" :
-                        np.Type == (int)RecurringType.BiWeek ? "Recurring Pattern by Bi-Weeks" :
-                        np.Type == (int)RecurringType.Month ? "Recurring Pattern by Month(s)" : "Recurring Pattern by Bi-Months",
+                        np.Type == (int)RecurringType.BiWeek ? "Recurring Pattern by Twice a Week" :
+                        np.Type == (int)RecurringType.Month ? "Recurring Pattern by Month(s)" : "Recurring Pattern by Twice a Month",
                         dayToGenerate = getDisplayContext(np.Type, np.DaytoGenerate),
                         recurringCount = np.RecurringCount.HasValue ? np.RecurringCount.ToString() : string.Empty,
                     })
@@ -336,25 +336,25 @@ namespace StudentTaskManagement.Controllers
                         switch (dayToGenerate)
                         {
                             case "1":
-                                context = "Monday";
+                                context += "Monday";
                                 break;
                             case "2":
-                                context = "Tuesday";
+                                context += "Tuesday";
                                 break;
                             case "3":
-                                context = "Wednesday";
+                                context += "Wednesday";
                                 break;
                             case "4":
-                                context = "Thursday";
+                                context += "Thursday";
                                 break;
                             case "5":
-                                context = "Friday";
+                                context += "Friday";
                                 break;
                             case "6":
-                                context = "Saturday";
+                                context += "Saturday";
                                 break;
                             case "7":
-                                context = "Sunday";
+                                context += "Sunday";
                                 break;
 
                         }

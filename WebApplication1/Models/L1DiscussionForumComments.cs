@@ -14,7 +14,11 @@ namespace StudentTaskManagement.Models
 
         [Required]
         public string Context { get; set; }
-        
+
+        [Required]
+        public int Status { get; set; }
+        public bool IsDiscussionForumDeleted { get; set; }
+
         [Required]
         public string CreatedByStudentId { get; set; }
 
@@ -23,11 +27,6 @@ namespace StudentTaskManagement.Models
 
         public DateTime? DeletionDateTime { get; set; }
         
-        [Required]
-        public int Status { get; set; }
-        public bool IsDiscussionForumDeleted { get; set; }
-
-
         [ForeignKey("L1DiscussionForumId")]
         public virtual L1DiscussionForums L1DiscussionForums { get; set; }
 

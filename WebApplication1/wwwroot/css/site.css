@@ -175,13 +175,13 @@ body {
     border-radius: 15px;
 }
 
-.form-control:hover,
-.custom-dropdown:hover,
-.form-select:hover {
-    background-color: white !important;
-    border: 1px solid var(--secondary-blue);
-    border-radius: 15px;
-}
+    .form-control:hover,
+    /*.custom-dropdown:hover,
+.form-select:hover*/ {
+        background-color: white !important;
+        border: none;
+        border-radius: 15px;
+    }
 
 .form-control::placeholder {
     color: #B2BEB5;
@@ -1136,6 +1136,10 @@ input[type="file"].form-control {
         color: #fab005;
     }
 
+    .due-date-badge.deadline-safe {
+        background-color: #e7f5ff;
+        color: #4c6ef5;
+    }
 
 /* Notification Badge */
 .notification-badge {

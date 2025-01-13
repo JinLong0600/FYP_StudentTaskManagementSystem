@@ -457,7 +457,8 @@ namespace WebApplication1.Controllers
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 // Initialize query
-                var query = dbContext.L1Tasks.Include(t => t.L1SubTasks).Where(t => t.CreatedByStudentId == LoginStudentId); // TODO: Replace with actual userId
+                var query = dbContext.L1Tasks.Include(t => t.L1SubTasks).Include(t => t.L1NotificationPresets)
+                    .Include(t => t.L1NotificationPresets).Where(t => t.CreatedByStudentId == LoginStudentId); // TODO: Replace with actual userId
 
                 // Get the start and end dates of the current week (Monday to Sunday)
                 var today = DateTime.Today;
@@ -580,11 +581,11 @@ namespace WebApplication1.Controllers
                         recurringPresetId = t.L1RecurringPresetId,
                         isNotification = t.IsNotification,
                         notificationPresetId = t.L1NotificationPresetId,
+                        isTaskNotificationPresetDeleted = t.L1NotificationPresets.Status == (int)PresetPatternStatus.Deleted ? true : false,
+                        isTaskRecurringPatternDeleted = t.L1RecurringPatterns.Status == (int)PresetPatternStatus.Deleted ? true : false,
                         completedSubtasksCount = t.L1SubTasks.Count(s => s.Status == (int)ItemTaskStatus.Completed),
                         totalSubtasksCount = t.L1SubTasks.Count,
-                        progress = t.L1SubTasks.Any() 
-                            ? (t.L1SubTasks.Count(s => s.Status == 2) * 100 / t.L1SubTasks.Count)
-                            : 0
+                        progress = t.L1SubTasks.Count != 0 ? (t.L1SubTasks.Count(s => s.Status == (int)ItemTaskStatus.Completed)) * 100 / t.L1SubTasks.Count : 0,
                     })
                     .ToListAsync();
                 if (tasks.Count == 0)
@@ -637,7 +638,7 @@ namespace WebApplication1.Controllers
                 var existingTask = await dbContext.L1Tasks
                     .Include(t => t.L1SubTasks)
                     .Include(t => t.L1NotificationPresets)
-                    .Include(t => t.L1NotificationPresets)
+                    .Include(t => t.L1RecurringPatterns)
                     .FirstOrDefaultAsync(t => t.Id == taskId);
 
                 if (existingTask == null)
@@ -645,7 +646,7 @@ namespace WebApplication1.Controllers
 
                 // No need for separate queries since we included everything
                 var taskNotificationPreset = existingTask.L1NotificationPresets;
-                var taskRecurringPreset = existingTask.L1RecurringPatterns;
+                var taskRecurringPattern = existingTask.L1RecurringPatterns;
 
                 // Load subtask notification presets in a single query
                 var subtaskIds = existingTask.L1SubTasks.Select(s => s.Id).ToList();
@@ -690,13 +691,15 @@ namespace WebApplication1.Controllers
                         startDate = existingTask.StartDate,
                         dueDate = existingTask.DueDate.ToString("dd-MM-yyyy, hh:mm tt"),
                         dueDatecss = (existingTask.DueDate - DateTime.Now).TotalDays <= 1 ? "overdue" :
-                        (existingTask.DueDate - DateTime.Now).TotalDays <= 3 ? "soon" : "deadline-safe",
+                        (existingTask.DueDate - DateTime.Now).TotalDays <= 3 ? "due-soon" : "deadline-safe",
                         isRecurring = existingTask.IsRecurring,
                         recurringPresetId = existingTask.L1RecurringPresetId,
                         defaultRecurringOptions = existingTask.DefaultRecurringOptions,
                         isNotification = existingTask.IsNotification,
                         notificationPresetId = existingTask.L1NotificationPresetId,
-                        defaultNotificationOptions = existingTask.DefaultNotificationOptions
+                        defaultNotificationOptions = existingTask.DefaultNotificationOptions,
+                        completedSubtasksCount = existingTask.L1SubTasks.Count(s => s.Status == (int)ItemTaskStatus.Completed),
+                        totalSubtasksCount = existingTask.L1SubTasks.Count,
                     },
                     notificationPreset = taskNotificationPreset != null ? new
                     {
@@ -715,25 +718,27 @@ namespace WebApplication1.Controllers
                         reminderTime = taskNotificationPreset.ReminderTime.HasValue ? taskNotificationPreset.ReminderTime.Value.ToString("hh:mm tt") : "",
                         isDaily = taskNotificationPreset.IsDaily,
                         isSystemDefault = taskNotificationPreset.IsSystemDefault,
+                        isTaskNotificationPresetDeleted = taskNotificationPreset.Status == (int)PresetPatternStatus.Deleted ? true : false,
                     } : null,
-                    recurringPreset = taskRecurringPreset != null ? new
+                    recurringPreset = taskRecurringPattern != null ? new
                     {
-                        id = taskRecurringPreset.Id,
-                        name = taskRecurringPreset.Name,
-                        description = string.IsNullOrEmpty(taskRecurringPreset.Description) ? null : taskRecurringPreset.Description,
-                        type = taskRecurringPreset.Type == (int)RecurringType.Day ? "Recurs by Day(s)" :
-                        taskRecurringPreset.Type == (int)RecurringType.Week ? "Recurs by Week(s)" :
-                        taskRecurringPreset.Type == (int)RecurringType.BiWeek ? "Recurs by Bi-Weeks" :
-                        taskRecurringPreset.Type == (int)RecurringType.Month ? "Recurs by Month(s)" : "Recurs by Bi-Months",
+                        id = taskRecurringPattern.Id,
+                        name = taskRecurringPattern.Name,
+                        description = string.IsNullOrEmpty(taskRecurringPattern.Description) ? null : taskRecurringPattern.Description,
+                        type = taskRecurringPattern.Type == (int)RecurringType.Day ? "Recurs by Day(s)" :
+                        taskRecurringPattern.Type == (int)RecurringType.Week ? "Recurs by Week(s)" :
+                        taskRecurringPattern.Type == (int)RecurringType.BiWeek ? "Recurs by Bi-Weeks" :
+                        taskRecurringPattern.Type == (int)RecurringType.Month ? "Recurs by Month(s)" : "Recurs by Bi-Months",
 
                         defaultSettingType = existingTask.DefaultRecurringOptions == 1 ? "Recurs by Day(s)" :
                         existingTask.DefaultRecurringOptions == 2 ? "Recurs by Week(s)" : "Recurs by Month(s)",
 
                         defaultSettingMessagePills = existingTask.DefaultRecurringOptions == 1 ? "Daily" :
                              existingTask.DefaultRecurringOptions == 2 ? "Weekly" : "Monthly",
-                        daytoGenerate = getDisplayContext(taskRecurringPreset.Type, taskRecurringPreset.DaytoGenerate),
-                        recurringCount = taskRecurringPreset.RecurringCount,
-                        isSystemDefault = taskRecurringPreset.IsSystemDefault,
+                        daytoGenerate = getDisplayContext(taskRecurringPattern.Type, taskRecurringPattern.DaytoGenerate),
+                        recurringCount = taskRecurringPattern.RecurringCount,
+                        isSystemDefault = taskRecurringPattern.IsSystemDefault,
+                        isTaskRecurringPatternDeleted = taskRecurringPattern.Status == (int)PresetPatternStatus.Deleted ? true : false,
                     } : null,
                     subtasks = existingTask.L1SubTasks.Select(st => new
                     {
@@ -788,6 +793,7 @@ namespace WebApplication1.Controllers
                             reminderTime = subtaskNotificationPresets[st.Id].ReminderTime.HasValue ? subtaskNotificationPresets[st.Id].ReminderTime.Value.ToString("hh:mm tt") : "",
                             isDaily = subtaskNotificationPresets[st.Id].IsDaily,
                             isSystemDefault = subtaskNotificationPresets[st.Id].IsSystemDefault,
+                            isSubTaskNotificationPresetDeleted = subtaskNotificationPresets[st.Id].Status == (int)PresetPatternStatus.Deleted ? true : false,
                         } : null
                     }).ToList()
                 };
@@ -976,6 +982,50 @@ namespace WebApplication1.Controllers
                 context = "Recurring every two months";
             }
             return context.TrimEnd(' ').TrimEnd(',');
+        }
+
+        [HttpPost]
+        [Route("Task/AjaxDeleteTask/{taskId?}")]
+        public async Task<IActionResult> AjaxDeleteTask(int taskId)
+        {
+            try
+            {
+                using var transaction = await dbContext.Database.BeginTransactionAsync();
+                
+                var task = await dbContext.L1Tasks
+                    .Include(t => t.L1SubTasks)
+                    .FirstOrDefaultAsync(t => t.Id == taskId && t.CreatedByStudentId == LoginStudentId);
+
+                if (task == null)
+                {
+                    return Json(new { success = false, message = "Task not found" });
+                }
+
+                // Delete all subtasks first
+                if (task.L1SubTasks != null && task.L1SubTasks.Any())
+                {
+                    dbContext.L1SubTasks.RemoveRange(task.L1SubTasks);
+                }
+
+                // Delete the main task
+                dbContext.L1Tasks.Remove(task);
+                
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = "Task and all related subtasks have been deleted successfully" 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting task");
+                return Json(new { 
+                    success = false, 
+                    message = "An error occurred while deleting the task" 
+                });
+            }
         }
     }
 

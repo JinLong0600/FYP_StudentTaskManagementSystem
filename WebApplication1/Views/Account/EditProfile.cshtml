@@ -323,6 +323,9 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/gh/kartik-v/bootstrap-fileinput@5.5.0/js/fileinput.min.js"></script>
     <script>
+        var isStudentImageExist = @Json.Serialize(isStudentImageExist);
+        var isProfileImageExist = @Json.Serialize(isProfileImageExist);
+
         function checkAge() {
             const dobInput = document.getElementById('DOB');
             const guardianSection = document.getElementById('guardianSection');
@@ -558,12 +561,18 @@
         });
 
         function validateForm() {
+            // Add alphanumeric validation method
+            $.validator.addMethod("alphanumeric", function(value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
+            }, "Letters and numbers only");
+
+            // Your existing checkUsername method
             $.validator.addMethod("checkUsername", function(value, element) {
                 var isValid = false;
                 $.ajax({
                     url: '/Account/AjaxCheckDuplicateUsername',
                     type: 'POST',
-                    async: false, // Synchronous call for validation
+                    async: false,
                     data: { username: value, isEditProfile: true },
                     success: function(response) {
                         if (response.success) {
@@ -576,7 +585,7 @@
                 });
                 return isValid;
             }, "This username is already taken");
-            
+
             // Add custom validation rules
             $.validator.addMethod("fileSize", function(value, element) {
                 return element.files.length === 0 || element.files[0].size <= 2 * 1024 * 1024; // 2MB
@@ -606,6 +615,7 @@
                 rules: {
                     Username: {
                         required: true,
+                        alphanumeric: true,  // Add this new rule
                         checkUsername: true,
                         maxlength: 50
                     },
@@ -642,29 +652,23 @@
                         required: true
                     },
                     ProfileImage: {
+                        required: isProfileImageExist,
                         fileSize: true
                     },
                     StudentIdentityCard: {
+                        required: isStudentImageExist,
                         fileSize: true
                     }
                 },
                 messages: {
                     Username: {
                         required: "Please enter a username",
-                        minlength: "Username must be at least 3 characters",
+                        alphanumeric: "Username can only contain letters and numbers",
                         maxlength: "Username cannot exceed 50 characters"
                     },
                     EmailAddress: {
                         required: "Please enter your email address",
                         email: "Please enter a valid email address"
-                    },
-                    Password: {
-                        required: "Please enter a password",
-                        minlength: "Password must be at least 6 characters"
-                    },
-                    ConfirmPassword: {
-                        required: "Please confirm your password",
-                        equalTo: "Passwords do not match"
                     },
                     PhoneNumber: {
                         required: "Please enter your phone number",

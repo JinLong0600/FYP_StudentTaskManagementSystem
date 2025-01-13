@@ -24,6 +24,9 @@ namespace StudentTaskManagement.Models
 
         public int Status { get; set; } //active //removed
 
+        [DefaultValue(false)]
+        public bool IsSystemDefault { get; set; }
+
         [Required]
         public string CreatedByStudentId { get; set; }
 
@@ -32,9 +35,6 @@ namespace StudentTaskManagement.Models
 
         [Required]
         public DateTime DeletionDateTime { get; set; }
-
-        [DefaultValue(false)]
-        public bool IsSystemDefault { get; set; }
 
         // Add inverse navigation property
         public virtual ICollection<L1Tasks> L1Tasks { get; set; }

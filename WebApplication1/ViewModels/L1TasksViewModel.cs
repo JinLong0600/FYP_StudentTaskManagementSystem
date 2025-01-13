@@ -2,7 +2,7 @@
 
 namespace StudentTaskManagement.ViewModels
 {
-    public class L1TasksViewModel : _BaseViewModel
+    public class L1TasksViewModel
     {
         public bool IsEdit { get; set; }
         public int TaskId { get; set; }

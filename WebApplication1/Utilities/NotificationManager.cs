@@ -65,7 +65,7 @@ namespace StudentTaskManagement.Utilities
                 .Where(n => !n.IsProcessed
                     && n.ScheduledTime <= now
                     && (n.LastAttempt == null || n.LastAttempt < now.AddMinutes(-5)))
-                .GroupBy(n => new { n.UserId, n.NotificationType })
+                .GroupBy(n => new { n.StudentId }) //, n.NotificationType })
                 .ToListAsync();
 
             foreach (var userGroup in pendingNotifications)
@@ -78,7 +78,7 @@ namespace StudentTaskManagement.Utilities
                     // Step 2: Send notifications
                     foreach (var message in aggregatedMessages)
                     {
-                        await SendChromeNotificationAsync(userGroup.Key.UserId, message);
+                        await SendChromeNotificationAsync(userGroup.Key.StudentId, message);
                     }
 
                     // Step 3: Mark as processed
@@ -92,7 +92,7 @@ namespace StudentTaskManagement.Utilities
                 {
                     _logger.LogError(ex,
                         "Error processing notifications for user {UserId}",
-                        userGroup.Key.UserId);
+                        userGroup.Key.StudentId);
                 }
             }
             // Step 4: Save changes
@@ -145,7 +145,7 @@ namespace StudentTaskManagement.Utilities
             {
                 // Get user's subscription from database
                 var pushSubscription = await dbContext.PushSubscriptions
-                    .FirstOrDefaultAsync(s => s.UserId == userId);
+                    .FirstOrDefaultAsync(s => s.StudentId == userId);
 
                 if (pushSubscription == null)
                 {
@@ -194,15 +194,15 @@ namespace StudentTaskManagement.Utilities
 
             var queueItem = new NotificationQueues
             {
-                TaskId = task.Id,
-                UserId = task.CreatedByStudentId,
-                NotificationPresetId = task.L1NotificationPresets.Id,
+                L1TaskId = task.Id,
+                StudentId = task.CreatedByStudentId,
+                L1NotificationPresetId = task.L1NotificationPresets.Id,
                 Title = $"Task Due: {task.Title}",
                 Message = $"Task '{task.Title}' is due at {task.DueDate:h:mm tt}",
                 ScheduledTime = scheduledTime,
-                NotificationType = task.L1NotificationPresets.Type,
-                IsDaily = task.L1NotificationPresets.IsDaily,
-                TaskDueDate = task.DueDate,
+                //NotificationType = task.L1NotificationPresets.Type,
+                //IsDaily = task.L1NotificationPresets.IsDaily,
+                //TaskDueDate = task.DueDate,
                 CreatedAt = DateTime.Now,
                 IsProcessed = false
             };
@@ -218,15 +218,15 @@ namespace StudentTaskManagement.Utilities
 
             var queueItem = new NotificationQueues
             {
-                SubtaskId = subtask.Id,
-                UserId = subtask.CreatedByStudentId,
-                NotificationPresetId = subtask.L1NotificationPresets.Id,
+                L1SubTasksId = subtask.Id,
+                StudentId = subtask.CreatedByStudentId,
+                L1NotificationPresetId = subtask.L1NotificationPresets.Id,
                 Title = $"subtask Due: {subtask.Title}",
                 Message = $"subtask '{subtask.Title}' is due at {subtask.DueDate:h:mm tt}",
                 ScheduledTime = scheduledTime,
-                NotificationType = subtask.L1NotificationPresets.Type,
-                IsDaily = subtask.L1NotificationPresets.IsDaily,
-                TaskDueDate = subtask.DueDate,
+                //NotificationType = subtask.L1NotificationPresets.Type,
+                //IsDaily = subtask.L1NotificationPresets.IsDaily,
+                //TaskDueDate = subtask.DueDate,
                 CreatedAt = DateTime.Now,
                 IsProcessed = false
             };

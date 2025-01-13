@@ -427,6 +427,19 @@
         });
 
         function validateForm() {
+            // Add password complexity validation method
+            $.validator.addMethod("passwordComplexity", function (value, element) {
+                // 1 number
+                // 1 special character
+                return this.optional(element) ||
+                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@@$!%*?&])[A-Za-z\d@@$!%*?&]{6,}$/.test(value);
+            }, "Password must contain at least one uppercase letter, one lowercase letter, and one special character");
+
+            // Add alphanumeric validation method
+            $.validator.addMethod("alphanumeric", function(value, element) {
+                return this.optional(element) || /^[a-zA-Z0-9]+$/.test(value);
+            }, "Letters and numbers only");
+
             $.validator.addMethod("checkUsername", function(value, element) {
                 var isValid = false;
                 $.ajax({
@@ -470,6 +483,7 @@
                 rules: {
                     Username: {
                         required: true,
+                        alphanumeric: true,  // Add this new rule
                         checkUsername: true,
                         maxlength: 50
                     },
@@ -480,6 +494,7 @@
                     },
                     Password: {
                         required: true,
+                        passwordComplexity: true,
                         minlength: 6
                     },
                     ConfirmPassword: {
@@ -538,7 +553,8 @@
                     },
                     Password: {
                         required: "Please enter a password",
-                        minlength: "Password must be at least 6 characters"
+                        minlength: "Password must be at least 6 characters",
+                        passwordComplexity: "Password must contain at least:<br/> One uppercase & lowercase letter and one special character (E.g.: @@$!%*?&)<br/>"
                     },
                     ConfirmPassword: {
                         required: "Please confirm your password",

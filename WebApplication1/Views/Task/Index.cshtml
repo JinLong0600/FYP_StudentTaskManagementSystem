@@ -260,16 +260,18 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                         <h6 class="section-title">
                                             <i class="fas fa-bell me-2"></i>Notification Preset
                                                 ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>'+ response.data.notificationPreset.type + '</span>' : ''}
-                                                ${response.data.notificationPreset && response.data.notificationPreset.isSystemDefault == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.notificationPreset.type + '</span>' : ""}
+                                                ${response.data.notificationPreset && response.data.notificationPreset.isSystemDefault == false && response.data.notificationPreset.isTaskNotificationPresetDeleted == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.notificationPreset.type + '</span>' : ""}
+                                                ${response.data.notificationPreset && response.data.notificationPreset.isTaskNotificationPresetDeleted == true ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-trash"></i></span>' : ''}
                                         </h6>
                                         ${response.data.notificationPreset ? `
                                             <div class="preset-details">
-                                                <h6 class="preset-name mb-2">${response.data.notificationPreset.name}</h6>
+                                                <h6 class="preset-name mb-2">${response.data.notificationPreset.name} ${response.data.notificationPreset.isTaskNotificationPresetDeleted == true ? generationDeleted() : ''}</h6>
                                                 <p class="preset-description mb-2">
-                                                    ${generationNullDescription(response.data.notificationPreset.description)}
+                                                        ${response.data.notificationPreset.isTaskNotificationPresetDeleted == true ? generationDeletedNotifcation() : generationNullDescription(response.data.notificationPreset.description)}
                                                 </p>
                                                 <div class="preset-type">
-                                                        ${response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.notificationPreset.defaultSettingMessagePills +'</span>' :createNotificationSettingPills(response.data.notificationPreset) }
+                                                            ${response.data.notificationPreset && response.data.notificationPreset.isTaskNotificationPresetDeleted == true ? '' :
+                                                                response.data.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.notificationPreset.defaultSettingMessagePills +'</span>' : createNotificationSettingPills(response.data.notificationPreset) }
                                                 </div>
                                             </div>
                                         ` : `
@@ -284,17 +286,18 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                     <div class="setting-card">
                                         <h6 class="section-title">
                                                 <i class="fas fa-redo me-2"></i>Recurring Pattern
-                                                ${response.data.recurringPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.recurringPreset.defaultSettingType + '</span>' : ''}
-                                                ${response.data.recurringPreset && response.data.recurringPreset.isSystemDefault == false ? '<span class="badge recurring-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.recurringPreset.type + '</span>' : ""}
+                                                ${response.data.recurringPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + response.data.recurringPreset.type + '</span>' : ''}
+                                                ${response.data.recurringPreset && response.data.recurringPreset.isSystemDefault == false && response.data.recurringPreset.isTaskRecurringPatternDeleted == false ? '<span class="badge recurring-type-badge"><i class="fas fa-clock me-1"></i>' + response.data.recurringPreset.type + '</span>' : ""}
+                                                ${response.data.recurringPreset && response.data.recurringPreset.isTaskRecurringPatternDeleted == true ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-trash"></i></span>' : ''}
                                         </h6>
                                             ${response.data.recurringPreset ? `
                                             <div class="preset-details">
-                                                    <h6 class="preset-name mb-2">${response.data.recurringPreset.name}</h6>
+                                                <h6 class="preset-name mb-2">${response.data.recurringPreset.name} ${response.data.recurringPreset.isTaskRecurringPatternDeleted == true ? generationDeleted() : ''}</h6>
                                                 <p class="preset-description mb-2">
-                                                        ${generationNullDescription(response.data.recurringPreset.description)}
+                                                        ${response.data.recurringPreset.isTaskRecurringPatternDeleted == true ? generationDeletedRecurring() : generationNullDescription(response.data.recurringPreset.description)}
                                                 </p>
                                                 <div class="preset-type">
-                                                    ${
+                                                    ${response.data.recurringPreset && response.data.recurringPreset.isTaskRecurringPatternDeleted == true ? '' :
                                                         response.data.recurringPreset?.isSystemDefault ? 
                                                         '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>'+ response.data.recurringPreset.defaultSettingMessagePills +'</span>' :
                                                         createRecurringSettingPills(response.data.recurringPreset)
@@ -317,7 +320,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                             <!-- Subtasks Section -->
                             <div class="subtasks-section">
                                 <h6 class="section-title mt-3 mb-3">
-                                    Subtasks (${response.data.subtasks.filter(st => st.status === 2).length}/${response.data.subtasks.length} Completed)
+                                            Subtasks (${response.data.task.completedSubtasksCount} / ${response.data.task.totalSubtasksCount} Completed)
                                 </h6>
                                 <div class="subtask-list">
                                     ${response.data.subtasks.map(subtask => `
@@ -367,17 +370,19 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                             <div class="setting-card">
                                                 <h6 class="section-title-subtask">
                                                     <i class="fas fa-bell me-2"></i>Notification Preset
-                                                    ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog"></i>'+ subtask.notificationPreset.type + '</span>' : ''}
-                                                    ${subtask.notificationPreset && subtask.notificationPreset.isSystemDefault == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + subtask.notificationPreset.type + '</span>' : ""}
+                                                    ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + subtask.notificationPreset.type + '</span>' : ''}
+                                                    ${subtask.notificationPreset && subtask.notificationPreset.isSystemDefault == false && subtask.notificationPreset.isTaskNotificationPresetDeleted == false ? '<span class="badge notification-type-badge"><i class="fas fa-clock me-1"></i>' + subtask.notificationPreset.type + '</span>' : ""}
+                                                    ${subtask.notificationPreset && subtask.notificationPreset.isSubTaskNotificationPresetDeleted == true ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-trash"></i></span>' : ''}
                                                 </h6>
                                                 ${subtask.notificationPreset ? `
                                                     <div class="preset-details">
-                                                        <h6 class="preset-name mb-2">${subtask.notificationPreset.name}</h6>
+                                                            <h6 class="preset-name mb-2">${subtask.notificationPreset.name} ${subtask.notificationPreset.isSubTaskNotificationPresetDeleted == true ? generationDeleted() : ''}</h6>
                                                         <p class="preset-description mb-2">
-                                                            ${generationNullDescription(subtask.notificationPreset.description)}
+                                                            ${subtask.notificationPreset.isSubTaskNotificationPresetDeleted == true ? generationDeletedNotifcation() : generationNullDescription(subtask.notificationPreset.description)}
                                                         </p>
                                                         <div class="preset-type">
-                                                            ${subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + subtask.notificationPreset.defaultSettingMessagePills +'</span>' :createNotificationSettingPills(response.data.notificationPreset) }
+                                                            ${subtask.notificationPreset && subtask.notificationPreset.isSubTaskNotificationPresetDeleted == true ? '' :
+                                                                subtask.notificationPreset?.isSystemDefault ? '<span class="badge bg-secondary ms-2" title="System Default"><i class="fas fa-cog me-2"></i>' + subtask.notificationPreset.defaultSettingMessagePills + '</span>' : createNotificationSettingPills(subtask.notificationPreset)}
                                                         </div>
                                                     </div>
                                                 ` : `
@@ -414,7 +419,10 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                         
                         let modalFooter = `
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="window.location.href='/Task/CreateTask/${response.data.task.taskId}'">View Full Details</button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-danger" onclick="confirmDelete(${response.data.task.taskId})"><i class="fas fa-trash"></i> Delete Task</button>
+                                    <button type="button" class="btn btn-primary" onclick="window.location.href='/Task/CreateTask/${response.data.task.taskId}'">View Full Details</button>
+                                </div>
                         `
 
                         // Update modal body
@@ -437,6 +445,67 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                 }
             });
         }
+
+    function confirmDelete(taskId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This task and its subtasks will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                Swal.fire({
+                    title: 'Deleting...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Send delete request
+                $.ajax({
+                    url: '/Task/AjaxDeleteTask/' + taskId,
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: response.message || 'Task and subtasks has been deleted.',
+                                confirmButtonColor: '#4f46e5'
+                            }).then(() => {
+                                window.location.href = '/Task';
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Failed to delete the task and subtasks.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to delete the task and subtasks. Please try again.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    }
+                });
+            }
+        });
+    }
 
     function initializeDateTimePickers() {
         const currentYear = new Date().getFullYear();
@@ -551,13 +620,19 @@ document.querySelector('.sidebar').addEventListener('click', function() {
     }
 
     function createTaskCardItem(task) {
+        console.log(task.isNotification);
+        console.log(task.isTaskNotificationPresetDeleted);
+        console.log(task.subtasks);
           let modelContent = `<div class="col-md-4">
             <div class="task-card priority-${task.prioritycss}" onclick="getTaskDetails(${task.id})">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="priority-badge priority-${task.prioritycss}">Priority: ${task.priority}</div>
                     <div class="task-icons">
-                        ${task.isNotification ? '<span class="icon-pill notification-pill"><i class="fas fa-bell"></i></span>' : ''}
-                        ${task.isRecurring ? '<span class="icon-pill recurring-pill"><i class="fas fa-redo"></i></span>' : ''}
+                            ${task.isNotification && task.isTaskNotificationPresetDeleted ? '<span class="icon-pill notification-pill-deleted"><i class="fas fa-bell"></i></span>' :
+                            task.isNotification ? '<span class="icon-pill notification-pill"><i class="fas fa-bell"></i></span>' : ''}
+                            ${task.isRecurring && task.isTaskRecurringPatternDeleted ? '<span class="icon-pill recurring-pill-deleted"><i class="fas fa-redo"></i></span>' :
+                            task.isRecurring ? '<span class="icon-pill recurring-pill"><i class="fas fa-redo"></i></span>' : '' }
+                
                     </div>
                 </div>
                 <div class="task-header">
@@ -614,7 +689,17 @@ document.querySelector('.sidebar').addEventListener('click', function() {
         }
         return modelContent;
     }
-    
+
+    function generationDeleted() {
+        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> [Deleted]</span>`;
+    }
+    function generationDeletedNotifcation() {
+        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> The selected preset has been deleted, please re-select a new preset to enable this feature.</span>`;
+    }
+    function generationDeletedRecurring() {
+        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> The selected pattern has been deleted, please re-select a new pattern to enable this feature.</span>`;
+    }
+
     function generationNullDescription(description) {
         if (description == null || description == "") 
         {
@@ -1059,9 +1144,18 @@ document.querySelector('.sidebar').addEventListener('click', function() {
     color: #ffc107;
 }
 
+.notification-pill-deleted {
+        background-color: #d1d1d1;
+        color: #9b9b9b;
+}
+
 .recurring-pill {
     background-color: rgba(13, 202, 240, 0.2);
     color: #0dcaf0;
+}
+.recurring-pill-deleted {
+        background-color: #d1d1d1;
+        color: #9b9b9b;
 }
 
 .icon-pill i {

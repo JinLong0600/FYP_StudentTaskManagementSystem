@@ -64,7 +64,6 @@ namespace StudentTaskManagement.Models
         public DbSet<L1RecurringPatterns> L1RecurringPresets { get; set; }
         public DbSet<L1NotificationPresets> L1NotificationPresets { get; set; }
         public DbSet<L1Students> L1Students { get; set; }
-        public DbSet<L1TaskReminders> L1TaskReminders { get; set; }
         public DbSet<L1DiscussionForumLikes> L1DiscussionForumLikes { get; set; }
         public DbSet<NotificationQueues> NotificationQueues { get; set; }
         public DbSet<PushSubscriptions> PushSubscriptions { get; set; }

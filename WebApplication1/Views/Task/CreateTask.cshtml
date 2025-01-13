@@ -78,9 +78,50 @@
 
                         <!-- Task Settings -->
                         <div class="mb-5">
-                            <!-- Recurring Settings -->
+                            <!-- Notification Settings -->
                             <div class="row mb-4">
                                 <h4>Task Settings</h4><hr />
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold lb-required">Notification Settings</label>
+                                    <div class="border rounded p-3">
+                                        <div class="task-setting-container mb-2">
+                                            <input type="radio" id="noNotification" name="IsNotification" value="0" checked>
+                                            <label for="noNotification">No Notifications</label>
+                                            <input type="radio" id="useNotification" name="IsNotification" value="1">
+                                            <label for="useNotification">Set Notifications</label>
+                                        </div>
+                                        <div id="notificationOptions" class="mt-3" style="display: none;">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold lb-required">Notification Preset</label>
+                                                @Html.DropDownListFor(m => m.L1NotificationPresetId,
+                                                         new SelectList(ViewBag.SelectNotificationPresetList, "Value", "Text", Model.L1NotificationPresetId),
+                                                         new
+                                                         {
+                                                             id = "notificationPresetSelect",
+                                                             @class = "form-control",
+                                                             data_placeholder = "- Please select -",
+                                                         })
+                                            </div>
+                                            <div id="customNotificationOptions" class="mt-3" style="display: none;">
+                                                <div class="task-setting-container mb-2">
+                                                    <input type="radio" id="DefaultNotificationOptions1" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.ThirtyMin)">
+                                                    <label for="DefaultNotificationOptions1">30 Minutes Before</label>
+
+                                                    <input type="radio" id="DefaultNotificationOptions2" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneWeek)">
+                                                    <label for="DefaultNotificationOptions2">1 Hour Before</label>
+
+                                                    <input type="radio" id="DefaultNotificationOptions3" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneMonth)">
+                                                    <label for="DefaultNotificationOptions3">1 Day Before</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+
+                            <!-- Recurring Settings -->
+                            <div class="row mb-4">
                                 <div class="col-12">
                                     <label class="form-label fw-semibold lb-required">Recurring Settings</label>
                                     <div class="border rounded p-3">
@@ -138,46 +179,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Notification Settings -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <label class="form-label fw-semibold lb-required">Notification Settings</label>
-                                    <div class="border rounded p-3">
-                                        <div class="task-setting-container mb-2">
-                                            <input type="radio" id="noNotification" name="IsNotification" value="0" checked>
-                                            <label for="noNotification">No Notifications</label>
-                                            <input type="radio" id="useNotification" name="IsNotification" value="1">
-                                            <label for="useNotification">Set Notifications</label>
-                                        </div>
-                                        <div id="notificationOptions" class="mt-3" style="display: none;">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-semibold lb-required">Notification Preset</label>
-                                                @Html.DropDownListFor(m => m.L1NotificationPresetId,
-                                                         new SelectList(ViewBag.SelectNotificationPresetList, "Value", "Text", Model.L1NotificationPresetId),
-                                                         new
-                                                         {
-                                                             id = "notificationPresetSelect",
-                                                             @class = "form-control",
-                                                             data_placeholder = "- Please select -",
-                                                         })
-                                            </div>
-                                            <div id="customNotificationOptions" class="mt-3" style="display: none;">
-                                                <div class="task-setting-container mb-2">
-                                                    <input type="radio" id="DefaultNotificationOptions1" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.ThirtyMin)">
-                                                    <label for="DefaultNotificationOptions1">30 Minutes Before</label>
-                                                    
-                                                    <input type="radio" id="DefaultNotificationOptions2" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneWeek)">
-                                                    <label for="DefaultNotificationOptions2">1 Hour Before</label>
-                                                    
-                                                    <input type="radio" id="DefaultNotificationOptions3" name="DefaultNotificationOptions" value="@((int)DefaultNotificationOptions.OneMonth)">
-                                                    <label for="DefaultNotificationOptions3">1 Day Before</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Subtasks -->
@@ -196,7 +197,13 @@
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Action("Index", "Task")'"><i class="fas fa-arrow-left"></i> Back to Task</button>
-                            <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">@(Model.IsEdit ? "Update task" : "Create new task")</button>
+                            <div class="d-flex gap-2">
+                                @if (Model.IsEdit) { 
+                                    <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.TaskId)"><i class="fas fa-trash"></i> Delete Task</button>
+                                }
+                                <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">@(Model.IsEdit ? "Update task" : "Create new task")</button>
+                            </div>
+                            
                         </div>
                     </form>
                 </div>
@@ -210,6 +217,67 @@
 
     // Convert ViewBag data to JavaScript array
     const notificationPresets = @Html.Raw(Json.Serialize(ViewBag.SelectNotificationPresetList));
+
+    function confirmDelete(taskId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This task and its subtasks will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                Swal.fire({
+                    title: 'Deleting...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Send delete request
+                $.ajax({
+                    url: '/Task/AjaxDeleteTask/' + taskId,
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: response.message || 'Task and subtasks has been deleted.',
+                                confirmButtonColor: '#4f46e5'
+                            }).then(() => {
+                                window.location.href = '/Task';
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Failed to delete the task and subtasks.',
+                                confirmButtonColor: '#4f46e5'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to delete the task and subtasks. Please try again.',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                    }
+                });
+            }
+        });
+    }
 
     function addSubtask(index, subtask = null) 
     {

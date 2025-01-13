@@ -30,10 +30,13 @@ namespace StudentTaskManagement.Models
 
         public DateTime? ReminderTime { get; set; } // will have value only when Type value is 1 else null. example: reminder 2 day before, at (ReminderTime)
 
-        public int Status { get; set; } //active //removed
-
         [Required]
         public bool IsDaily { get; set; } // will have value only when Type value is 2 else null
+
+        public int Status { get; set; } //active //removed
+
+        [DefaultValue(false)]
+        public bool IsSystemDefault { get; set; } // this one can ignore first
 
         [Required]
         public string CreatedByStudentId { get; set; }
@@ -43,8 +46,7 @@ namespace StudentTaskManagement.Models
 
         public DateTime? DeletionDateTime { get; set; }
 
-        [DefaultValue(false)]
-        public bool IsSystemDefault { get; set; } // this one can ignore first
+
 
         public virtual ICollection<L1Tasks> L1Tasks { get; set; }
         public virtual ICollection<L1SubTasks> L1SubTasks { get; set; }

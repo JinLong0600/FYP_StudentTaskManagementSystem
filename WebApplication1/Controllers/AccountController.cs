@@ -603,7 +603,7 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-        [HttpPost]
+/*        [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel viewModel)
         {
@@ -623,7 +623,7 @@ namespace WebApplication1.Controllers
                 return View("ForgotPasswordConfirmation");
             }
             return View(viewModel);
-        }
+        }*/
 
         [HttpGet]
         [AllowAnonymous]

@@ -26,8 +26,7 @@
                 </div>
                 <div class="no-tasks-message" id="noTasksMessage" style="display: none;">
                     <i class="fas fa-info-circle"></i>
-                    <p>No high priority tasks found for this period.</p>
-                    <p class="pending-note">There are <span id="pendingTaskCount">0</span> pending tasks with normal priority.</p>
+                    <p>There is no task that will be due.</p>
                 </div>
             </div>
         </div>
@@ -1132,7 +1131,6 @@
                 } else {
                     taskList.style.display = 'none';
                     noTasksMessage.style.display = 'flex';
-                    document.getElementById('pendingTaskCount').textContent = '0';
                 }
             },
             error: function (xhr, status, error) {

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StudentTaskManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class initialmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,24 +25,12 @@ namespace StudentTaskManagement.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedByStudentId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastModifiedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DeletionDateTime = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DeletionDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsSystemDefault = table.Column<bool>(type: "bit", nullable: false, defaultValue: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_L1RecurringPresets", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "L1RecurringTaskCounters",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    L1TaskId = table.Column<int>(type: "int", nullable: false),
-                    L1RecurringTaskSettingId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_L1RecurringTaskCounters", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -118,6 +106,23 @@ namespace StudentTaskManagement.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PushSubscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Endpoint = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    P256dh = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Auth = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PushSubscriptions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "L1RoleClaims",
                 columns: table => new
                 {
@@ -185,6 +190,7 @@ namespace StudentTaskManagement.Migrations
                     CreatedByStudentId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastModifiedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletionDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsSystemDefault = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
@@ -294,7 +300,8 @@ namespace StudentTaskManagement.Migrations
                     CreatedByStudentId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     LastModifiedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletionDateTime = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    IsDiscussionForumDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -391,7 +398,6 @@ namespace StudentTaskManagement.Migrations
                     L1TaskId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Category = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     Priority = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -402,15 +408,14 @@ namespace StudentTaskManagement.Migrations
                     CreatedByStudentId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastModifiedDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeletionDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    L1NotificationPresetsId = table.Column<int>(type: "int", nullable: true),
                     L1RecurringPatternsId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_L1SubTasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_L1SubTasks_L1NotificationPresets_L1NotificationPresetsId",
-                        column: x => x.L1NotificationPresetsId,
+                        name: "FK_L1SubTasks_L1NotificationPresets_L1NotificationPresetId",
+                        column: x => x.L1NotificationPresetId,
                         principalTable: "L1NotificationPresets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -423,6 +428,51 @@ namespace StudentTaskManagement.Migrations
                     table.ForeignKey(
                         name: "FK_L1SubTasks_L1Tasks_L1TaskId",
                         column: x => x.L1TaskId,
+                        principalTable: "L1Tasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NotificationQueues",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TaskId = table.Column<int>(type: "int", nullable: false),
+                    SubtaskId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NotificationPresetId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ScheduledTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsProcessed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastAttempt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    GroupKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    NotificationType = table.Column<int>(type: "int", nullable: false),
+                    IsDaily = table.Column<bool>(type: "bit", nullable: false),
+                    TaskDueDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationQueues", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NotificationQueues_L1NotificationPresets_NotificationPresetId",
+                        column: x => x.NotificationPresetId,
+                        principalTable: "L1NotificationPresets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_NotificationQueues_L1SubTasks_SubtaskId",
+                        column: x => x.SubtaskId,
+                        principalTable: "L1SubTasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_NotificationQueues_L1Tasks_TaskId",
+                        column: x => x.TaskId,
                         principalTable: "L1Tasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -483,9 +533,9 @@ namespace StudentTaskManagement.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_L1SubTasks_L1NotificationPresetsId",
+                name: "IX_L1SubTasks_L1NotificationPresetId",
                 table: "L1SubTasks",
-                column: "L1NotificationPresetsId");
+                column: "L1NotificationPresetId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_L1SubTasks_L1RecurringPatternsId",
@@ -521,6 +571,21 @@ namespace StudentTaskManagement.Migrations
                 name: "IX_L1UserRoles_RoleId",
                 table: "L1UserRoles",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationQueues_NotificationPresetId",
+                table: "NotificationQueues",
+                column: "NotificationPresetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationQueues_SubtaskId",
+                table: "NotificationQueues",
+                column: "SubtaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationQueues_TaskId",
+                table: "NotificationQueues",
+                column: "TaskId");
         }
 
         /// <inheritdoc />
@@ -533,13 +598,7 @@ namespace StudentTaskManagement.Migrations
                 name: "L1DiscussionForumLikes");
 
             migrationBuilder.DropTable(
-                name: "L1RecurringTaskCounters");
-
-            migrationBuilder.DropTable(
                 name: "L1RoleClaims");
-
-            migrationBuilder.DropTable(
-                name: "L1SubTasks");
 
             migrationBuilder.DropTable(
                 name: "L1TaskReminders");
@@ -557,13 +616,22 @@ namespace StudentTaskManagement.Migrations
                 name: "L1UserTokens");
 
             migrationBuilder.DropTable(
+                name: "NotificationQueues");
+
+            migrationBuilder.DropTable(
+                name: "PushSubscriptions");
+
+            migrationBuilder.DropTable(
                 name: "L1DiscussionForums");
 
             migrationBuilder.DropTable(
-                name: "L1Tasks");
+                name: "L1Roles");
 
             migrationBuilder.DropTable(
-                name: "L1Roles");
+                name: "L1SubTasks");
+
+            migrationBuilder.DropTable(
+                name: "L1Tasks");
 
             migrationBuilder.DropTable(
                 name: "L1NotificationPresets");
