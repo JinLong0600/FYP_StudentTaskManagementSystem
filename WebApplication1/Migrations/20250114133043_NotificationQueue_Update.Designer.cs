@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentTaskManagement.Models;
 
@@ -11,9 +12,11 @@ using StudentTaskManagement.Models;
 namespace StudentTaskManagement.Migrations
 {
     [DbContext(typeof(StudentTaskManagementContext))]
-    partial class StudentTaskManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20250114133043_NotificationQueue_Update")]
+    partial class NotificationQueue_Update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -665,7 +668,7 @@ namespace StudentTaskManagement.Migrations
                     b.Property<int?>("L1SubTasksId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("L1TaskId")
+                    b.Property<int>("L1TaskId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("LastAttempt")
@@ -675,6 +678,9 @@ namespace StudentTaskManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("NotificationPresetId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("ScheduledTime")
                         .HasColumnType("datetime2");
 
@@ -682,17 +688,20 @@ namespace StudentTaskManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("L1NotificationPresetId");
-
                     b.HasIndex("L1SubTasksId");
 
-                    b.HasIndex("L1TaskId");
+                    b.HasIndex("NotificationPresetId");
+
+                    b.HasIndex("TaskId");
 
                     b.ToTable("NotificationQueues");
                 });
@@ -881,26 +890,28 @@ namespace StudentTaskManagement.Migrations
 
             modelBuilder.Entity("StudentTaskManagement.Models.NotificationQueues", b =>
                 {
-                    b.HasOne("StudentTaskManagement.Models.L1NotificationPresets", "L1NotificationPresets")
-                        .WithMany()
-                        .HasForeignKey("L1NotificationPresetId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("StudentTaskManagement.Models.L1SubTasks", "L1SubTasks")
+                    b.HasOne("StudentTaskManagement.Models.L1SubTasks", "SubTask")
                         .WithMany()
                         .HasForeignKey("L1SubTasksId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("StudentTaskManagement.Models.L1Tasks", "L1Tasks")
+                    b.HasOne("StudentTaskManagement.Models.L1NotificationPresets", "NotificationPreset")
                         .WithMany()
-                        .HasForeignKey("L1TaskId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("NotificationPresetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("L1NotificationPresets");
+                    b.HasOne("StudentTaskManagement.Models.L1Tasks", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("L1SubTasks");
+                    b.Navigation("NotificationPreset");
 
-                    b.Navigation("L1Tasks");
+                    b.Navigation("SubTask");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("StudentTaskManagement.Models.L1DiscussionForums", b =>

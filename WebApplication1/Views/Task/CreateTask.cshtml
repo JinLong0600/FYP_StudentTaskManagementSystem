@@ -201,7 +201,7 @@
                                 @if (Model.IsEdit) { 
                                     <button type="button" class="btn btn-danger" onclick="confirmDelete(@Model.TaskId)"><i class="fas fa-trash"></i> Delete Task</button>
                                 }
-                                <button type="submit" id="btnSubmit" class="btn btn-primary btn-lg fw-bold">@(Model.IsEdit ? "Update task" : "Create new task")</button>
+                                <button type="submit" id="btnSubmit" class="btn btn-primary">@(Model.IsEdit ? "Update task" : "Create new task")</button>
                             </div>
                             
                         </div>
@@ -734,7 +734,7 @@
             rules: {
                 Title: {
                     required: true,
-                    maxlength: 50
+                    maxlength: 25
                 },
                 Category: {
                     required: true

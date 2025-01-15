@@ -14,7 +14,7 @@
                 </div>
                 <div class="task-filter-selector">
                     <select id="taskFilterSelect" onchange="updateTasksList()">
-                        <option value="today">Due Today</option>
+                        <option value="today" selected>Due Today</option>
                         <option value="thisWeek">Due this week</option>
                         <option value="thisMonth">Due this month</option>
                     </select>
@@ -1082,7 +1082,7 @@
                     document.getElementById('totalTasks').textContent = response.data.totalTask ? response.data.totalTask : "0";
                     document.getElementById('completedTasks').textContent = response.data.completedTask ? response.data.completedTask : "0";
                     document.getElementById('inProgressTasks').textContent = response.data.inProgressTask ? response.data.inProgressTask : "0";
-                    document.getElementById('pendingTasks').textContent = response.data.NotStartedTask ? response.data.NotStartedTask : "0";
+                    document.getElementById('pendingTasks').textContent = response.data.notStartedTask ? response.data.notStartedTask : "0";
                     document.getElementById('onHoldTasks').textContent = response.data.onHoldTask ? response.data.onHoldTask : "0";
                     document.getElementById('overdueTasks').textContent = response.data.overdueTask ? response.data.overdueTask : "0";
                 },
@@ -1388,7 +1388,7 @@
                                                 <span class="text-decoration-none text-dark fw-bold">
                                                     ${post.title}
                                                 </span>
-                                                ${renderNew(true)}
+                                                ${renderNew(post.isNew)}
                                                         ${renderResolved(post.isResolved)}
                                             </h5>
                                         </div>

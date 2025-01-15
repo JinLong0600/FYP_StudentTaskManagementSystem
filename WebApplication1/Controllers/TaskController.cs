@@ -579,6 +579,7 @@ namespace WebApplication1.Controllers
 
                         isRecurring = t.IsRecurring,
                         recurringPresetId = t.L1RecurringPresetId,
+                        isParent = t.IsParentRecurring,
                         isNotification = t.IsNotification,
                         notificationPresetId = t.L1NotificationPresetId,
                         isTaskNotificationPresetDeleted = t.L1NotificationPresets.Status == (int)PresetPatternStatus.Deleted ? true : false,
@@ -700,6 +701,7 @@ namespace WebApplication1.Controllers
                         defaultNotificationOptions = existingTask.DefaultNotificationOptions,
                         completedSubtasksCount = existingTask.L1SubTasks.Count(s => s.Status == (int)ItemTaskStatus.Completed),
                         totalSubtasksCount = existingTask.L1SubTasks.Count,
+                        isParentRecurring = existingTask.IsParentRecurring,
                     },
                     notificationPreset = taskNotificationPreset != null ? new
                     {

@@ -492,7 +492,7 @@ namespace WebApplication1.Controllers
                 }
 
                 ViewBag.ErrorTitle = "Email cannot be confirmed";
-                return View("Error");
+                return RedirectToAction("EmailConfrimationExpired", "Account");
             }
             catch (Exception ex)
             {
@@ -752,6 +752,7 @@ namespace WebApplication1.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout() 
         {
             await _signInManager.SignOutAsync();

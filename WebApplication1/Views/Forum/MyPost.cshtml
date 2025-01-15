@@ -10,7 +10,7 @@
     <div class="card mb-4">
         <div class="d-flex justify-content-between align-items-center" style="margin: 25px 25px 0px 25px">
             <div>
-                <h4 class="">My Post</h4>
+                <h4 class=""><i class="fa fa-plus me-2"></i>My Post</h4>
                 <p class="text-muted">Start your conversation with the community</p>
             </div>
             <div>
@@ -39,6 +39,7 @@
                                id="tagSearch"
                                placeholder="Search by tags...">
                     </div>
+                    <input type="hidden" id="selectedTagsInput" name="tags" value="">
                 </div>
 
                 <!-- Status Filter -->
@@ -303,7 +304,8 @@
             outline: none;
             flex: 1;
             min-width: 60px;
-            padding: 2px;
+            padding: 12px 8px;
+            height: 2.4rem;
         }
 
         .tag-list {
@@ -334,7 +336,6 @@
                 .tag-item .remove-tag:hover {
                     color: #dc3545;
                 }
-
         .form-label {
             font-weight: 500;
             margin-bottom: 0.5rem;
@@ -594,18 +595,23 @@
         */
     </script>
     <script>
+        // Function to update hidden input value
+        function updateHiddenInput() {
+            $('#selectedTagsInput').val(selectedTags.join(','));
+        }
 
         // Function to get all current filter values
-        function getFilterValues() {
+        /*function getFilterValues() {
             return {
                 titleSearch: $('#titleSearch').val(),
-                tagSearch: $('#tagSearch').val(),
+                tags: $('#selectedTagsInput').val(), //selectedTags, // Now sending array of tags
+                //tagSearch: $('#tagSearch').val(),
                 status: $('#statusFilter').val(),
                 sortOrder: $('#sortOrder').val(),
                 page: currentPage,
                 pageSize: pageSize
             };
-        }
+        }*/
 
         // Debounced search function
         function debouncedSearch() {
@@ -633,6 +639,7 @@
                 if (tag && !selectedTags.includes(tag)) {
                     addTag(tag);
                     $(this).val('');
+                    updateHiddenInput(); // Update hidden input when adding tag
                 }
             }
         });
@@ -661,7 +668,7 @@
         function getFilterValues() {
             return {
                 titleSearch: $('#titleSearch').val(),
-                tags: selectedTags, // Now sending array of tags
+                tags: $('#selectedTagsInput').val(), //selectedTags, // Now sending array of tags
                 status: $('#statusFilter').val(),
                 sortOrder: $('#sortOrder').val(),
                 page: currentPage,
@@ -674,6 +681,7 @@
             $('#titleSearch').val('');
             selectedTags = [];
             $('#selectedTags').empty();
+            $('#selectedTagsInput').val('');
             $('#statusFilter').val('');
             $('#sortOrder').val('newest');
             currentPage = 1;

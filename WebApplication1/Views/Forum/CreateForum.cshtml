@@ -30,7 +30,7 @@
 
                         <div class="mb-4">
                             <label class="form-label lb-required">Category</label>
-                            <select name="Category" id="Category" class="form-select" readonly=@(Model.Status == (int)ForumStatus.Resolved)>
+                            <select name="Category" id="Category" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
                                 <option value="">- Please select-</option>
                                 <option value="@((int)ForumCategory.GeneralDiscussions)" selected=@(Model.Status == (int)ForumCategory.GeneralDiscussions)>General Discussions</option>
                                 <option value="@((int)ForumCategory.HomeworkHelp)" selected=@(Model.Status == (int)ForumCategory.HomeworkHelp)>Homework Help</option>
@@ -58,7 +58,7 @@
                         {
                             <div class="mb-4">
                                 <label class="form-label lb-required">Status</label>
-                                <select name="Status" id="Status" class="form-select" readonly=@(Model.Status == (int)ForumStatus.Resolved)>
+                                <select name="Status" id="Status" class="form-select" disabled=@(Model.Status == (int)ForumStatus.Resolved)>
                                     <option value="@((int)ForumStatus.Active)" selected=@(Model.Status == (int)ForumStatus.Active)>Active</option>
                                     <option value="@((int)ForumStatus.Resolved)" selected=@(Model.Status == (int)ForumStatus.Resolved)>Resolved</option>
                                 </select>

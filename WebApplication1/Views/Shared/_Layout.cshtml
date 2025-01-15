@@ -82,7 +82,7 @@
                             <ul class="nav flex-column ms-3 mt-1">
                                 <li class="nav-item">
                                     <a class="nav-link sub-nav-link d-flex align-items-center py-2 @(ViewBag.ActiveMenu == "MyPost" ? "active" : string.Empty)" href="/Forum/MyPost">
-                                        <i class="fa-solid fa-arrow-up-from-bracket me-2"></i>My Post
+                                        <i class="fa fa-plus me-2"></i>My Post
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -130,9 +130,12 @@
 
                 <!-- Bottom Items -->
                 <div class="mt-auto mb-3 px-3">
-                    <a class="nav-link nav-item-danger d-flex align-items-center py-2" href="/Account/Logout">
-                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                    </a>
+                    <form id="logoutForm" class="m-0" action="/Account/Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger d-flex align-items-center py-2 w-100 border-0">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </button>
+                    </form>
                 </div>
             </div>
         </nav>

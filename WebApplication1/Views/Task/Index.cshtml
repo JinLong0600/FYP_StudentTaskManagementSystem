@@ -304,7 +304,21 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                                                     }
                                                 </div>
                                             </div>
-                                        ` : `
+                                        ` :
+                            response.data.task.isParentRecurring == false ?
+                                `
+                                                        <div class="alert alert-info d-flex align-items-center" role="alert">
+                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            <div>
+                                                                This is an automatically generated task from a recurring pattern.
+                                                                <span class="d-block small mt-1 text-muted">
+                                                                    Recurring settings can only be modified in the original parent task.
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                `
+                            :
+                                        `
                                             <p class="setting-value text-muted">
                                                 <i class="fas fa-times-circle me-2"></i>No recurring preset
                                             </p>
@@ -622,7 +636,7 @@ document.querySelector('.sidebar').addEventListener('click', function() {
     function createTaskCardItem(task) {
         console.log(task.isNotification);
         console.log(task.isTaskNotificationPresetDeleted);
-        console.log(task.subtasks);
+        console.log(task.isParent);
           let modelContent = `<div class="col-md-4">
             <div class="task-card priority-${task.prioritycss}" onclick="getTaskDetails(${task.id})">
                 <div class="d-flex justify-content-between align-items-start">
@@ -631,8 +645,8 @@ document.querySelector('.sidebar').addEventListener('click', function() {
                             ${task.isNotification && task.isTaskNotificationPresetDeleted ? '<span class="icon-pill notification-pill-deleted"><i class="fas fa-bell"></i></span>' :
                             task.isNotification ? '<span class="icon-pill notification-pill"><i class="fas fa-bell"></i></span>' : ''}
                             ${task.isRecurring && task.isTaskRecurringPatternDeleted ? '<span class="icon-pill recurring-pill-deleted"><i class="fas fa-redo"></i></span>' :
-                            task.isRecurring ? '<span class="icon-pill recurring-pill"><i class="fas fa-redo"></i></span>' : '' }
-                
+                            task.isRecurring && (task.isParent == true || task.isParent == null) ? '<span class="icon-pill recurring-pill"><i class="fas fa-redo"></i></span>' :
+                            task.isRecurring == false && task.isParent == false ? '<span class="icon-pill recurring-pill-deleted"><i class="fa-solid fa-copy"></i></span>' : ''}
                     </div>
                 </div>
                 <div class="task-header">
@@ -694,10 +708,10 @@ document.querySelector('.sidebar').addEventListener('click', function() {
         return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> [Deleted]</span>`;
     }
     function generationDeletedNotifcation() {
-        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> The selected preset has been deleted, please re-select a new preset to enable this feature.</span>`;
+        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- The selected preset has been deleted, please re-select a new preset to enable this feature. -</span>`;
     }
     function generationDeletedRecurring() {
-        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;"> The selected pattern has been deleted, please re-select a new pattern to enable this feature.</span>`;
+        return `<span style="font-size: 0.75rem; font-style: italic; color:#878787;">- The selected pattern has been deleted, please re-select a new pattern to enable this feature. -</span>`;
     }
 
     function generationNullDescription(description) {

@@ -10,7 +10,9 @@
     <div class="card mb-4">
         <div class="d-flex justify-content-between align-items-center" style="margin: 25px 25px 0px 25px">
             <div>
-                <h4 class="">Discussion Forum</h4>
+                <h4 class="">
+                    <i class="fa-solid fa-people-group me-2"></i>Discussion Forum
+                </h4>
                 <p class="text-muted">Join the conversation with our community</p>
             </div>
             <div>
@@ -39,6 +41,7 @@
                                 id="tagSearch"
                                 placeholder="Search by tags...">
                     </div>
+                    <input type="hidden" id="selectedTagsInput" name="tags" value="">
                 </div>
 
                 <!-- Status Filter -->
@@ -588,7 +591,7 @@
     <script>
 
         // Function to get all current filter values
-        function getFilterValues() {
+        /*function getFilterValues() {
             return {
                 titleSearch: $('#titleSearch').val(),
                 tagSearch: $('#tagSearch').val(),
@@ -597,7 +600,7 @@
                 page: currentPage,
                 pageSize: pageSize
             };
-        }
+        }*/
 
         // Debounced search function
         function debouncedSearch() {
@@ -617,6 +620,9 @@
     <script>
 let selectedTags = [];
 
+// Add a hidden input field to your form
+//$('#forumForm').append('<input type="hidden" id="selectedTagsInput" name="tags" value="">');
+
 // Tag input handling
 $('#tagSearch').on('keydown', function(e) {
     if (e.key === 'Enter' || e.key === ',') {
@@ -625,6 +631,7 @@ $('#tagSearch').on('keydown', function(e) {
         if (tag && !selectedTags.includes(tag)) {
             addTag(tag);
             $(this).val('');
+            updateHiddenInput(); // Update hidden input when adding tag
         }
     }
 });
@@ -632,7 +639,7 @@ $('#tagSearch').on('keydown', function(e) {
 function addTag(tag) {
     selectedTags.push(tag);
     const tagElement = $(`
-        <div class="tag-item">
+        <div class="tag-item" data-tag="${tag}">
             ${tag}
             <span class="remove-tag">
                 <i class="fas fa-times"></i>
@@ -640,20 +647,27 @@ function addTag(tag) {
         </div>
     `);
     
-    tagElement.find('.remove-tag').click(function() {
-        tagElement.remove();
-        selectedTags = selectedTags.filter(t => t !== tag);
-        // Remove the debouncedSearch() call here
+    // Add click handler for removing tags
+    tagElement.find('.remove-tag').on('click', function() {
+        const tagToRemove = $(this).parent().attr('data-tag');
+        selectedTags = selectedTags.filter(t => t !== tagToRemove);
+        $(this).parent().remove();
+        updateHiddenInput(); // Update hidden input when removing tag
     });
     
     $('#selectedTags').append(tagElement);
+}
+
+// Function to update hidden input value
+function updateHiddenInput() {
+    $('#selectedTagsInput').val(selectedTags.join(','));
 }
 
 // Update getFilterValues function
 function getFilterValues() {
     return {
         titleSearch: $('#titleSearch').val(),
-        tags: selectedTags, // Now sending array of tags
+        tags: $('#selectedTagsInput').val(), //selectedTags, // Now sending array of tags
         status: $('#statusFilter').val(),
         sortOrder: $('#sortOrder').val(),
         page: currentPage,
@@ -666,6 +680,7 @@ function clearFilters() {
     $('#titleSearch').val('');
     selectedTags = [];
     $('#selectedTags').empty();
+    $('#selectedTagsInput').val('');
     $('#statusFilter').val('');
     $('#sortOrder').val('newest');
     currentPage = 1;

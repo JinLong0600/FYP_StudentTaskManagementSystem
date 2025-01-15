@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using static StudentTaskManagement.Utilities.GeneralEnum;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace StudentTaskManagement.Controllers
 {
@@ -327,7 +328,7 @@ namespace StudentTaskManagement.Controllers
                 var forum = await dbContext.L1DiscussionForums
                     .Include(f => f.L1DiscussionForumComments)
                     .Include(f => f.L1DiscussionForumLikes)
-                    .FirstOrDefaultAsync(f => f.Id == id && f.Status == (int)ForumStatus.Deleted);
+                    .FirstOrDefaultAsync(f => f.Id == id && f.Status != (int)ForumStatus.Deleted);
 
                 if (forum == null)
                 {
@@ -426,7 +427,7 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
-        public async Task<IActionResult> AjaxGetForumPosts(string titleSearch, string[] tags,
+        public async Task<IActionResult> AjaxGetForumPosts(string titleSearch, string tags,
             string status, string sortOrder, int page = 1, int pageSize = 10)
         {
             try 
@@ -439,8 +440,22 @@ namespace StudentTaskManagement.Controllers
                 if (!string.IsNullOrEmpty(titleSearch))
                     query = query.Where(f => f.Title.Contains(titleSearch));
 
-                if (tags != null && tags.Length > 0)
-                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));
+/*                if (tags != null && tags.Length > 0)
+                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));*/
+
+                if (!string.IsNullOrEmpty(tags))
+                {
+                    var searchTags = tags.Split(',')
+                        .Select(t => t.Trim().ToLower())
+                        .ToList();
+
+                    query = query.Where(post =>
+                        post.Label != null &&
+                        searchTags.Any(searchTag =>
+                            post.Label.ToLower().Contains(searchTag)
+                        )
+                    );
+                }
 
                 if (!string.IsNullOrEmpty(status))
                     query = query.Where(f => f.Status == Convert.ToInt32(status));
@@ -448,11 +463,11 @@ namespace StudentTaskManagement.Controllers
                 // Apply sorting
                 query = sortOrder switch
                 {
-                    "newest" => query.OrderByDescending(f => f.LastModifiedDate),
-                    "oldest" => query.OrderBy(f => f.LastModifiedDate),
+                    "newest" => query.OrderByDescending(f => f.CreatedDateTime),
+                    "oldest" => query.OrderBy(f => f.CreatedDateTime),
                     "mostLiked" => query.OrderByDescending(f => f.LikeCount),
                     "mostCommented" => query.OrderByDescending(f => f.CommentCount),
-                    _ => query.OrderByDescending(f => f.LastModifiedDate) // "newest" is default
+                    _ => query.OrderByDescending(f => f.CreatedDateTime) // "newest" is default
                 };
 
                 var totalPosts = await query.CountAsync();
@@ -474,7 +489,7 @@ namespace StudentTaskManagement.Controllers
                         createdByStudentId = p.CreatedByStudentId,
                         authorName = p.L1Students.UserName,
                         authorProfileImage = p.L1Students.ProfileImage,
-                        isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
+                        isNew = p.CreatedDateTime >= DateTime.Now.AddHours(-24),
                         isResolved = p.Status == (int)ForumStatus.Active ? false : true
                     })
                     .ToListAsync();
@@ -499,7 +514,7 @@ namespace StudentTaskManagement.Controllers
             
         }
 
-        public async Task<IActionResult> AjaxGetMyPosts(string titleSearch, string[] tags,
+        public async Task<IActionResult> AjaxGetMyPosts(string titleSearch, string tags,
             string status, string sortOrder, int page = 1, int pageSize = 10)
         {
             try
@@ -512,8 +527,22 @@ namespace StudentTaskManagement.Controllers
                 if (!string.IsNullOrEmpty(titleSearch))
                     query = query.Where(f => f.Title.Contains(titleSearch));
 
-                if (tags != null && tags.Length > 0)
-                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));
+                /*                if (tags != null && tags.Length > 0)
+                                    query = query.Where(f => tags.All(t => f.Label.Contains(t)));*/
+
+                if (!string.IsNullOrEmpty(tags))
+                {
+                    var searchTags = tags.Split(',')
+                        .Select(t => t.Trim().ToLower())
+                        .ToList();
+
+                    query = query.Where(post =>
+                        post.Label != null &&
+                        searchTags.Any(searchTag =>
+                            post.Label.ToLower().Contains(searchTag)
+                        )
+                    );
+                }
 
                 if (!string.IsNullOrEmpty(status))
                     query = query.Where(f => f.Status == Convert.ToInt32(status));
@@ -521,11 +550,11 @@ namespace StudentTaskManagement.Controllers
                 // Apply sorting
                 query = sortOrder switch
                 {
-                    "newest" => query.OrderByDescending(f => f.LastModifiedDate),
-                    "oldest" => query.OrderBy(f => f.LastModifiedDate),
+                    "newest" => query.OrderByDescending(f => f.CreatedDateTime),
+                    "oldest" => query.OrderBy(f => f.CreatedDateTime),
                     "mostLiked" => query.OrderByDescending(f => f.LikeCount),
                     "mostCommented" => query.OrderByDescending(f => f.CommentCount),
-                    _ => query.OrderByDescending(f => f.LastModifiedDate) // "newest" is default
+                    _ => query.OrderByDescending(f => f.CreatedDateTime) // "newest" is default
                 };
 
                 var totalPosts = await query.CountAsync();
@@ -546,7 +575,7 @@ namespace StudentTaskManagement.Controllers
                         lastModifiedDate = p.CreatedDateTime.ToString("dd-MM-yyyy, hh:mm tt"),
                         createdByStudentId = p.CreatedByStudentId,
                         authorName = p.L1Students.UserName,
-                        isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
+                        isNew = p.CreatedDateTime >= DateTime.Now.AddHours(-24),
                         isResolved = p.Status == (int)ForumStatus.Active ? false : true
                     })
                     .ToListAsync();

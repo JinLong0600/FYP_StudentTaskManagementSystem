@@ -1,8 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using StudentTaskManagement.Models;
 using StudentTaskManagement.ViewModels;
 using System.Text.Json;
+using System.Threading.Tasks;
 using WebPush;
+using static StudentTaskManagement.Utilities.GeneralEnum;
 
 namespace StudentTaskManagement.Utilities
 {
@@ -16,14 +19,15 @@ namespace StudentTaskManagement.Utilities
     {
         private readonly StudentTaskManagementContext dbContext;
         private readonly ILogger<NotificationManager> _logger;
-        private readonly IConfiguration _configuration;  // Add this
+        private readonly VapidConfiguration _vapidConfig;
 
         public NotificationManager(
             StudentTaskManagementContext context,
-            ILogger<NotificationManager> logger, IConfiguration configuration)
+            ILogger<NotificationManager> logger, IOptions<VapidConfiguration> vapidConfig)
         {
             dbContext = context;
             _logger = logger;
+            _vapidConfig = vapidConfig.Value;
         }
 
         
@@ -35,12 +39,12 @@ namespace StudentTaskManagement.Utilities
             // Step 2: Fetch tasks/subtasks that need notifications
             var tasks = await dbContext.L1Tasks
                 .Include(t => t.L1NotificationPresets)
-                .Where(t => t.L1NotificationPresets != null && t.DueDate > DateTime.Now)
+                .Where(t => (t.IsNotification && t.L1NotificationPresets != null) && t.DueDate > DateTime.Now && t.Status != (int)ItemTaskStatus.Completed && t.Status != (int)ItemTaskStatus.Overdue)
                 .ToListAsync();
 
             var subtasks = await dbContext.L1SubTasks
                 .Include(t => t.L1NotificationPresets)
-                .Where(t => t.L1NotificationPresets != null && t.DueDate > DateTime.Now)
+                .Where(t => (t.IsNotification && t.L1NotificationPresets != null) && t.DueDate > DateTime.Now && t.Status != (int)ItemTaskStatus.Completed && t.Status != (int)ItemTaskStatus.Overdue)
                 .ToListAsync();
 
             // Step 3: Create notification queue items
@@ -129,7 +133,7 @@ namespace StudentTaskManagement.Utilities
         {
             new NotificationMessage
             {
-                Title = "Multiple Tasks Due",
+                Title = "Multiple Tasks Due.",
                 Message = $"You have {notifications.Count} tasks due at {dueTime}: " +
                          $"{firstTask.Title} and {notifications.Count - 1} others",
                 IsAggregated = true
@@ -167,15 +171,15 @@ namespace StudentTaskManagement.Utilities
                 var auth = pushSubscription.Auth;
 
                 var vapidDetails = new VapidDetails(
-                    "mailto:your-email@domain.com",  // Your contact email
-                    _configuration["VAPID:PublicKey"],
-                    _configuration["VAPID:PrivateKey"]
+                    "mailto:ajlong0600@gmail.com",
+                    _vapidConfig.PublicKey,
+                    _vapidConfig.PrivateKey
                 );
 
                 var webPushClient = new WebPushClient();
                 await webPushClient.SendNotificationAsync(
                     new PushSubscription(pushEndpoint, p256dh, auth),
-                    JsonSerializer.Serialize(notification),
+                    message.Message,
                     vapidDetails
                 );
             }
@@ -188,50 +192,67 @@ namespace StudentTaskManagement.Utilities
 
         private async Task CreateNotificationQueueItemForTask(L1Tasks task)
         {
-            var scheduledTime = CalculateScheduledTime(
-                task.L1NotificationPresets,
-                task.DueDate);
-
-            var queueItem = new NotificationQueues
+            var scheduledTime = new DateTime();
+            
+            if (task.L1NotificationPresets.IsSystemDefault) {
+                scheduledTime = CalculateScheduledTimeForDefaultOption(task.DefaultNotificationOptions, task.DueDate);
+            }
+            else {
+                scheduledTime = CalculateScheduledTime(task.L1NotificationPresets, task.DueDate);
+            }
+            if (scheduledTime.Date == DateTime.Now.Date)
             {
-                L1TaskId = task.Id,
-                StudentId = task.CreatedByStudentId,
-                L1NotificationPresetId = task.L1NotificationPresets.Id,
-                Title = $"Task Due: {task.Title}",
-                Message = $"Task '{task.Title}' is due at {task.DueDate:h:mm tt}",
-                ScheduledTime = scheduledTime,
-                //NotificationType = task.L1NotificationPresets.Type,
-                //IsDaily = task.L1NotificationPresets.IsDaily,
-                //TaskDueDate = task.DueDate,
-                CreatedAt = DateTime.Now,
-                IsProcessed = false
-            };
+                var queueItem = new NotificationQueues
+                {
+                    L1TaskId = task.Id,
+                    StudentId = task.CreatedByStudentId,
+                    DefaultNotificationOption = task.L1NotificationPresets.IsSystemDefault ? task.DefaultNotificationOptions : null,
+                    L1NotificationPresetId = !task.L1NotificationPresets.IsSystemDefault ? task.L1NotificationPresetId : null,
+                    Title = $"Task Due: {task.Title}",
+                    Message = $"Task '{task.Title}' is due at {scheduledTime:hh:mm tt}",
+                    ScheduledTime = scheduledTime,
+                    //NotificationType = task.L1NotificationPresets.Type,
+                    //IsDaily = task.L1NotificationPresets.IsDaily,
+                    //TaskDueDate = task.DueDate,
+                    CreatedAt = DateTime.Now,
+                    IsProcessed = false
+                };
+                await dbContext.NotificationQueues.AddAsync(queueItem);
+            }
 
-            await dbContext.NotificationQueues.AddAsync(queueItem);
+            
         }
 
         private async Task CreateNotificationQueueItemForSubtask(L1SubTasks subtask)
         {
-            var scheduledTime = CalculateScheduledTime(
-                subtask.L1NotificationPresets,
-                subtask.DueDate);
-
-            var queueItem = new NotificationQueues
+            var scheduledTime = new DateTime();
+            if (subtask.L1NotificationPresets.IsSystemDefault)
             {
-                L1SubTasksId = subtask.Id,
-                StudentId = subtask.CreatedByStudentId,
-                L1NotificationPresetId = subtask.L1NotificationPresets.Id,
-                Title = $"subtask Due: {subtask.Title}",
-                Message = $"subtask '{subtask.Title}' is due at {subtask.DueDate:h:mm tt}",
-                ScheduledTime = scheduledTime,
-                //NotificationType = subtask.L1NotificationPresets.Type,
-                //IsDaily = subtask.L1NotificationPresets.IsDaily,
-                //TaskDueDate = subtask.DueDate,
-                CreatedAt = DateTime.Now,
-                IsProcessed = false
-            };
+                scheduledTime = CalculateScheduledTimeForDefaultOption(subtask.DefaultNotificationOptions, subtask.DueDate);
+            }
+            else
+            {
+                scheduledTime = CalculateScheduledTime(subtask.L1NotificationPresets, subtask.DueDate);
+            }
 
-            await dbContext.NotificationQueues.AddAsync(queueItem);
+            if (scheduledTime.Date == DateTime.Now.Date)
+            {
+                var queueItem = new NotificationQueues
+                {
+                    L1SubTasksId = subtask.Id,
+                    StudentId = subtask.CreatedByStudentId,
+                    L1NotificationPresetId = subtask.L1NotificationPresets.Id,
+                    Title = $"Subtask Due: {subtask.Title}",
+                    Message = $"Subtask '{subtask.Title}' is due at {subtask.DueDate:h:mm tt}",
+                    ScheduledTime = scheduledTime,
+                    //NotificationType = subtask.L1NotificationPresets.Type,
+                    //IsDaily = subtask.L1NotificationPresets.IsDaily,
+                    //TaskDueDate = subtask.DueDate,
+                    CreatedAt = DateTime.Now,
+                    IsProcessed = false
+                };
+                await dbContext.NotificationQueues.AddAsync(queueItem);
+            }
         }
 
         private DateTime CalculateScheduledTime(
@@ -251,12 +272,25 @@ namespace StudentTaskManagement.Utilities
                         .AddHours(-preset.ReminderHoursBefore.GetValueOrDefault())
                         .AddMinutes(-preset.ReminderMinutesBefore.GetValueOrDefault());
 
-                    if (preset.IsDaily && reminderTime < DateTime.Now)
-                    {
-                        reminderTime = reminderTime.AddDays(1);
-                    }
-
                     return reminderTime;
+
+                default:
+                    throw new ArgumentException("Invalid notification preset type");
+            }
+        }
+
+        private DateTime CalculateScheduledTimeForDefaultOption(int? defaultNotificationOptions, DateTime taskDueDate)
+        {
+            switch (defaultNotificationOptions)
+            {
+                case 3: // 1 day before
+                    return taskDueDate.AddDays(-1);
+
+                case 2: // 1 hour before
+                    return taskDueDate.AddHours(-1);
+
+                case 1: // 30 minutue before
+                    return taskDueDate.AddMinutes(-30);
 
                 default:
                     throw new ArgumentException("Invalid notification preset type");

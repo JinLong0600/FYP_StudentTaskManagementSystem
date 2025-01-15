@@ -158,25 +158,25 @@ namespace WebApplication1.Controllers
                         var mondayOffset = currentDayOfWeek == 0 ? -6 : 1 - currentDayOfWeek;
                         var currentWeekStart = today.AddDays(mondayOffset);
                         var currentWeekEnd = currentWeekStart.AddDays(6);
-                        taskQuery = taskQuery.Where(t =>  t.DueDate >= currentWeekStart && t.DueDate <= currentWeekEnd);
+                        taskQuery = taskQuery.Where(t => t.CreatedByStudentId == LoginStudentId && t.DueDate >= currentWeekStart && t.DueDate <= currentWeekEnd);
                         break;
 
                     case 2: // Next week
                         var nextWeekStart = today.AddDays(7 - (int)today.DayOfWeek + 1);
                         var nextWeekEnd = nextWeekStart.AddDays(6);
-                        taskQuery = dbContext.L1Tasks.Where(t => t.DueDate >= nextWeekStart && t.DueDate <= nextWeekEnd);
+                        taskQuery = dbContext.L1Tasks.Where(t => t.CreatedByStudentId == LoginStudentId && t.DueDate >= nextWeekStart && t.DueDate <= nextWeekEnd);
                         break;
 
                     case 3: // Last week
                         var lastWeekStart = today.AddDays(-7 - (int)today.DayOfWeek + 1);
                         var lastWeekEnd = lastWeekStart.AddDays(6);
-                        taskQuery = dbContext.L1Tasks.Where(t => t.DueDate >= lastWeekStart && t.DueDate <= lastWeekEnd);
+                        taskQuery = dbContext.L1Tasks.Where(t => t.CreatedByStudentId == LoginStudentId && t.DueDate >= lastWeekStart && t.DueDate <= lastWeekEnd);
                         break;
 
                     case 4: // This month
                         var currentMonthStart = new DateTime(today.Year, today.Month, 1);
                         var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
-                        taskQuery = dbContext.L1Tasks.Where(t => t.DueDate >= currentMonthStart && t.DueDate <= currentMonthEnd);
+                        taskQuery = dbContext.L1Tasks.Where(t => t.CreatedByStudentId == LoginStudentId && t.DueDate >= currentMonthStart && t.DueDate <= currentMonthEnd);
                         break;
 
                     default:
@@ -441,8 +441,8 @@ namespace WebApplication1.Controllers
                     .Select(p => new
                     {
                         id = p.Id,
-                        isNew = p.LastModifiedDate >= DateTime.Now.AddHours(-24),
-                        isResolved =  true,
+                        isNew = p.CreatedDateTime >= DateTime.Now.AddHours(-24),
+                        isResolved =  p.Status == (int)ForumStatus.Resolved ? true : false,
                         title = p.Title,
                         description = p.Description,
                         createdDate = p.CreatedDateTime.ToString("dd-MM-yyyy, hh:mm tt"),

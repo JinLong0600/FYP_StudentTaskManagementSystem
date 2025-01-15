@@ -8,10 +8,11 @@ namespace StudentTaskManagement.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public int L1TaskId { get; set; }
+        public int? L1TaskId { get; set; }
         public int? L1SubTasksId { get; set; }
         public string StudentId { get; set; }
-        public int L1NotificationPresetId { get; set; }
+        public int? DefaultNotificationOption { get; set; }
+        public int? L1NotificationPresetId { get; set; }
         public string Title { get; set; }
         public string Message { get; set; }
         public DateTime ScheduledTime { get; set; }
@@ -24,9 +25,14 @@ namespace StudentTaskManagement.Models
         //public DateTime TaskDueDate { get; set; }
 
         // Navigation properties
-        public virtual L1Tasks Task { get; set; }
-        public virtual L1SubTasks SubTask { get; set; }
-        public virtual L1NotificationPresets NotificationPreset { get; set; }
+        [ForeignKey("L1TaskId")]
+        public virtual L1Tasks L1Tasks { get; set; }
+
+        [ForeignKey("L1SubTasksId")]
+        public virtual L1SubTasks L1SubTasks { get; set; }
+
+        [ForeignKey("L1NotificationPresetId")]
+        public virtual L1NotificationPresets L1NotificationPresets { get; set; }
     }
 
 }

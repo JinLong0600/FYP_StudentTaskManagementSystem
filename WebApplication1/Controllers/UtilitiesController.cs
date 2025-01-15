@@ -127,12 +127,22 @@ namespace StudentTaskManagement.Controllers
                     // Check if we should generate a task today based on the preset type
                     if (ShouldGenerateTaskToday(task, preset, today))
                     {
-                        await CreateNewTaskFromTemplate(task, preset);
+                        await CreateNewTaskFromTemplate(task);
                         tasksGenerated++;
 
                         // Update the generated count on the original task
                         task.GeneratedCount = (task.GeneratedCount ?? 0) + 1;
                         task.LastModifiedDateTime = DateTime.Now;
+                    }
+                    else if (task.L1RecurringPatterns.IsSystemDefault && ShouldGenerateTaskTodayDefaultVersion(task, today))
+                    {
+                        await CreateNewTaskFromTemplate(task);
+                        tasksGenerated++;
+
+                        // Update the generated count on the original task
+                        task.GeneratedCount = (task.GeneratedCount ?? 0) + 1;
+                        task.LastModifiedDateTime = DateTime.Now;
+
                     }
                 }
 
@@ -226,7 +236,32 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
-        private async Task CreateNewTaskFromTemplate(L1Tasks task, L1RecurringPatterns preset)
+        private bool ShouldGenerateTaskTodayDefaultVersion(L1Tasks task, DateTime today)
+        {
+            switch (task.DefaultRecurringOptions)
+            {
+                case 1: // Day
+                        return true; // All days
+
+                case 2: // Week
+                        // Recur on the same day as start date
+                        var daysSinceStart = (today - task.StartDate.Date).Days;
+                        return daysSinceStart > 0 &&
+                               daysSinceStart % 7 == 0 &&
+                               today.DayOfWeek == task.StartDate.DayOfWeek;
+                case 3: // Month
+                        // For all months, check if today is the same date as start date
+                        // or last day of month if the date doesn't exist
+                        var targetDay = task.StartDate.Day;
+                        var lastDayOfMonth = DateTime.DaysInMonth(today.Year, today.Month);
+                        var targetDate = Math.Min(targetDay, lastDayOfMonth);
+                        return today.Day == targetDate;
+                default:
+                    return false;
+            }
+        }
+
+        private async Task CreateNewTaskFromTemplate(L1Tasks task)
         {
             // Calculate the original time gap
             int daysDifference = (task.DueDate - task.StartDate).Days;
@@ -249,6 +284,7 @@ namespace StudentTaskManagement.Controllers
                 L1RecurringPresetId = null,      // Clear the preset reference
                 DefaultRecurringOptions = null,
                 GeneratedCount = null,         // Clear the generated count
+                IsParentRecurring = false,
                 
                 // ... other properties
                 IsNotification = task.IsNotification,
@@ -295,119 +331,10 @@ namespace StudentTaskManagement.Controllers
         }
         #endregion
 
+
+        //[HttpPost("api/utilities/refresh-queue")]
         [HttpGet]
-        [Route("api/utilities/test-notification")]
-        public IActionResult TestChromeNotification()
-        {
-            try
-            {
-                // Return a script that will first request permission and then trigger the notification
-                var script = @"
-                    function requestAndShowNotification() {
-                        if ('Notification' in window) {
-                            Notification.requestPermission().then(function(permission) {
-                                if (permission === 'granted') {
-                                    // First show the welcome notification
-                                    new Notification('Notifications Enabled!', {
-                                        body: 'You will now receive notifications for your tasks.',
-                                        icon: '/path/to/your/icon.png'
-                                    });
-
-                                    // Then after a short delay, show the test notification
-                                    setTimeout(() => {
-                                        new Notification('Test Notification', {
-                                            body: 'This is a test notification from your task management system',
-                                            icon: '/path/to/your/icon.png',
-                                            badge: '/path/to/your/badge.png'
-                                        });
-                                    }, 2000); // 2 second delay between notifications
-                                }
-                            });
-                        }
-                    }
-                    
-                    // Execute immediately
-                    requestAndShowNotification();";
-
-                return Content($"<script>{script}</script>", "text/html");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error in TestChromeNotification: {ex.Message}");
-                return StatusCode(500, new { 
-                    Success = false, 
-                    Message = "An error occurred while sending test notification" 
-                });
-            }
-        }
-
-        [HttpGet]
-        [Route("api/utilities/request-notification-permission")]
-        public IActionResult RequestNotificationPermission()
-        {
-            try
-            {
-                var script = @"
-            const NotificationManager = {
-                checkInterval: 5000, // 5 seconds
-                intervalId: null,
-
-                init: function() {
-                    if (!('Notification' in window)) {
-                        console.log('This browser does not support notifications');
-                        return;
-                    }
-                    this.startRequestCycle();
-                },
-
-                requestPermission: async function() {
-                    if (Notification.permission !== 'granted') {
-                        const permission = await Notification.requestPermission();
-                        if (permission === 'granted') {
-                            this.showWelcomeNotification();
-                            this.stopRequestCycle();
-                        }
-                    }
-                },
-
-                showWelcomeNotification: function() {
-                    new Notification('Notifications Enabled!', {
-                        body: 'You will now receive notifications for your tasks.',
-                        icon: '/path/to/your/icon.png'
-                    });
-                },
-
-                startRequestCycle: function() {
-                    this.requestPermission(); // Initial request
-                    this.intervalId = setInterval(() => this.requestPermission(), this.checkInterval);
-                },
-
-                stopRequestCycle: function() {
-                    if (this.intervalId) {
-                        clearInterval(this.intervalId);
-                        this.intervalId = null;
-                    }
-                }
-            };
-
-            // Initialize when the page loads
-            document.addEventListener('DOMContentLoaded', () => NotificationManager.init());";
-
-                return Content($"<script>{script}</script>", "text/html");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error in RequestNotificationPermission: {ex.Message}");
-                return StatusCode(500, new
-                {
-                    Success = false,
-                    Message = "An error occurred while requesting notification permission"
-                });
-            }
-        }
-
-
-        [HttpPost("refresh-queue")]
+        [Route("api/utilities/refresh-queue")]
         public async Task<IActionResult> RefreshNotificationQueue()
         {
             try
@@ -422,7 +349,9 @@ namespace StudentTaskManagement.Controllers
             }
         }
 
-        [HttpPost("process-now")]
+        //[HttpPost("api/utilities/process-now")]
+        [HttpGet]
+        [Route("api/utilities/process-now")]
         public async Task<IActionResult> ProcessNotificationsNow()
         {
             try
